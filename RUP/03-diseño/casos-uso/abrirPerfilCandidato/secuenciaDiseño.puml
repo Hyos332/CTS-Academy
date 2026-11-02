@@ -1,0 +1,59 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "AdmisionesController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "AdmisionesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Selecciona candidato en panel de admisiones
+activate spa
+
+spa -> proxy : GET /api/v1/evaluacion/gestor/candidatos/:id\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : getCandidateDetailedProfile(candidatoId: string)
+activate svc
+
+svc -> db : candidatos.findUnique({\n  where: { id: candidatoId },\n  include: {\n    usuario: { select: { id, email, nombre, apellidos } },\n    convocatoria: { select: { id, denominacion, estado } },\n    tests: { select: { id, tipo_bateria, estado, calificacion_obtenida, segundos_consumidos, fecha_inicio, fecha_finalizacion } },\n    entrevista: { include: { anotaciones: true } }\n  }\n})
+activate db
+db --> svc : fullCandidateRecord
+deactivate db
+
+alt candidato no encontrado
+    svc --> ctrl : throw NotFoundException("Candidato no encontrado")
+    ctrl --> proxy : 404 Not Found
+    proxy --> spa : 404 Not Found
+    spa --> actor : Muestra notificación de recurso no hallado
+else candidato localizado
+    svc --> ctrl : CandidatoPerfilCompletoDto {\n  candidatoId, datosPersonales, convocatoria,\n  estadoPostulacion, perfilCompetencias (Radar JSONB),\n  testsDesglosados, entrevista, anotaciones\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa -> spa : Renderiza Radar Chart (Chart.js / Recharts) y timeline
+    spa --> actor : Visualiza expediente holístico del postulante ([ADR-009])
+    deactivate spa
+end
+
+@enduml

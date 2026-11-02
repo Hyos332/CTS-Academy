@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "EntrevistasController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "EntrevistasService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Introduce evaluación de competencia y comentario
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/entrevistas/:id/anotaciones\nPayload: { competenciaEvaluada, calificacionCualitativa, comentario }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : addInterviewAnnotation(entrevistaId: string, dto: AnotacionEntrevistaDto)
+activate svc
+
+svc -> db : entrevistas.findUnique({\n  where: { id: entrevistaId }\n})
+activate db
+db --> svc : entrevistaRecord
+deactivate db
+
+alt entrevista inexistente
+    svc --> ctrl : throw NotFoundException("Entrevista no encontrada")
+    ctrl --> proxy : 404 Not Found
+    proxy --> spa : 404 Not Found
+    spa --> actor : Muestra error de entrevista no encontrada
+else entrevista válida
+    svc -> db : anotaciones_entrevista.create({\n  data: {\n    entrevista_id: entrevistaId,\n    competencia_evaluada: dto.competenciaEvaluada,\n    calificacion_cualitativa: dto.calificacionCualitativa,\n    comentario: dto.comentario,\n    creado_en: NOW()\n  }\n})
+    activate db
+    db --> svc : nuevaAnotacion
+    deactivate db
+
+    svc --> ctrl : AnotacionResponseDto {\n  id: nuevaAnotacion.id, entrevistaId,\n  competencia: nuevaAnotacion.competencia_evaluada,\n  calificacion: nuevaAnotacion.calificacion_cualitativa,\n  comentario: nuevaAnotacion.comentario,\n  registradaEn: nuevaAnotacion.creado_en\n}
+    deactivate svc
+
+    ctrl --> proxy : 201 Created (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 201 Created
+    deactivate proxy
+
+    spa --> actor : Añade anotación en tiempo real a la ficha del candidato
+    deactivate spa
+end
+
+@enduml

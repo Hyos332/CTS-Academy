@@ -31,8 +31,8 @@ En esta fase se formalizan:
 | :--- | :--- | :---: | :---: |
 | **Modelo de Datos Relacional (DER)** | 23 tablas, 3 esquemas PostgreSQL (`equipos`, `evaluacion`, `formacion`), UUID v4, radar JSONB, auditoría e índices | [Ver DER y Diccionario](modelo-datos/README.md) | Completado |
 | **Arquitectura de Despliegue Físico** | Topología Docker Compose multi-stage, 4 redes aisladas, PostgreSQL 16, Redis 7 y sandbox CI | [Ver Despliegue](despliegue/README.md) | Completado |
-| **Contratos de Interfaces OpenAPI / REST** | Especificación formal de endpoints HTTP, payloads JSON, DTOs y cabeceras JWT | [Ver Contratos API](casos-uso/README.md) | En progreso (PK01 2/2) |
-| **Diagramas de Secuencia de Diseño** | Interacción detallada controladores NestJS, servicios, Redis y PostgreSQL | [Ver Secuencias](casos-uso/README.md) | En progreso (PK01 2/2) |
+| **Contratos de Interfaces OpenAPI / REST** | Especificación formal de endpoints HTTP, payloads JSON, DTOs y cabeceras JWT | [Ver Contratos API](casos-uso/README.md) | En progreso (14/35 CUs) |
+| **Diagramas de Secuencia de Diseño** | Interacción detallada controladores NestJS, servicios, Redis y PostgreSQL | [Ver Secuencias](casos-uso/README.md) | En progreso (14/35 CUs) |
 
 </div>
 
@@ -44,7 +44,11 @@ En esta fase se formalizan:
 > **Progreso de la Fase de Diseño**:
 > 1. **Modelo de Datos Relacional (DER)**: 23 tablas en PostgreSQL 16 con esquemas lógicos nativos ([ADR-012](/RUP/BITACORA.md#adr-012-elecci%C3%B3n-de-postgresql-16-para-persistencia-relacional-y-soporte-de-microservicios)), adaptado a la operativa real de CTS ([ADR-013](/RUP/BITACORA.md#adr-013-simplificaci%C3%B3n-pragm%C3%A1tica-del-modelo-de-datos-der-y-alineaci%C3%B3n-con-la-operativa-real-de-cts)).
 > 2. **Arquitectura y Despliegue Físico**: Diagrama de despliegue UML, topología de 4 redes virtuales independientes (`public`, `app`, `data`, `sandbox`) y especificación `docker-compose.yml` multi-contenedor con sandbox no privilegiado.
-> 3. **Contratos OpenAPI / REST y Diagramas de Secuencia**: Formalizados para **PK01 — Acceso (2/2 CUs)** (`iniciarSesion`, `cerrarSesion`). Siguiente objetivo: PK02 — MotorEvaluacion (12 CUs).
+> 3. **Contratos OpenAPI / REST y Diagramas de Secuencia**: Formalizados para:
+>    - **PK01 — Acceso (2/2 CUs)**: `iniciarSesion`, `cerrarSesion`.
+>    - **PK02 — MotorEvaluacion (12/12 CUs)**: `abrirPanelPostulacion`, `iniciarTest`, `responderPreguntaTeorica`, `entregarPreguntaPractica`, `finalizarTest`, `abrirPerfilCandidato`, `agendarEntrevistaGoogleMeet`, `registrarAnotacionesEntrevista`, `admitirAlumnoProfer`, `rechazarCandidatura`, `registrarCandidato`, `importarCandidatosSede`.
+>    - Total acumulado: **14 / 35 CUs (40%)**.
+>    - Siguiente objetivo: **PK03 — MotorFormacion (17 CUs)**.
 > Los artefactos se encuentran compilados vectorialmente en `/images/RUP/03-diseño/`.
 
 ---

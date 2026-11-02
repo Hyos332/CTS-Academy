@@ -1,0 +1,88 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Candidato / Alumno" as actor
+participant "SPA Client\n(Monaco Editor)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "TestsController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(NestJS)" as guard
+participant "TestsService\n(Application Service)" as svc
+participant "CodeSandboxService\n(Runner Client)" as runnerClient
+participant "Runner Daemon\n(cts-runner-daemon)" as daemon
+participant "Ephemeral Container\n(Docker Sandbox: none)" as sandbox
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Redacta código y pulsa "Ejecutar y Entregar"
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/tests/:id/respuestas/practica\nPayload: { preguntaId, codigo, lenguaje }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : submitPracticalAnswer(testId, dto: EntregaPracticaDto, userId)
+activate svc
+
+svc -> db : tests.findFirst({\n  where: { id: testId, estado: 'EN_CURSO' }\n})
+activate db
+db --> svc : testActivo
+deactivate db
+
+alt test expirado
+    svc --> ctrl : throw BadRequestException("Examen expirado")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Notifica finalización del tiempo
+else test en tiempo válido
+    svc -> db : preguntas.findUnique({\n  where: { id: dto.preguntaId },\n  select: { id, test_cases_json, timeout_ms }\n})
+    activate db
+    db --> svc : preguntaData
+    deactivate db
+
+    svc -> runnerClient : executeSandboxedCode({\n  codigo: dto.codigo,\n  lenguaje: dto.lenguaje,\n  testCases: preguntaData.test_cases_json\n})
+    activate runnerClient
+
+    runnerClient -> daemon : POST /execute (cts_sandbox_net)
+    activate daemon
+
+    daemon -> sandbox : docker run --network=none --memory=256m --cpus=0.5 --read-only ...
+    activate sandbox
+    sandbox --> daemon : executionResult { passed: 4, total: 4, stdout, stderr, exitCode: 0 }
+    deactivate sandbox
+
+    daemon --> runnerClient : SandboxExecutionDto
+    deactivate daemon
+
+    runnerClient --> svc : result
+    deactivate runnerClient
+
+    svc -> db : respuestas_evaluacion.upsert({\n  where: { test_id_pregunta_id: { test_id: testId, pregunta_id: dto.preguntaId } },\n  create: {\n    test_id: testId, pregunta_id: dto.preguntaId,\n    codigo_entregado: dto.codigo,\n    calificacion_obtenida: (result.passed / result.total) * 10.0,\n    es_correcta: result.passed === result.total,\n    respondida_en: NOW()\n  },\n  update: {\n    codigo_entregado: dto.codigo,\n    calificacion_obtenida: (result.passed / result.total) * 10.0,\n    es_correcta: result.passed === result.total,\n    respondida_en: NOW()\n  }\n})
+    activate db
+    db --> svc : respuestaPersistida
+    deactivate db
+
+    svc --> ctrl : EntregaPracticaResponseDto {\n  guardado: true, passedTests: result.passed, totalTests: result.total,\n  output: result.stdout, error: result.stderr\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Muestra resultados de la consola y tests aprobados
+    deactivate spa
+end
+
+@enduml

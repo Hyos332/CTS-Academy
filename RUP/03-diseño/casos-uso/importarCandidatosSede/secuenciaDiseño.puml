@@ -1,0 +1,69 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "AdmisionesController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "AdmisionesService\n(Application Service)" as svc
+participant "BullMQ Queue\n(Redis 7 / importacion)" as queue
+participant "ImportWorker\n(Background Processor)" as worker
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Sube archivo CSV/Excel y pulsa "Importar Lote"
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/candidatos/importar-sede\nMultipart: { file: .csv, sedeOrigen, convocatoriaId }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : queueBatchImport(fileBuffer, dto, gestorId)
+activate svc
+
+svc -> svc : parseCsvHeadersAndValidate(fileBuffer)\nGenera loteId = gen_random_uuid()
+
+svc -> queue : add('procesar-lote-candidatos', {\n  loteId, sedeOrigen: dto.sedeOrigen,\n  convocatoriaId: dto.convocatoriaId,\n  registros: rows,\n  gestorId\n})
+activate queue
+queue --> svc : jobEnqueued { jobId: 1042 }
+deactivate queue
+
+svc --> ctrl : ImportacionIniciadaResponseDto {\n  loteId, totalRegistros: rows.length,\n  estado: "PROCESANDO", jobId: 1042\n}
+deactivate svc
+
+ctrl --> proxy : 202 Accepted (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 202 Accepted
+deactivate proxy
+
+spa --> actor : Muestra barra de progreso de importación asíncrona
+deactivate spa
+
+== Procesamiento Asíncrono en Segundo Plano ==
+
+queue -> worker : process(job)
+activate worker
+
+worker -> db : $transaction batch insert en chunks de 50:\n- motor_equipos.usuarios\n- motor_evaluacion.candidatos (lote_importacion_id = loteId)\n- motor_evaluacion.tests (3 tests por candidato)
+activate db
+db --> worker : lotePersistido { insertados: 48, duplicadosOmitidos: 2 }
+deactivate db
+
+worker -> spa : WebSocket emit('importacion:progreso', { loteId, completado: true })
+worker --> queue : job.completed()
+deactivate worker
+
+@enduml

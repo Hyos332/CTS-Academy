@@ -1,0 +1,69 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "AdmisionesController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "AdmisionesService\n(Application Service)" as svc
+participant "EmailService\n(Nodemailer / SES)" as mailer
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Introduce motivo y confirma "Rechazar Candidatura"
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/candidatos/:id/rechazar\nPayload: { motivoRechazo }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : rejectCandidate(candidatoId: string, dto: RechazarCandidatoDto)
+activate svc
+
+svc -> db : candidatos.findUnique({\n  where: { id: candidatoId },\n  include: { usuario: true }\n})
+activate db
+db --> svc : candidatoRecord
+deactivate db
+
+alt candidato no existe o ya resuelto
+    svc --> ctrl : throw BadRequestException("La candidatura ya se encuentra resuelta")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Muestra advertencia de estado
+else rechazo procesable
+    svc -> db : $transaction([\n  candidatos.update({\n    where: { id: candidatoId },\n    data: {\n      decision_admision: 'RECHAZADO',\n      motivo_rechazo: dto.motivoRechazo,\n      estado_postulacion: 'RECHAZADO',\n      actualizado_en: NOW()\n    }\n  }),\n  usuarios.update({\n    where: { id: candidatoRecord.usuario_id },\n    data: { activo: false, actualizado_en: NOW() }\n  })\n])
+    activate db
+    db --> svc : [candidatoRechazado, userDesactivado]
+    deactivate db
+
+    svc -> mailer : sendRejectionEmail({\n  to: candidatoRecord.usuario.email,\n  nombre: candidatoRecord.usuario.nombre,\n  motivo: dto.motivoRechazo\n})
+    activate mailer
+    mailer --> svc : emailEnviado
+    deactivate mailer
+
+    svc --> ctrl : RechazarCandidaturaResponseDto {\n  candidatoId, estado: 'RECHAZADO', fechaResolucion: NOW()\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Actualiza estado a rechazado y archiva expediente
+    deactivate spa
+end
+
+@enduml

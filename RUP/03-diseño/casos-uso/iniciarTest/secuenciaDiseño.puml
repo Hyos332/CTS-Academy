@@ -1,0 +1,80 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Candidato / Alumno" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "TestsController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(NestJS)" as guard
+participant "TestsService\n(Application Service)" as svc
+participant "TimerRedisService\n(cts-redis)" as redisSvc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Clic en "Comenzar Test"
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/tests/:id/iniciar\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (user: { sub, rol })
+deactivate guard
+
+ctrl -> svc : startTest(testId: string, userId: string, clientIp: string)
+activate svc
+
+svc -> db : tests.findUnique({\n  where: { id: testId },\n  include: { candidato: true, alumno: true }\n})
+activate db
+db --> svc : testRecord
+deactivate db
+
+alt test no pertenece al usuario autenticado
+    svc --> ctrl : throw ForbiddenException("No tienes permiso sobre esta evaluación")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra error de acceso
+else test ya completado o expirado
+    svc --> ctrl : throw BadRequestException("La evaluación ya fue cerrada")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Muestra notificación de test no disponible
+else test en estado NO_INICIADO
+    svc -> db : $transaction([\n  tests.update({ where: { id: testId }, data: { estado: 'EN_CURSO', fecha_inicio: NOW() } }),\n  sesiones_evaluacion.create({ data: { test_id: testId, ip_remota: clientIp, ultimo_latido: NOW(), inicios_concurrencia: 1 } })\n])
+    activate db
+    db --> svc : [updatedTest, sesionEval]
+    deactivate db
+
+    svc -> redisSvc : initTimer(testId, tiempoLimiteSegundos)
+    activate redisSvc
+    redisSvc --> svc : timerIniciado (TTL fijado)
+    deactivate redisSvc
+
+    svc -> db : preguntas.findMany({\n  where: { ... },\n  include: { opciones: { select: { id, texto } } }\n})
+    activate db
+    db --> svc : preguntasSanitizadas
+    deactivate db
+
+    svc --> ctrl : IniciarTestResponseDto {\n  testId, tipoBateria, tiempoRestanteSegundos: test.tiempo_limite_segundos,\n  preguntas: preguntasSanitizadas\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa -> spa : Inicializa temporizador visual y WebSocket heartbeat
+    spa --> actor : Renderiza pantalla de ejecución del examen
+    deactivate spa
+end
+
+@enduml

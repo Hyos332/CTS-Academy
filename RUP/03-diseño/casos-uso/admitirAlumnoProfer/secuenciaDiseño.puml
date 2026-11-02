@@ -1,0 +1,74 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "AdmisionesController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "AdmisionesService\n(Application Service)" as svc
+participant "EmailService\n(Nodemailer / SES)" as mailer
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Selecciona squad técnico y pulsa "Admitir Alumno PROFER"
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/candidatos/:id/admitir\nPayload: { equipoId }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : admitCandidate(candidatoId: string, dto: AdmitirCandidatoDto)
+activate svc
+
+svc -> db : candidatos.findUnique({\n  where: { id: candidatoId },\n  include: { usuario: true }\n})
+activate db
+db --> svc : candidatoRecord
+deactivate db
+
+svc -> db : equipos.findUnique({\n  where: { id: dto.equipoId }\n})
+activate db
+db --> svc : equipoRecord
+deactivate db
+
+alt equipo inexistente
+    svc --> ctrl : throw BadRequestException("El squad técnico especificado no existe")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Muestra error de selección de squad
+else admisión válida
+    svc -> db : $transaction([\n  candidatos.update({\n    where: { id: candidatoId },\n    data: { decision_admision: 'ADMITIDO', estado_postulacion: 'ADMITIDO', actualizado_en: NOW() }\n  }),\n  usuarios.update({\n    where: { id: candidatoRecord.usuario_id },\n    data: { rol: 'ALUMNO', actualizado_en: NOW() }\n  }),\n  alumnos_profer.create({\n    data: {\n      usuario_id: candidatoRecord.usuario_id,\n      equipo_id: dto.equipoId,\n      candidato_origen_id: candidatoId,\n      matricula_activa: true,\n      creado_en: NOW()\n    }\n  })\n])
+    activate db
+    db --> svc : [candidatoUpd, userUpd, nuevoAlumno]
+    deactivate db
+
+    svc -> mailer : sendAdmissionWelcomeEmail({\n  to: candidatoRecord.usuario.email,\n  nombre: candidatoRecord.usuario.nombre,\n  squadNombre: equipoRecord.nombre,\n  portalUrl: "https://cts-academy.org/portal/alumno"\n})
+    activate mailer
+    mailer --> svc : emailEnviado
+    deactivate mailer
+
+    svc --> ctrl : AdmitirAlumnoResponseDto {\n  alumnoId: nuevoAlumno.id,\n  usuarioId: userUpd.id,\n  equipo: { id: equipoRecord.id, nombre: equipoRecord.nombre, codigo: equipoRecord.codigo },\n  estado: 'ADMITIDO'\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Notifica admisión exitosa y transiciona vista a estado admitido
+    deactivate spa
+end
+
+@enduml

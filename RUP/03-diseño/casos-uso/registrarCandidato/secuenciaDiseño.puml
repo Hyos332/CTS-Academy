@@ -1,0 +1,75 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "AdmisionesController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "AdmisionesService\n(Application Service)" as svc
+participant "Argon2Service\n(Crypto Service)" as argon
+participant "EmailService\n(Nodemailer / SES)" as mailer
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Completa formulario y pulsa "Registrar Candidato"
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/candidatos\nPayload: { email, nombre, apellidos, telefono, sedeOrigen, convocatoriaId }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : registerCandidate(dto: RegistrarCandidatoDto)
+activate svc
+
+svc -> db : usuarios.findUnique({ where: { email: dto.email } })
+activate db
+db --> svc : existingUser | null
+deactivate db
+
+alt email ya registrado en el sistema
+    svc --> ctrl : throw ConflictException("El correo electrónico ya se encuentra registrado")
+    ctrl --> proxy : 409 Conflict
+    proxy --> spa : 409 Conflict
+    spa --> actor : Muestra advertencia de correo duplicado
+else email disponible
+    svc -> argon : generateTemporaryHash()\nor generateActivationToken()
+    activate argon
+    argon --> svc : { tempPassword, passwordHash }
+    deactivate argon
+
+    svc -> db : $transaction([\n  usuarios.create({\n    data: { email: dto.email, password_hash: passwordHash, nombre: dto.nombre, apellidos: dto.apellidos, rol: 'CANDIDATO', activo: true }\n  }),\n  candidatos.create({\n    data: { usuario_id: newUserId, convocatoria_id: dto.convocatoriaId, sede_origen: dto.sedeOrigen, telefono: dto.telefono, estado_postulacion: 'REGISTRADO' }\n  }),\n  tests.createMany({\n    data: [\n      { candidato_id: newCandidatoId, tipo_bateria: 'ACTITUD', tiempo_limite_segundos: 1800, estado: 'NO_INICIADO' },\n      { candidato_id: newCandidatoId, tipo_bateria: 'APTITUD', tiempo_limite_segundos: 2400, estado: 'NO_INICIADO' },\n      { candidato_id: newCandidatoId, tipo_bateria: 'TECNICO', tiempo_limite_segundos: 3600, estado: 'NO_INICIADO' }\n    ]\n  })\n])
+    activate db
+    db --> svc : [nuevoUsuario, nuevoCandidato, testsCreados]
+    deactivate db
+
+    svc -> mailer : sendCandidateWelcomeEmail({\n  to: dto.email,\n  nombre: dto.nombre,\n  tempPassword,\n  loginUrl: "https://cts-academy.org/login"\n})
+    activate mailer
+    mailer --> svc : emailEnviado
+    deactivate mailer
+
+    svc --> ctrl : RegistrarCandidatoResponseDto {\n  candidatoId: nuevoCandidato.id,\n  usuarioId: nuevoUsuario.id,\n  email: nuevoUsuario.email,\n  sedeOrigen: nuevoCandidato.sede_origen,\n  estado: 'REGISTRADO'\n}
+    deactivate svc
+
+    ctrl --> proxy : 201 Created (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 201 Created
+    deactivate proxy
+
+    spa --> actor : Notifica registro exitoso y actualiza lista de aspirantes
+    deactivate spa
+end
+
+@enduml

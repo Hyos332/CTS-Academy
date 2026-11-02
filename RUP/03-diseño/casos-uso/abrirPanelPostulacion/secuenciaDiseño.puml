@@ -1,0 +1,54 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Candidato" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "CandidatosController\n(NestJS)" as ctrl
+participant "JwtAuthGuard & RolesGuard\n(NestJS)" as guard
+participant "CandidatosService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Accede a /portal/postulacion
+activate spa
+
+spa -> proxy : GET /api/v1/evaluacion/candidatos/me/dashboard\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard -> guard : validateToken & checkRole('CANDIDATO')
+guard --> ctrl : authorized: true (user: { sub, rol })
+deactivate guard
+
+ctrl -> svc : getCandidateDashboard(userId: string)
+activate svc
+
+svc -> db : candidatos.findUnique({\n  where: { usuario_id: userId },\n  include: {\n    convocatoria: true,\n    tests: { select: { id, tipo_bateria, estado, tiempo_limite_segundos, segundos_consumidos } },\n    entrevista: { select: { id, enlace_google_meet, fecha_hora_programada, estado } }\n  }\n})
+activate db
+db --> svc : candidatoData
+deactivate db
+
+svc -> svc : Sanitiza respuesta (Opacidad de notas [ADR-009]):\nOculta calificaciones numéricas y respuestas correctas
+
+svc --> ctrl : CandidatoDashboardDto {\n  candidatoId, sedeOrigen, estadoPostulacion,\n  convocatoria: { denominacion, estado },\n  tests: [ { id, tipo, estado, segundosRestantes } ],\n  entrevista: { fechaHora, meetLink, estado }\n}
+deactivate svc
+
+ctrl --> proxy : 200 OK (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa --> actor : Renderiza Dashboard del Aspirante\n(Estado de admisión, batería de 3 tests y cita Meet si aplica)
+deactivate spa
+
+@enduml

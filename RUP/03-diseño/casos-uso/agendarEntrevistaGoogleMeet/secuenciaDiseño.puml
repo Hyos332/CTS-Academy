@@ -1,0 +1,75 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "EntrevistasController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "EntrevistasService\n(Application Service)" as svc
+participant "GoogleCalendarService\n(Calendar API v3)" as google
+participant "EmailService\n(Nodemailer / SES)" as mailer
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Selecciona fecha y confirma agendamiento
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/candidatos/:id/entrevista\nPayload: { fechaHoraProgramada, duracionMinutos: 30 }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : scheduleInterview(candidatoId: string, gestorId: string, dto: AgendarEntrevistaDto)
+activate svc
+
+svc -> db : candidatos.findUnique({\n  where: { id: candidatoId },\n  include: { usuario: true, entrevista: true }\n})
+activate db
+db --> svc : candidatoRecord
+deactivate db
+
+alt entrevista previa ya agendada
+    svc --> ctrl : throw BadRequestException("El candidato ya posee una entrevista programada")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Muestra advertencia de conflicto de agenda
+else disponibilidad confirmada
+    svc -> google : createConferenceEvent({\n  summary: "Entrevista Admisión PROFER - " + candidatoRecord.usuario.nombre,\n  start: dto.fechaHoraProgramada,\n  attendees: [candidatoRecord.usuario.email, req.user.email]\n})
+    activate google
+    google --> svc : { eventId: "cal_12345", hangoutLink: "https://meet.google.com/cts-prof-sel" }
+    deactivate google
+
+    svc -> db : $transaction([\n  entrevistas.create({\n    data: {\n      candidato_id: candidatoId,\n      gestor_id: gestorId,\n      enlace_google_meet: googleResult.hangoutLink,\n      google_calendar_event_id: googleResult.eventId,\n      fecha_hora_programada: dto.fechaHoraProgramada,\n      estado: 'PROGRAMADA',\n      creado_en: NOW()\n    }\n  }),\n  candidatos.update({\n    where: { id: candidatoId },\n    data: { estado_postulacion: 'ENTREVISTA_AGENDADA' }\n  })\n])
+    activate db
+    db --> svc : [nuevaEntrevista, candidatoActualizado]
+    deactivate db
+
+    svc -> mailer : sendInterviewInvitation({\n  to: candidatoRecord.usuario.email,\n  meetLink: googleResult.hangoutLink,\n  fechaHora: dto.fechaHoraProgramada\n})
+    activate mailer
+    mailer --> svc : emailEnviado
+    deactivate mailer
+
+    svc --> ctrl : AgendarEntrevistaResponseDto {\n  entrevistaId: nuevaEntrevista.id,\n  enlaceGoogleMeet: googleResult.hangoutLink,\n  fechaHora: dto.fechaHoraProgramada,\n  estado: 'PROGRAMADA'\n}
+    deactivate svc
+
+    ctrl --> proxy : 201 Created (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 201 Created
+    deactivate proxy
+
+    spa --> actor : Notifica agendamiento exitoso y actualiza estado en pantalla
+    deactivate spa
+end
+
+@enduml

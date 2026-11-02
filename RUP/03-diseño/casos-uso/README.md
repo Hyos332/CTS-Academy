@@ -20,19 +20,19 @@ Este directorio centraliza las realizaciones técnicas de diseño para los **35 
 ├── PK01 - Acceso (2 CUs)               ──► Completado (2/2)
 │   ├── iniciarSesion/                  ──► POST /api/v1/auth/login
 │   └── cerrarSesion/                   ──► POST /api/v1/auth/logout
-├── PK02 - MotorEvaluacion (12 CUs)     ──► En cola (0/12)
-│   ├── abrirPanelPostulacion/
-│   ├── iniciarTest/
-│   ├── responderPreguntaTeorica/
-│   ├── entregarPreguntaPractica/
-│   ├── finalizarTest/
-│   ├── abrirPerfilCandidato/
-│   ├── agendarEntrevistaGoogleMeet/
-│   ├── registrarAnotacionesEntrevista/
-│   ├── admitirAlumnoProfer/
-│   ├── rechazarCandidatura/
-│   ├── registrarCandidato/
-│   └── importarCandidatosSede/
+├── PK02 - MotorEvaluacion (12 CUs)     ──► Completado (12/12)
+│   ├── abrirPanelPostulacion/          ──► GET  /api/v1/evaluacion/candidatos/me/dashboard
+│   ├── iniciarTest/                    ──► POST /api/v1/evaluacion/tests/:id/iniciar
+│   ├── responderPreguntaTeorica/       ──► POST /api/v1/evaluacion/tests/:id/respuestas/teorica
+│   ├── entregarPreguntaPractica/       ──► POST /api/v1/evaluacion/tests/:id/respuestas/practica
+│   ├── finalizarTest/                  ──► POST /api/v1/evaluacion/tests/:id/finalizar
+│   ├── abrirPerfilCandidato/           ──► GET  /api/v1/evaluacion/gestor/candidatos/:id
+│   ├── agendarEntrevistaGoogleMeet/    ──► POST /api/v1/evaluacion/candidatos/:id/entrevista
+│   ├── registrarAnotacionesEntrevista/ ──► POST /api/v1/evaluacion/entrevistas/:id/anotaciones
+│   ├── admitirAlumnoProfer/            ──► POST /api/v1/evaluacion/candidatos/:id/admitir
+│   ├── rechazarCandidatura/            ──► POST /api/v1/evaluacion/candidatos/:id/rechazar
+│   ├── registrarCandidato/             ──► POST /api/v1/evaluacion/candidatos
+│   └── importarCandidatosSede/         ──► POST /api/v1/evaluacion/candidatos/importar-sede
 ├── PK03 - MotorFormacion (17 CUs)      ──► En cola (0/17)
 │   ├── abrirPanelAlumno/
 │   ├── consultarCapacitacion/
@@ -77,20 +77,20 @@ Este directorio centraliza las realizaciones técnicas de diseño para los **35 
 
 <div align=center>
 
-| Caso de Uso | Método & Endpoint REST Previsto | Módulo Responsable | Estado |
-| :--- | :--- | :--- | :---: |
-| **`abrirPanelPostulacion()`** | `GET /api/v1/evaluacion/candidatos/me/dashboard` | `CandidatoController` | Pendiente |
-| **`iniciarTest()`** | `POST /api/v1/evaluacion/tests/:id/iniciar` | `TestController` | Pendiente |
-| **`responderPreguntaTeorica()`** | `POST /api/v1/evaluacion/tests/:id/respuestas/teorica` | `TestController` | Pendiente |
-| **`entregarPreguntaPractica()`** | `POST /api/v1/evaluacion/tests/:id/respuestas/practica` | `TestController` / Sandbox Daemon | Pendiente |
-| **`finalizarTest()`** | `POST /api/v1/evaluacion/tests/:id/finalizar` | `TestController` | Pendiente |
-| **`abrirPerfilCandidato()`** | `GET /api/v1/evaluacion/gestor/candidatos/:id` | `AdmisionesController` | Pendiente |
-| **`agendarEntrevistaGoogleMeet()`** | `POST /api/v1/evaluacion/entrevistas` | `EntrevistasController` / Google Calendar | Pendiente |
-| **`registrarAnotacionesEntrevista()`** | `POST /api/v1/evaluacion/entrevistas/:id/anotaciones` | `EntrevistasController` | Pendiente |
-| **`admitirAlumnoProfer()`** | `POST /api/v1/evaluacion/candidatos/:id/admitir` | `AdmisionesController` | Pendiente |
-| **`rechazarCandidatura()`** | `POST /api/v1/evaluacion/candidatos/:id/rechazar` | `AdmisionesController` | Pendiente |
-| **`registrarCandidato()`** | `POST /api/v1/evaluacion/candidatos` | `AdmisionesController` | Pendiente |
-| **`importarCandidatosSede()`** | `POST /api/v1/evaluacion/candidatos/importar-sede` | `AdmisionesController` / BullMQ Queue | Pendiente |
+| Caso de Uso | Método & Endpoint REST | Módulo Responsable | Realización de Diseño | Estado |
+| :--- | :--- | :--- | :---: | :---: |
+| **`abrirPanelPostulacion()`** | `GET /api/v1/evaluacion/candidatos/me/dashboard` | `CandidatosController` | [Ver Diseño](abrirPanelPostulacion/README.md) | **Completado** |
+| **`iniciarTest()`** | `POST /api/v1/evaluacion/tests/:id/iniciar` | `TestsController` | [Ver Diseño](iniciarTest/README.md) | **Completado** |
+| **`responderPreguntaTeorica()`** | `POST /api/v1/evaluacion/tests/:id/respuestas/teorica` | `TestsController` | [Ver Diseño](responderPreguntaTeorica/README.md) | **Completado** |
+| **`entregarPreguntaPractica()`** | `POST /api/v1/evaluacion/tests/:id/respuestas/practica` | `TestsController` / Sandbox | [Ver Diseño](entregarPreguntaPractica/README.md) | **Completado** |
+| **`finalizarTest()`** | `POST /api/v1/evaluacion/tests/:id/finalizar` | `TestsController` / Radar | [Ver Diseño](finalizarTest/README.md) | **Completado** |
+| **`abrirPerfilCandidato()`** | `GET /api/v1/evaluacion/gestor/candidatos/:id` | `AdmisionesController` | [Ver Diseño](abrirPerfilCandidato/README.md) | **Completado** |
+| **`agendarEntrevistaGoogleMeet()`** | `POST /api/v1/evaluacion/candidatos/:id/entrevista` | `EntrevistasController` / Meet | [Ver Diseño](agendarEntrevistaGoogleMeet/README.md) | **Completado** |
+| **`registrarAnotacionesEntrevista()`** | `POST /api/v1/evaluacion/entrevistas/:id/anotaciones` | `EntrevistasController` | [Ver Diseño](registrarAnotacionesEntrevista/README.md) | **Completado** |
+| **`admitirAlumnoProfer()`** | `POST /api/v1/evaluacion/candidatos/:id/admitir` | `AdmisionesController` | [Ver Diseño](admitirAlumnoProfer/README.md) | **Completado** |
+| **`rechazarCandidatura()`** | `POST /api/v1/evaluacion/candidatos/:id/rechazar` | `AdmisionesController` | [Ver Diseño](rechazarCandidatura/README.md) | **Completado** |
+| **`registrarCandidato()`** | `POST /api/v1/evaluacion/candidatos` | `AdmisionesController` | [Ver Diseño](registrarCandidato/README.md) | **Completado** |
+| **`importarCandidatosSede()`** | `POST /api/v1/evaluacion/candidatos/importar-sede` | `AdmisionesController` / BullMQ | [Ver Diseño](importarCandidatosSede/README.md) | **Completado** |
 
 </div>
 

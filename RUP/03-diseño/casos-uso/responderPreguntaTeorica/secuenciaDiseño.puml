@@ -1,0 +1,73 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Candidato / Alumno" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "TestsController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(NestJS)" as guard
+participant "TestsService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Selecciona opción y confirma
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/tests/:id/respuestas/teorica\nPayload: { preguntaId, opcionSeleccionadaId }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : submitTheoreticalAnswer(testId, dto: ResponderTeoricaDto, userId)
+activate svc
+
+svc -> db : tests.findFirst({\n  where: { id: testId, estado: 'EN_CURSO' }\n})
+activate db
+db --> svc : testActivo
+deactivate db
+
+alt test expirado o no activo
+    svc --> ctrl : throw BadRequestException("El tiempo del examen ha expirado")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Notifica finalización del tiempo
+else test en tiempo válido
+    svc -> db : opciones_pregunta.findUnique({\n  where: { id: dto.opcionSeleccionadaId },\n  select: { id, es_correcta }\n})
+    activate db
+    db --> svc : opcionDb
+    deactivate db
+
+    svc -> db : respuestas_evaluacion.upsert({\n  where: { test_id_pregunta_id: { test_id: testId, pregunta_id: dto.preguntaId } },\n  create: {\n    test_id: testId, pregunta_id: dto.preguntaId,\n    opcion_seleccionada_id: dto.opcionSeleccionadaId,\n    es_correcta: opcionDb.es_correcta,\n    calificacion_obtenida: opcionDb.es_correcta ? 1.00 : 0.00,\n    respondida_en: NOW()\n  },\n  update: {\n    opcion_seleccionada_id: dto.opcionSeleccionadaId,\n    es_correcta: opcionDb.es_correcta,\n    calificacion_obtenida: opcionDb.es_correcta ? 1.00 : 0.00,\n    respondida_en: NOW()\n  }\n})
+    activate db
+    db --> svc : respuestaPersistida
+    deactivate db
+
+    svc -> db : sesiones_evaluacion.updateMany({\n  where: { test_id: testId },\n  data: { ultimo_latido: NOW() }\n})
+    activate db
+    db --> svc : heartbeatUpdated
+    deactivate db
+
+    svc --> ctrl : { guardado: true, respondidaEn: respuestaPersistida.respondida_en }
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (Sin revelar es_correcta [ADR-009])
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Actualiza indicador visual de pregunta contestada
+    deactivate spa
+end
+
+@enduml

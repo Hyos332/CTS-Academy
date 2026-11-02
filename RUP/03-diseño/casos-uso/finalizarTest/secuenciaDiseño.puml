@@ -1,0 +1,80 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Candidato / Alumno" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "TestsController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(NestJS)" as guard
+participant "TestsService\n(Application Service)" as svc
+participant "RadarService\n(Competency Calculator)" as radar
+participant "TimerRedisService\n(cts-redis)" as redisSvc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Confirma "Finalizar Examen"
+activate spa
+
+spa -> proxy : POST /api/v1/evaluacion/tests/:id/finalizar\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : finishTest(testId: string, userId: string)
+activate svc
+
+svc -> db : tests.findUnique({\n  where: { id: testId },\n  include: { candidato: { include: { tests: true } } }\n})
+activate db
+db --> svc : testRecord
+deactivate db
+
+svc -> db : respuestas_evaluacion.aggregate({\n  where: { test_id: testId },\n  _sum: { calificacion_obtenida: true }\n})
+activate db
+db --> svc : sumaNotas
+deactivate db
+
+svc -> db : tests.update({\n  where: { id: testId },\n  data: {\n    estado: 'COMPLETADO',\n    fecha_finalizacion: NOW(),\n    calificacion_obtenida: sumaNotas._sum.calificacion_obtenida,\n    segundos_consumidos: EXTRACT(EPOCH FROM (NOW() - testRecord.fecha_inicio))\n  }\n})
+activate db
+db --> svc : testFinalizado
+deactivate db
+
+svc -> redisSvc : deleteTimer(testId)
+activate redisSvc
+redisSvc --> svc : timerDeleted
+deactivate redisSvc
+
+opt Si el actor es Candidato y sus 3 tests (Actitud, Aptitud, Técnico) están COMPLETADOS
+    svc -> radar : buildCompetencyRadar(testRecord.candidato.tests)
+    activate radar
+    radar --> svc : radarJson { actitud, aptitud, tecnico, scoreGlobal }
+    deactivate radar
+
+    svc -> db : candidatos.update({\n  where: { id: testRecord.candidato_id },\n  data: {\n    estado_postulacion: 'TESTS_COMPLETADOS',\n    perfil_competencias: radarJson\n  }\n})
+    activate db
+    db --> svc : candidatoActualizado
+    deactivate db
+end
+
+svc --> ctrl : FinalizarTestResponseDto {\n  testId, estado: 'COMPLETADO',\n  mensaje: "Examen finalizado satisfactoriamente"\n}
+deactivate svc
+
+ctrl --> proxy : 200 OK (Sin revelar calificación numérica [ADR-009])
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa --> actor : Muestra pantalla de cierre y redirige al dashboard
+deactivate spa
+
+@enduml
