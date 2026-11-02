@@ -194,8 +194,10 @@ Registro formal y cronológico de decisiones de diseño, acuerdos de modelado y 
   3. Se exigía `titulacion_universitaria` en los candidatos, cuando en realidad son estudiantes que postulan para cursar el grado universitario.
   4. Se persistía una nota escalar numérica (`nota_final_bateria`), contradiciendo el acuerdo de [ADR-007](/RUP/BITACORA.md#adr-007-admisi%C3%B3n-continua-por-ciclos-acad%C3%A9micos-bater%C3%ADa-de-3-tests-e-inclusi%C3%B3n-de-entrevista) donde la batería de 3 tests consolida un gráfico de radar de competencias multidimensional.
   5. Se habían introducido tablas para comentarios línea por línea de revisiones de código (`comentarios_revision`, `revisiones_codigo`), cuando los becarios y Tech Leaders operan nativamente sobre Pull Requests reales de GitHub/GitLab.
+  6. Se mantenían tablas de perfil 1:1 artificiales para Gestores (`gestores_profer`) y Tech Leaders (`lideres_equipo`) que no aportaban atributos de negocio reales y forzaban JOINs redundantes.
 * **Decisión**:
   * **Eliminación de `programas_profer`**: `equipos` pasa a ser entidad raíz de primer nivel en `motor_equipos`.
+  * **Eliminación de Tablas de Perfil Redundantes (RBAC Puro)**: Se suprimen `gestores_profer` y `lideres_equipo`. El Gestor se gestiona mediante autorización basada en roles (`usuarios.rol = 'GESTOR'`), y la titularidad de los squads técnicos se modela directamente mediante `equipos.lider_usuario_id -> usuarios.id`. El total de tablas del modelo de persistencia se consolida limpiamente en **23 tablas**.
   * **Flexibilidad de Asignación a Squads**: Se eliminan `cupos_equipo_convocatoria` y los bloqueos restrictivos de cupo.
   * **Eliminación de Titulación Previa**: Retirar el campo de titulación universitaria de `candidatos`.
   * **Radar de Competencias JSONB**: Sustituir la nota escalar por `perfil_competencias: jsonb` en `candidatos`, almacenando los puntajes por dimensión que alimentan el gráfico de radar en el panel del Gestor.

@@ -30,7 +30,7 @@ El esquema general ilustra las entidades de los tres esquemas de base de datos (
 
 ### 2.1 Subsistema `motor_equipos` (Gobernanza y Estructura Organizativa)
 
-Centraliza los usuarios autenticados, perfiles de rol y los 6 squads técnicos permanentes de CTS ([ADR-004](/RUP/BITACORA.md#adr-004-embudo-en-2-fases-y-asignaci%C3%B3n-a-los-6-equipos-de-cts)). Se prescinde de tablas intermedias de programas al ser PROFER el único marco institucional de la plataforma.
+Centraliza los usuarios autenticados, perfiles de rol y los 6 squads técnicos permanentes de CTS ([ADR-004](/RUP/BITACORA.md#adr-004-embudo-en-2-fases-y-asignaci%C3%B3n-a-los-6-equipos-de-cts)). Se prescinde de tablas redundantes de perfil para Gestores y Tech Leaders: la autorización se gestiona limpiamente mediante RBAC (`usuarios.rol`), y cada equipo vincula directamente a su Tech Leader titular mediante `lider_usuario_id` ([ADR-013](/RUP/BITACORA.md#adr-013-simplificaci%C3%B3n-pragm%C3%A1tica-del-modelo-de-datos-der-y-alineaci%C3%B3n-con-la-operativa-real-de-cts)).
 
 <div align="center">
 
@@ -41,14 +41,14 @@ Centraliza los usuarios autenticados, perfiles de rol y los 6 squads técnicos p
 
 </div>
 
-#### Diccionario de Tablas: `motor_equipos` (6 Tablas)
+#### Diccionario de Tablas: `motor_equipos` (4 Tablas)
 
 * **`usuarios`**:
   * `id` (`uuid`, PK): Identificador universal único generado mediante `gen_random_uuid()`.
   * `email` (`varchar(255)`, UNIQUE, NOT NULL): Correo institucional.
   * `password_hash` (`varchar(255)`, NOT NULL): Hash argon2id para autenticación.
   * `nombre` (`varchar(100)`, NOT NULL), `apellidos` (`varchar(150)`, NOT NULL).
-  * `rol` (`varchar(30)`, NOT NULL): `CHECK (rol IN ('CANDIDATO', 'ALUMNO', 'LIDER_EQUIPO', 'GESTOR'))`.
+  * `rol` (`varchar(30)`, NOT NULL): `CHECK (rol IN ('CANDIDATO', 'ALUMNO', 'LIDER_EQUIPO', 'GESTOR'))`. Define directamente las capacidades operativas sin tablas accesorias.
   * `activo` (`boolean`, DEFAULT true): Estado de habilitación de acceso.
   * `creado_en`, `actualizado_en` (`timestamptz`, NOT NULL): Marcas de tiempo de auditoría.
   * `eliminado_en` (`timestamptz`, NULL): Soporte para borrado lógico (*soft-delete*).
@@ -61,18 +61,11 @@ Centraliza los usuarios autenticados, perfiles de rol y los 6 squads técnicos p
 
 * **`equipos`** (Los 6 squads técnicos de CTS):
   * `id` (`uuid`, PK).
+  * `lider_usuario_id` (`uuid`, UNIQUE, NOT NULL, FK -> `usuarios.id`): Tech Leader titular asignado a la dirección del squad ([RN-TL-01](/RUP/01-requisitos/03-detalle-casos-uso/abrirPanelLider/README.md)).
   * `codigo` (`varchar(20)`, UNIQUE, NOT NULL): Clave unívoca (`TEAM-01` a `TEAM-06`).
   * `nombre` (`varchar(100)`, NOT NULL): Denominación funcional del equipo.
   * `especialidad` (`varchar(50)`, NOT NULL): Especialidad técnica predominante.
   * *Nota de diseño:* No se fijan límites rígidos de cupo; la distribución de becarios entre squads es flexible (equipos con 12, 4 o 1 integrante) según demanda de proyectos.
-
-* **`lideres_equipo`** (Tech Leaders titulares):
-  * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`).
-  * `equipo_id` (`uuid`, FK -> `equipos.id`): Squad asignado bajo su tutoría exclusiva ([RN-TL-01](/RUP/01-requisitos/03-detalle-casos-uso/abrirPanelLider/README.md)).
-  * `especialidad_tecnica` (`varchar(100)`), `activo` (`boolean`).
-
-* **`gestores_profer`**:
-  * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`), `departamento` (`varchar(100)`), `cargo` (`varchar(100)`).
 
 * **`alumnos_profer`**:
   * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`).

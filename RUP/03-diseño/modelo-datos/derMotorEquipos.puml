@@ -35,27 +35,11 @@ package "motor_equipos" {
     entity "equipos" as equipos {
         * id : uuid <<PK>>
         --
+        * lider_usuario_id : uuid <<FK, UNIQUE>>
         * codigo : varchar(20) <<UNIQUE>>
         * nombre : varchar(100)
         * especialidad : varchar(50)
         * creado_en : timestamptz
-    }
-
-    entity "lideres_equipo" as lideres {
-        * id : uuid <<PK>>
-        --
-        * usuario_id : uuid <<FK, UNIQUE>>
-        * equipo_id : uuid <<FK>>
-        * especialidad_tecnica : varchar(100)
-        * activo : boolean
-    }
-
-    entity "gestores_profer" as gestores {
-        * id : uuid <<PK>>
-        --
-        * usuario_id : uuid <<FK, UNIQUE>>
-        * departamento : varchar(100)
-        * cargo : varchar(100)
     }
 
     entity "alumnos_profer" as alumnos {
@@ -73,11 +57,8 @@ package "motor_equipos" {
 }
 
 usuarios ||--o{ sesiones : "mantiene"
-usuarios ||--o| lideres : "perfila"
-usuarios ||--o| gestores : "perfila"
-usuarios ||--o| alumnos : "perfila"
-
-equipos ||--o{ lideres : "dirige"
+usuarios ||--o| equipos : "lidera (Tech Leader)"
+usuarios ||--o| alumnos : "perfila (Becario)"
 equipos ||--o{ alumnos : "adscribe"
 
 @enduml

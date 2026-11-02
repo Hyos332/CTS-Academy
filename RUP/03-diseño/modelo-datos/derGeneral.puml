@@ -15,6 +15,7 @@ package "MotorEquipos" #FAFAFA {
     entity "equipos" as eq_equipos {
         * id : uuid <<PK>>
         --
+        * lider_usuario_id : uuid <<FK>>
         * codigo : varchar(20)
         * nombre : varchar(100)
     }
@@ -25,19 +26,6 @@ package "MotorEquipos" #FAFAFA {
         * usuario_id : uuid <<FK>>
         * equipo_id : uuid <<FK>>
         candidato_origen_id : uuid <<FK>>
-    }
-
-    entity "lideres_equipo" as eq_lideres {
-        * id : uuid <<PK>>
-        --
-        * usuario_id : uuid <<FK>>
-        * equipo_id : uuid <<FK>>
-    }
-
-    entity "gestores_profer" as eq_gestores {
-        * id : uuid <<PK>>
-        --
-        * usuario_id : uuid <<FK>>
     }
 }
 
@@ -147,11 +135,16 @@ package "MotorFormacion" #F9FFF0 {
     }
 }
 
+' Relaciones Intra-MotorEquipos
+eq_usuarios ||--o| eq_equipos : "lidera (TL)"
+eq_usuarios ||--o| eq_alumnos : "perfila"
+eq_equipos ||--o{ eq_alumnos : "adscribe"
+
 ' Relaciones Inter-Microservicios
 eq_usuarios ||..o{ ev_candidatos : "credenciales"
 ev_candidatos |o..o| eq_alumnos : "transiciona al admitir [ADR-010]"
-eq_gestores ||..o{ ev_entrevistas : "conduce [ADR-009]"
-eq_gestores ||..o{ ev_informes : "formaliza cierre"
+eq_usuarios ||..o{ ev_entrevistas : "conduce (Gestor) [ADR-009]"
+eq_usuarios ||..o{ ev_informes : "formaliza cierre (Gestor)"
 
 eq_equipos ||..o{ fm_modulos : "propiedad técnica [RN-LEAD-01]"
 eq_alumnos ||..o{ ev_tests : "rinde nivelación"
@@ -159,8 +152,8 @@ fm_preguntas ||..o{ ev_respuestas : "reactivos de examen"
 
 eq_alumnos ||..o{ fm_lecturas : "tracking formativo"
 eq_alumnos ||..o{ fm_entregas : "remite PRs"
-eq_lideres ||..o{ fm_entregas : "califica y retroalimenta"
+eq_usuarios ||..o{ fm_entregas : "califica y retroalimenta (TL)"
 eq_alumnos ||..o{ fm_sumativas : "evaluación final"
-eq_lideres ||..o{ fm_sumativas : "emite veredicto"
+eq_usuarios ||..o{ fm_sumativas : "emite veredicto (TL)"
 
 @enduml
