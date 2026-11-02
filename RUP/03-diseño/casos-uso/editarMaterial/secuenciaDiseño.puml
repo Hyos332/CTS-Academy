@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(Editor Markdown)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "MaterialesController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "MaterialesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Modifica contenido Markdown y pulsa "Guardar Cambios"
+activate spa
+
+spa -> proxy : PUT /api/v1/formacion/materiales/:id\nPayload: { titulo, contenidoMarkdown, estimadoMinutos }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : updateMaterial(materialId: string, userId: string, dto: EditarMaterialDto)
+activate svc
+
+svc -> db : materiales.findUnique({\n  where: { id: materialId },\n  include: { modulo: { include: { equipo_propietario: true } } }\n})
+activate db
+db --> svc : materialDb
+deactivate db
+
+alt autorización inválida
+    svc --> ctrl : throw ForbiddenException("No puedes modificar recursos de otro squad")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia
+else actualización válida
+    svc -> db : materiales.update({\n  where: { id: materialId },\n  data: {\n    titulo: dto.titulo,\n    contenido_markdown: dto.contenidoMarkdown,\n    estimado_minutos: dto.estimadoMinutos,\n    actualizado_en: NOW()\n  }\n})
+    activate db
+    db --> svc : materialActualizado
+    deactivate db
+
+    svc --> ctrl : MaterialActualizadoResponseDto {\n  id: materialActualizado.id, titulo: materialActualizado.titulo,\n  actualizadoEn: materialActualizado.actualizado_en\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Notifica cambios guardados y refresca previsualización
+    deactivate spa
+end
+
+@enduml

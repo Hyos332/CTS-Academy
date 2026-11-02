@@ -1,0 +1,64 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Alumno / Tech Leader" as actor
+participant "VisorMaterial\n(React Markdown)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "MaterialesController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(NestJS)" as guard
+participant "MaterialesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Abre guía didáctica
+activate spa
+
+spa -> proxy : GET /api/v1/formacion/materiales/:id\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : getMaterialContent(materialId: string, userId: string, rol: string)
+activate svc
+
+svc -> db : materiales.findUnique({\n  where: { id: materialId },\n  include: { modulo: true }\n})
+activate db
+db --> svc : materialRecord
+deactivate db
+
+opt Si el actor es ALUMNO
+    svc -> db : alumnos_profer.findUnique({ where: { usuario_id: userId } })
+    activate db
+    db --> svc : alumnoDb
+    deactivate db
+
+    svc -> db : lecturas_material.upsert({\n  where: { material_id_alumno_id: { material_id: materialId, alumno_id: alumnoDb.id } },\n  create: { material_id: materialId, alumno_id: alumnoDb.id, leido_en: NOW() },\n  update: { leido_en: NOW() }\n})
+    activate db
+    db --> svc : lecturaRegistrada
+    deactivate db
+end
+
+svc --> ctrl : MaterialDetalleDto {\n  id, titulo, orden, contenidoMarkdown: materialRecord.contenido_markdown,\n  estimadoMinutos: materialRecord.estimado_minutos\n}
+deactivate svc
+
+ctrl --> proxy : 200 OK (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa -> spa : Renderiza Markdown seguro (React-Markdown + Prism/Shiki)
+spa --> actor : Muestra guía técnica interactiva
+deactivate spa
+
+@enduml

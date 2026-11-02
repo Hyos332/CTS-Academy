@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "TechLeaderController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "TechLeaderService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Selecciona entrega en bandeja de pendientes
+activate spa
+
+spa -> proxy : GET /api/v1/formacion/tech-lead/entregas/:id\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'LIDER_EQUIPO')
+deactivate guard
+
+ctrl -> svc : getDeliveryReviewDetails(entregaId: string, userId: string)
+activate svc
+
+svc -> db : entregas_laboratorio.findUnique({\n  where: { id: entregaId },\n  include: {\n    alumno: { include: { usuario: true, equipo: true } },\n    laboratorio: { include: { modulo: true } }\n  }\n})
+activate db
+db --> svc : entregaRecord
+deactivate db
+
+alt el alumno no pertenece al equipo del TL
+    svc --> ctrl : throw ForbiddenException("No puedes auditar entregables de otro squad")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia de permisos
+else autorización correcta
+    svc -> db : entregas_laboratorio.findMany({\n  where: { laboratorio_id: entregaRecord.laboratorio_id, alumno_id: entregaRecord.alumno_id },\n  orderBy: { numero_intento: 'asc' }\n})
+    activate db
+    db --> svc : historialIntentos
+    deactivate db
+
+    svc --> ctrl : DetalleRevisionEntregableDto {\n  entregaId, alumno, laboratorio, urlPullRequest, commitHash,\n  historialIntentos: [...]\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Renderiza panel de auditoría con enlace al PR en GitHub
+    deactivate spa
+end
+
+@enduml

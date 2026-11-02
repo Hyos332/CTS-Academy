@@ -1,0 +1,62 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "TechLeaderController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "TechLeaderService\n(Application Service)" as svc
+participant "EmailService\n(Nodemailer / SES)" as mailer
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Asigna nota favorable (>= 7.0), redacta feedback y confirma "Aprobar"
+activate spa
+
+spa -> proxy : POST /api/v1/formacion/tech-lead/entregas/:id/aprobar\nPayload: { calificacion: 9.5, feedbackGeneral }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'LIDER_EQUIPO')
+deactivate guard
+
+ctrl -> svc : approveDelivery(entregaId: string, userId: string, dto: AprobarEntregableDto)
+activate svc
+
+svc -> db : entregas_laboratorio.findUnique({\n  where: { id: entregaId },\n  include: { alumno: { include: { usuario: true } }, laboratorio: true }\n})
+activate db
+db --> svc : entregaRecord
+deactivate db
+
+svc -> db : entregas_laboratorio.update({\n  where: { id: entregaId },\n  data: {\n    estado: 'APROBADO',\n    calificacion: dto.calificacion,\n    feedback_general: dto.feedbackGeneral,\n    tech_leader_id: userId,\n    fecha_calificacion: NOW()\n  }\n})
+activate db
+db --> svc : entregaAprobada
+deactivate db
+
+svc -> mailer : sendDeliveryApprovalEmail({\n  to: entregaRecord.alumno.usuario.email,\n  laboratorio: entregaRecord.laboratorio.titulo,\n  calificacion: dto.calificacion,\n  feedback: dto.feedbackGeneral\n})
+activate mailer
+mailer --> svc : emailEnviado
+deactivate mailer
+
+svc --> ctrl : AprobarEntregableResponseDto {\n  entregaId, estado: 'APROBADO',\n  calificacion: dto.calificacion,\n  fechaCalificacion: entregaAprobada.fecha_calificacion\n}
+deactivate svc
+
+ctrl --> proxy : 200 OK (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa --> actor : Notifica aprobación exitosa y retira entrega de la bandeja de pendientes
+deactivate spa
+
+@enduml

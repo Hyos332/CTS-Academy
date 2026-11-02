@@ -1,0 +1,76 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(Banco Reactivos)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "BancoPreguntasController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "BancoPreguntasService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Confirma eliminación de pregunta del banco
+activate spa
+
+spa -> proxy : DELETE /api/v1/formacion/preguntas/:id\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : deleteQuestion(preguntaId: string, userId: string)
+activate svc
+
+svc -> db : preguntas.findUnique({\n  where: { id: preguntaId },\n  include: { modulo: { include: { equipo_propietario: true } } }\n})
+activate db
+db --> svc : preguntaDb
+deactivate db
+
+alt autorización inválida
+    svc --> ctrl : throw ForbiddenException("No puedes eliminar reactivos de otro squad")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia
+else autorización válida
+    svc -> db : respuestas_evaluacion.count({ where: { pregunta_id: preguntaId } })
+    activate db
+    db --> svc : respuestasAsociadas
+    deactivate db
+
+    alt pregunta ya utilizada en evaluaciones pasadas
+        svc -> db : preguntas.update({\n  where: { id: preguntaId },\n  data: { activo: false, eliminado_en: NOW() }\n})
+        activate db
+        db --> svc : preguntaInactivada
+        deactivate db
+        svc --> ctrl : { id: preguntaId, eliminado: true, softDelete: true }
+    else sin respuestas asociadas
+        svc -> db : $transaction([\n  opciones_pregunta.deleteMany({ where: { pregunta_id: preguntaId } }),\n  preguntas.delete({ where: { id: preguntaId } })\n])
+        activate db
+        db --> svc : [opcionesBorradas, preguntaBorrada]
+        deactivate db
+        svc --> ctrl : { id: preguntaId, eliminado: true, softDelete: false }
+    end
+
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Notifica reactivo retirado del banco
+    deactivate spa
+end
+
+@enduml

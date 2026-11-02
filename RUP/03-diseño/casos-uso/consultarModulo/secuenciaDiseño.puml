@@ -1,0 +1,58 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Alumno / Tech Leader" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "ModulosController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(NestJS)" as guard
+participant "ModulosService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Clic en un módulo formativo
+activate spa
+
+spa -> proxy : GET /api/v1/formacion/modulos/:id\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : getModuloDetails(moduloId: string, userId: string)
+activate svc
+
+svc -> db : modulos.findUnique({\n  where: { id: moduloId },\n  include: {\n    equipo_propietario: true,\n    materiales: { orderBy: { orden: 'asc' } },\n    laboratorios: {\n      include: { entregas: { where: { alumno: { usuario_id: userId } } } }\n    }\n  }\n})
+activate db
+db --> svc : moduloRecord
+deactivate db
+
+svc -> db : lecturas_material.findMany({\n  where: { alumno: { usuario_id: userId }, material: { modulo_id: moduloId } }\n})
+activate db
+db --> svc : lecturasRealizadas
+deactivate db
+
+svc -> svc : mapStudentProgress(moduloRecord, lecturasRealizadas)
+
+svc --> ctrl : ModuloDetalleDto {\n  id, titulo, descripcion, orden,\n  materiales: [ { id, titulo, leido: true/false } ],\n  laboratorios: [ { id, titulo, estadoEntrega: 'APROBADO' } ]\n}
+deactivate svc
+
+ctrl --> proxy : 200 OK (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa --> actor : Renderiza vista de contenidos del módulo y estados de avance
+deactivate spa
+
+@enduml

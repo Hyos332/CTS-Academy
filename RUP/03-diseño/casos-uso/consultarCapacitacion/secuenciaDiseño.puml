@@ -1,0 +1,58 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Alumno / Tech Leader" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "CapacitacionesController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(NestJS)" as guard
+participant "CapacitacionesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Selecciona capacitación en catálogo formativo
+activate spa
+
+spa -> proxy : GET /api/v1/formacion/capacitaciones/:id\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : getCapacitacionDetails(capacitacionId: string)
+activate svc
+
+svc -> db : capacitaciones.findUnique({\n  where: { id: capacitacionId },\n  include: {\n    modulos: {\n      orderBy: { orden: 'asc' },\n      include: {\n        equipo_propietario: { select: { id, codigo, nombre } },\n        materiales: { select: { id, titulo, orden, estimado_minutos } },\n        laboratorios: { select: { id, titulo, orden, dificultad } }\n      }\n    }\n  }\n})
+activate db
+db --> svc : capacitacionRecord
+deactivate db
+
+alt capacitación no encontrada
+    svc --> ctrl : throw NotFoundException("Capacitación no encontrada")
+    ctrl --> proxy : 404 Not Found
+    proxy --> spa : 404 Not Found
+    spa --> actor : Muestra error de recurso no disponible
+else recurso encontrado
+    svc --> ctrl : CapacitacionDetalleDto {\n  id, trackEspecialidad, totalModulos, modulos: [...]\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Renderiza árbol curricular interactivo de la capacitación
+    deactivate spa
+end
+
+@enduml

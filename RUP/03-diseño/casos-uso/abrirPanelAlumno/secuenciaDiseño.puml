@@ -1,0 +1,58 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Alumno" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "FormacionController\n(NestJS)" as ctrl
+participant "RolesGuard('ALUMNO')\n(NestJS)" as guard
+participant "FormacionService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Accede a /portal/alumno
+activate spa
+
+spa -> proxy : GET /api/v1/formacion/alumnos/me/dashboard\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'ALUMNO')
+deactivate guard
+
+ctrl -> svc : getAlumnoDashboard(userId: string)
+activate svc
+
+svc -> db : alumnos_profer.findUnique({\n  where: { usuario_id: userId },\n  include: {\n    equipo: { include: { lider: { select: { nombre, apellidos, email } } } },\n    lecturas_material: true,\n    entregas_laboratorio: true\n  }\n})
+activate db
+db --> svc : alumnoData
+deactivate db
+
+svc -> db : capacitaciones.findFirst({\n  where: { track_especialidad: alumnoData.equipo.especialidad },\n  include: { modulos: { include: { materiales: true, laboratorios: true } } }\n})
+activate db
+db --> svc : capacitacionData
+deactivate db
+
+svc -> svc : calculateProgressMetrics(alumnoData, capacitacionData):\n- % lecturas leídas\n- % laboratorios aprobados\n- Entregas pendientes de revisión
+
+svc --> ctrl : AlumnoDashboardDto {\n  alumnoId, equipo: { id, codigo, nombre, especialidad },\n  techLeader: { nombre, email },\n  metricasProgreso: { porcentajeGlobal, modulosCompletados, totalModulos },\n  modulosEnCurso: [...]\n}
+deactivate svc
+
+ctrl --> proxy : 200 OK (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa --> actor : Renderiza Dashboard Formativo del Alumno PROFER
+deactivate spa
+
+@enduml

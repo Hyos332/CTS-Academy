@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(Editor Markdown)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "MaterialesController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "MaterialesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Redacta guía en Markdown y pulsa "Publicar Material"
+activate spa
+
+spa -> proxy : POST /api/v1/formacion/modulos/:id/materiales\nPayload: { titulo, contenidoMarkdown, orden, estimadoMinutos }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : createMaterial(moduloId: string, userId: string, dto: CrearMaterialDto)
+activate svc
+
+svc -> db : modulos.findUnique({\n  where: { id: moduloId },\n  include: { equipo_propietario: true }\n})
+activate db
+db --> svc : moduloDb
+deactivate db
+
+alt el TL no pertenece al equipo propietario del módulo
+    svc --> ctrl : throw ForbiddenException("Solo el squad propietario puede gestionar materiales")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia de permisos
+else autorización concedida
+    svc -> db : materiales.create({\n  data: {\n    modulo_id: moduloId,\n    titulo: dto.titulo,\n    contenido_markdown: dto.contenidoMarkdown,\n    orden: dto.orden,\n    estimado_minutos: dto.estimadoMinutos,\n    creado_en: NOW()\n  }\n})
+    activate db
+    db --> svc : nuevoMaterial
+    deactivate db
+
+    svc --> ctrl : MaterialCreadoResponseDto {\n  id: nuevoMaterial.id, moduloId, titulo: nuevoMaterial.titulo,\n  orden: nuevoMaterial.orden, creadoEn: nuevoMaterial.creado_en\n}
+    deactivate svc
+
+    ctrl --> proxy : 201 Created (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 201 Created
+    deactivate proxy
+
+    spa --> actor : Notifica material publicado y actualiza árbol curricular
+    deactivate spa
+end
+
+@enduml

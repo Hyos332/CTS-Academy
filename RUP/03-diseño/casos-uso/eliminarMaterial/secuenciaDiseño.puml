@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "MaterialesController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "MaterialesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Confirma eliminación de material didáctico
+activate spa
+
+spa -> proxy : DELETE /api/v1/formacion/materiales/:id\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : deleteMaterial(materialId: string, userId: string)
+activate svc
+
+svc -> db : materiales.findUnique({\n  where: { id: materialId },\n  include: { modulo: { include: { equipo_propietario: true } } }\n})
+activate db
+db --> svc : materialDb
+deactivate db
+
+alt autorización inválida
+    svc --> ctrl : throw ForbiddenException("No puedes eliminar materiales de otro squad")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia
+else eliminación autorizada
+    svc -> db : $transaction([\n  lecturas_material.deleteMany({ where: { material_id: materialId } }),\n  materiales.delete({ where: { id: materialId } })\n])
+    activate db
+    db --> svc : [lecturasBorradas, materialBorrado]
+    deactivate db
+
+    svc --> ctrl : { id: materialId, eliminado: true }
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Notifica material eliminado y retira elemento del listado
+    deactivate spa
+end
+
+@enduml

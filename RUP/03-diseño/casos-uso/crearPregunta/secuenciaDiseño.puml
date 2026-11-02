@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(Banco Reactivos)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "BancoPreguntasController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "BancoPreguntasService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Introduce enunciado, opciones u oráculo práctico y pulsa "Guardar Pregunta"
+activate spa
+
+spa -> proxy : POST /api/v1/formacion/modulos/:id/preguntas\nPayload: { enunciado, tipoPregunta, pesoPuntos, opciones }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : createQuestion(moduloId: string, userId: string, dto: CrearPreguntaDto)
+activate svc
+
+svc -> db : modulos.findUnique({\n  where: { id: moduloId },\n  include: { equipo_propietario: true }\n})
+activate db
+db --> svc : moduloDb
+deactivate db
+
+alt autorización inválida
+    svc --> ctrl : throw ForbiddenException("No tienes permiso sobre este banco modular")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia
+else creación autorizada
+    svc -> db : $transaction([\n  preguntas.create({\n    data: {\n      modulo_id: moduloId,\n      enunciado: dto.enunciado,\n      tipo_pregunta: dto.tipoPregunta,\n      peso_puntos: dto.pesoPuntos,\n      test_cases_json: dto.testCasesJson ?? null,\n      timeout_ms: dto.timeoutMs ?? null,\n      opciones: dto.opciones ? { createMany: { data: dto.opciones } } : undefined,\n      creado_en: NOW()\n    },\n    include: { opciones: true }\n  })\n])
+    activate db
+    db --> svc : [nuevaPregunta]
+    deactivate db
+
+    svc --> ctrl : PreguntaCreadaResponseDto {\n  id: nuevaPregunta.id, moduloId, tipoPregunta: nuevaPregunta.tipo_pregunta,\n  totalOpciones: nuevaPregunta.opciones.length\n}
+    deactivate svc
+
+    ctrl --> proxy : 201 Created (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 201 Created
+    deactivate proxy
+
+    spa --> actor : Notifica reactivo incorporado al banco de evaluación
+    deactivate spa
+end
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Alumno" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "EntregablesController\n(NestJS)" as ctrl
+participant "RolesGuard('ALUMNO')\n(NestJS)" as guard
+participant "EntregablesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Consulta retroalimentación de laboratorio entregado
+activate spa
+
+spa -> proxy : GET /api/v1/formacion/entregas/:id/feedback\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'ALUMNO')
+deactivate guard
+
+ctrl -> svc : getDeliveryFeedback(entregaId: string, userId: string)
+activate svc
+
+svc -> db : entregas_laboratorio.findUnique({\n  where: { id: entregaId },\n  include: {\n    alumno: true,\n    laboratorio: true,\n    tech_leader: { select: { id, nombre, apellidos, email } }\n  }\n})
+activate db
+db --> svc : entregaRecord
+deactivate db
+
+alt entrega no pertenece al alumno autenticado
+    svc --> ctrl : throw ForbiddenException("No tienes permiso sobre esta entrega")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia de acceso denegado
+else entrega válida
+    svc --> ctrl : FeedbackEntregableDto {\n  entregaId, laboratorioTitulo: entregaRecord.laboratorio.titulo,\n  numeroIntento: entregaRecord.numero_intento,\n  estado: entregaRecord.estado,\n  calificacion: entregaRecord.calificacion,\n  feedbackGeneral: entregaRecord.feedback_general,\n  techLeader: entregaRecord.tech_leader,\n  fechaCalificacion: entregaRecord.fecha_calificacion\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Renderiza modal con feedback técnico del Tech Leader y nota
+    deactivate spa
+end
+
+@enduml

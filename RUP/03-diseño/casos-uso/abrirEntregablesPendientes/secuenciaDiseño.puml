@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "TechLeaderController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "TechLeaderService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Accede a bandeja de entregables pendientes
+activate spa
+
+spa -> proxy : GET /api/v1/formacion/tech-lead/entregables-pendientes\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'LIDER_EQUIPO')
+deactivate guard
+
+ctrl -> svc : getPendingDeliveries(userId: string)
+activate svc
+
+svc -> db : equipos.findUnique({\n  where: { lider_usuario_id: userId }\n})
+activate db
+db --> svc : equipoLiderado
+deactivate db
+
+alt usuario no lidera ningún equipo
+    svc --> ctrl : throw ForbiddenException("No posees titularidad de squad")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia
+else titularidad confirmada
+    svc -> db : entregas_laboratorio.findMany({\n  where: {\n    estado: 'EN_REVISION',\n    alumno: { equipo_id: equipoLiderado.id }\n  },\n  include: {\n    alumno: { include: { usuario: { select: { nombre, apellidos, email } } } },\n    laboratorio: { select: { id, titulo, modulo: { select: { titulo } } } }\n  },\n  orderBy: { fecha_envio: 'asc' }\n})
+    activate db
+    db --> svc : entregasPendientes
+    deactivate db
+
+    svc --> ctrl : EntregablesPendientesDto {\n  equipo: { id: equipoLiderado.id, nombre: equipoLiderado.nombre },\n  totalPendientes: entregasPendientes.length,\n  entregas: entregasPendientes\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Renderiza tabla interactiva de PRs pendientes de revisión
+    deactivate spa
+end
+
+@enduml

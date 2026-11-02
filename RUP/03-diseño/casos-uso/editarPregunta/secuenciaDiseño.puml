@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(Banco Reactivos)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "BancoPreguntasController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "BancoPreguntasService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Edita enunciado u opciones y pulsa "Actualizar Pregunta"
+activate spa
+
+spa -> proxy : PUT /api/v1/formacion/preguntas/:id\nPayload: { enunciado, pesoPuntos, opciones }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true
+deactivate guard
+
+ctrl -> svc : updateQuestion(preguntaId: string, userId: string, dto: EditarPreguntaDto)
+activate svc
+
+svc -> db : preguntas.findUnique({\n  where: { id: preguntaId },\n  include: { modulo: { include: { equipo_propietario: true } } }\n})
+activate db
+db --> svc : preguntaDb
+deactivate db
+
+alt autorización inválida
+    svc --> ctrl : throw ForbiddenException("No puedes editar reactivos de otro squad")
+    ctrl --> proxy : 403 Forbidden
+    proxy --> spa : 403 Forbidden
+    spa --> actor : Muestra advertencia
+else actualización válida
+    svc -> db : $transaction([\n  preguntas.update({\n    where: { id: preguntaId },\n    data: {\n      enunciado: dto.enunciado,\n      peso_puntos: dto.pesoPuntos,\n      test_cases_json: dto.testCasesJson ?? undefined,\n      actualizado_en: NOW()\n    }\n  }),\n  dto.opciones ? opciones_pregunta.deleteMany({ where: { pregunta_id: preguntaId } }) : undefined,\n  dto.opciones ? opciones_pregunta.createMany({ data: dto.opciones.map(o => ({ pregunta_id: preguntaId, texto: o.texto, es_correcta: o.esCorrecta })) }) : undefined\n])
+    activate db
+    db --> svc : [preguntaUpd, ...]
+    deactivate db
+
+    svc --> ctrl : PreguntaActualizadaResponseDto {\n  id: preguntaId, enunciado: preguntaUpd.enunciado, actualizadoEn: preguntaUpd.actualizado_en\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Notifica actualización de pregunta en el banco
+    deactivate spa
+end
+
+@enduml

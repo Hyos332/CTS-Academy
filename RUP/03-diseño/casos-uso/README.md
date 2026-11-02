@@ -33,24 +33,24 @@ Este directorio centraliza las realizaciones técnicas de diseño para los **35 
 │   ├── rechazarCandidatura/            ──► POST /api/v1/evaluacion/candidatos/:id/rechazar
 │   ├── registrarCandidato/             ──► POST /api/v1/evaluacion/candidatos
 │   └── importarCandidatosSede/         ──► POST /api/v1/evaluacion/candidatos/importar-sede
-├── PK03 - MotorFormacion (17 CUs)      ──► En cola (0/17)
-│   ├── abrirPanelAlumno/
-│   ├── consultarCapacitacion/
-│   ├── consultarModulo/
-│   ├── consultarMaterial/
-│   ├── enviarEntregable/
-│   ├── consultarFeedbackEntregable/
-│   ├── abrirEntregablesPendientes/
-│   ├── revisarEntregable/
-│   ├── aprobarEntregable/
-│   ├── solicitarCambiosEntregable/
-│   ├── evaluarCapacitacionAlumno/
-│   ├── crearMaterial/
-│   ├── editarMaterial/
-│   ├── eliminarMaterial/
-│   ├── crearPregunta/
-│   ├── editarPregunta/
-│   └── eliminarPregunta/
+├── PK03 - MotorFormacion (17 CUs)      ──► Completado (17/17)
+│   ├── abrirPanelAlumno/               ──► GET    /api/v1/formacion/alumnos/me/dashboard
+│   ├── consultarCapacitacion/          ──► GET    /api/v1/formacion/capacitaciones/:id
+│   ├── consultarModulo/                ──► GET    /api/v1/formacion/modulos/:id
+│   ├── consultarMaterial/              ──► GET    /api/v1/formacion/materiales/:id
+│   ├── enviarEntregable/               ──► POST   /api/v1/formacion/laboratorios/:id/entregas
+│   ├── consultarFeedbackEntregable/    ──► GET    /api/v1/formacion/entregas/:id/feedback
+│   ├── abrirEntregablesPendientes/     ──► GET    /api/v1/formacion/tech-lead/entregables-pendientes
+│   ├── revisarEntregable/              ──► GET    /api/v1/formacion/tech-lead/entregas/:id
+│   ├── aprobarEntregable/              ──► POST   /api/v1/formacion/tech-lead/entregas/:id/aprobar
+│   ├── solicitarCambiosEntregable/     ──► POST   /api/v1/formacion/tech-lead/entregas/:id/solicitar-cambios
+│   ├── evaluarCapacitacionAlumno/      ──► POST   /api/v1/formacion/tech-lead/alumnos/:id/evaluacion-sumativa
+│   ├── crearMaterial/                  ──► POST   /api/v1/formacion/modulos/:id/materiales
+│   ├── editarMaterial/                 ──► PUT    /api/v1/formacion/materiales/:id
+│   ├── eliminarMaterial/               ──► DELETE /api/v1/formacion/materiales/:id
+│   ├── crearPregunta/                  ──► POST   /api/v1/formacion/modulos/:id/preguntas
+│   ├── editarPregunta/                 ──► PUT    /api/v1/formacion/preguntas/:id
+│   └── eliminarPregunta/               ──► DELETE /api/v1/formacion/preguntas/:id
 └── PK04 - MotorEquipos (4 CUs)         ──► En cola (0/4)
     ├── abrirPanelLider/
     ├── abrirPanelAdmisiones/
@@ -100,25 +100,25 @@ Este directorio centraliza las realizaciones técnicas de diseño para los **35 
 
 <div align=center>
 
-| Caso de Uso | Método & Endpoint REST Previsto | Módulo Responsable | Estado |
-| :--- | :--- | :--- | :---: |
-| **`abrirPanelAlumno()`** | `GET /api/v1/formacion/alumnos/me/dashboard` | `FormacionController` | Pendiente |
-| **`consultarCapacitacion()`** | `GET /api/v1/formacion/capacitaciones/:id` | `CapacitacionesController` | Pendiente |
-| **`consultarModulo()`** | `GET /api/v1/formacion/modulos/:id` | `ModulosController` | Pendiente |
-| **`consultarMaterial()`** | `GET /api/v1/formacion/materiales/:id` | `MaterialesController` | Pendiente |
-| **`enviarEntregable()`** | `POST /api/v1/formacion/laboratorios/:id/entregas` | `EntregablesController` | Pendiente |
-| **`consultarFeedbackEntregable()`** | `GET /api/v1/formacion/entregas/:id/feedback` | `EntregablesController` | Pendiente |
-| **`abrirEntregablesPendientes()`** | `GET /api/v1/formacion/tech-lead/entregables-pendientes` | `TechLeaderController` | Pendiente |
-| **`revisarEntregable()`** | `GET /api/v1/formacion/tech-lead/entregas/:id` | `TechLeaderController` | Pendiente |
-| **`aprobarEntregable()`** | `POST /api/v1/formacion/tech-lead/entregas/:id/aprobar` | `TechLeaderController` | Pendiente |
-| **`solicitarCambiosEntregable()`** | `POST /api/v1/formacion/tech-lead/entregas/:id/solicitar-cambios` | `TechLeaderController` | Pendiente |
-| **`evaluarCapacitacionAlumno()`** | `POST /api/v1/formacion/tech-lead/alumnos/:id/evaluacion-sumativa` | `TechLeaderController` | Pendiente |
-| **`crearMaterial()`** | `POST /api/v1/formacion/modulos/:id/materiales` | `MaterialesController` | Pendiente |
-| **`editarMaterial()`** | `PUT /api/v1/formacion/materiales/:id` | `MaterialesController` | Pendiente |
-| **`eliminarMaterial()`** | `DELETE /api/v1/formacion/materiales/:id` | `MaterialesController` | Pendiente |
-| **`crearPregunta()`** | `POST /api/v1/formacion/modulos/:id/preguntas` | `BancoPreguntasController` | Pendiente |
-| **`editarPregunta()`** | `PUT /api/v1/formacion/preguntas/:id` | `BancoPreguntasController` | Pendiente |
-| **`eliminarPregunta()`** | `DELETE /api/v1/formacion/preguntas/:id` | `BancoPreguntasController` | Pendiente |
+| Caso de Uso | Método & Endpoint REST | Módulo Responsable | Realización de Diseño | Estado |
+| :--- | :--- | :--- | :---: | :---: |
+| **`abrirPanelAlumno()`** | `GET /api/v1/formacion/alumnos/me/dashboard` | `FormacionController` | [Ver Diseño](abrirPanelAlumno/README.md) | **Completado** |
+| **`consultarCapacitacion()`** | `GET /api/v1/formacion/capacitaciones/:id` | `CapacitacionesController` | [Ver Diseño](consultarCapacitacion/README.md) | **Completado** |
+| **`consultarModulo()`** | `GET /api/v1/formacion/modulos/:id` | `ModulosController` | [Ver Diseño](consultarModulo/README.md) | **Completado** |
+| **`consultarMaterial()`** | `GET /api/v1/formacion/materiales/:id` | `MaterialesController` | [Ver Diseño](consultarMaterial/README.md) | **Completado** |
+| **`enviarEntregable()`** | `POST /api/v1/formacion/laboratorios/:id/entregas` | `EntregablesController` | [Ver Diseño](enviarEntregable/README.md) | **Completado** |
+| **`consultarFeedbackEntregable()`** | `GET /api/v1/formacion/entregas/:id/feedback` | `EntregablesController` | [Ver Diseño](consultarFeedbackEntregable/README.md) | **Completado** |
+| **`abrirEntregablesPendientes()`** | `GET /api/v1/formacion/tech-lead/entregables-pendientes` | `TechLeaderController` | [Ver Diseño](abrirEntregablesPendientes/README.md) | **Completado** |
+| **`revisarEntregable()`** | `GET /api/v1/formacion/tech-lead/entregas/:id` | `TechLeaderController` | [Ver Diseño](revisarEntregable/README.md) | **Completado** |
+| **`aprobarEntregable()`** | `POST /api/v1/formacion/tech-lead/entregas/:id/aprobar` | `TechLeaderController` | [Ver Diseño](aprobarEntregable/README.md) | **Completado** |
+| **`solicitarCambiosEntregable()`** | `POST /api/v1/formacion/tech-lead/entregas/:id/solicitar-cambios` | `TechLeaderController` | [Ver Diseño](solicitarCambiosEntregable/README.md) | **Completado** |
+| **`evaluarCapacitacionAlumno()`** | `POST /api/v1/formacion/tech-lead/alumnos/:id/evaluacion-sumativa` | `TechLeaderController` | [Ver Diseño](evaluarCapacitacionAlumno/README.md) | **Completado** |
+| **`crearMaterial()`** | `POST /api/v1/formacion/modulos/:id/materiales` | `MaterialesController` | [Ver Diseño](crearMaterial/README.md) | **Completado** |
+| **`editarMaterial()`** | `PUT /api/v1/formacion/materiales/:id` | `MaterialesController` | [Ver Diseño](editarMaterial/README.md) | **Completado** |
+| **`eliminarMaterial()`** | `DELETE /api/v1/formacion/materiales/:id` | `MaterialesController` | [Ver Diseño](eliminarMaterial/README.md) | **Completado** |
+| **`crearPregunta()`** | `POST /api/v1/formacion/modulos/:id/preguntas` | `BancoPreguntasController` | [Ver Diseño](crearPregunta/README.md) | **Completado** |
+| **`editarPregunta()`** | `PUT /api/v1/formacion/preguntas/:id` | `BancoPreguntasController` | [Ver Diseño](editarPregunta/README.md) | **Completado** |
+| **`eliminarPregunta()`** | `DELETE /api/v1/formacion/preguntas/:id` | `BancoPreguntasController` | [Ver Diseño](eliminarPregunta/README.md) | **Completado** |
 
 </div>
 

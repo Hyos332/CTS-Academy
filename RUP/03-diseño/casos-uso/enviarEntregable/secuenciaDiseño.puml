@@ -1,0 +1,61 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Alumno" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "EntregablesController\n(NestJS)" as ctrl
+participant "RolesGuard('ALUMNO')\n(NestJS)" as guard
+participant "EntregablesService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Introduce URL de Pull Request y Commit Hash
+activate spa
+
+spa -> proxy : POST /api/v1/formacion/laboratorios/:id/entregas\nPayload: { urlPullRequest, commitHash }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'ALUMNO')
+deactivate guard
+
+ctrl -> svc : submitDelivery(laboratorioId: string, userId: string, dto: EnviarEntregableDto)
+activate svc
+
+svc -> db : alumnos_profer.findUnique({ where: { usuario_id: userId } })
+activate db
+db --> svc : alumnoDb
+deactivate db
+
+svc -> db : entregas_laboratorio.count({\n  where: { laboratorio_id: laboratorioId, alumno_id: alumnoDb.id }\n})
+activate db
+db --> svc : intentosPrevios
+deactivate db
+
+svc -> db : entregas_laboratorio.create({\n  data: {\n    laboratorio_id: laboratorioId,\n    alumno_id: alumnoDb.id,\n    numero_intento: intentosPrevios + 1,\n    url_pull_request: dto.urlPullRequest,\n    commit_hash: dto.commitHash,\n    estado: 'EN_REVISION',\n    fecha_envio: NOW()\n  }\n})
+activate db
+db --> svc : nuevaEntrega
+deactivate db
+
+svc --> ctrl : EntregaResponseDto {\n  entregaId: nuevaEntrega.id, laboratorioId,\n  numeroIntento: nuevaEntrega.numero_intento,\n  urlPullRequest: nuevaEntrega.url_pull_request,\n  estado: 'EN_REVISION',\n  fechaEnvio: nuevaEntrega.fecha_envio\n}
+deactivate svc
+
+ctrl --> proxy : 201 Created (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 201 Created
+deactivate proxy
+
+spa --> actor : Notifica entrega registrada y en espera de revisión del Tech Leader
+deactivate spa
+
+@enduml
