@@ -1,0 +1,97 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "ActorAutenticado\n(Candidato/Alumno/TL/Gestor)" as actor
+participant "BarraNavegacion\n(React 18 SPA)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "AuthController\n(NestJS)" as ctrl
+participant "JwtAuthGuard\n(Passport JWT)" as guard
+participant "AuthService\n(Application Service)" as svc
+participant "EvaluacionService\n(MotorEvaluacion)" as evalSvc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+database "Redis 7\n(cts-redis)" as redis
+
+actor -> spa : Clic en "Cerrar Sesión"
+activate spa
+
+opt Comprobación de Procesos Activos (RN-ACC-05)
+    spa -> proxy : GET /api/v1/auth/active-evaluations\nHeader: Authorization Bearer <token>
+    activate proxy
+    proxy -> ctrl : Proxy request
+    activate ctrl
+    ctrl -> guard : canActivate(context)
+    activate guard
+    guard -> redis : EXISTS bl:<token_hash>
+    activate redis
+    redis --> guard : 0 (No en lista negra)
+    deactivate redis
+    guard --> ctrl : canActivate: true (user: { sub, rol })
+    deactivate guard
+
+    ctrl -> evalSvc : checkActiveEvaluations(userId)
+    activate evalSvc
+    evalSvc -> db : tests.findFirst({\n  where: { candidato_id: userId, estado: 'EN_CURSO' }\n})
+    activate db
+    db --> evalSvc : activeTest | null
+    deactivate db
+    evalSvc --> ctrl : { hasActiveTest, remainingSeconds }
+    deactivate evalSvc
+
+    ctrl --> proxy : 200 OK { hasActiveTest: true, remainingSeconds: 1420 }
+    deactivate ctrl
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Muestra Diálogo Modal de Advertencia:\n"Tienes una prueba en curso. El cronómetro continuará en el servidor."
+    actor -> spa : Confirma cierre de sesión
+end
+
+spa -> proxy : POST /api/v1/auth/logout\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard -> redis : EXISTS bl:<token_hash>
+activate redis
+redis --> guard : 0 (Válido)
+deactivate redis
+guard --> ctrl : canActivate: true
+deactivate guard
+
+ctrl -> svc : logout(token: string, userId: string)
+activate svc
+
+svc -> svc : tokenHash = sha256(token)\nremainingTtl = exp - currentTime()
+
+svc -> redis : SETEX bl:<tokenHash>, remainingTtl, "revoked"
+activate redis
+redis --> svc : OK (Añadido a Blacklist)
+deactivate redis
+
+svc -> db : sesiones.updateMany({\n  where: { usuario_id: userId, token_hash: tokenHash },\n  data: { revocado: true, revocado_en: NOW() }\n})
+activate db
+db --> svc : countActualizados: 1
+deactivate db
+
+svc --> ctrl : { success: true, message: "Sesión cerrada correctamente" }
+deactivate svc
+
+ctrl --> proxy : 200 OK\n{ "statusCode": 200, "message": "Sesión revocada exitosamente" }
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa -> spa : Purga token en memoria y estado de la app (RN-ACC-04)
+spa --> actor : Redirige a /login (Sesión finalizada)
+deactivate spa
+
+@enduml

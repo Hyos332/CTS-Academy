@@ -1,0 +1,112 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "UsuarioNoLogueado" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "AuthController\n(NestJS)" as ctrl
+participant "ThrottlerGuard\n(Rate Limiter)" as guard
+participant "AuthService\n(Application Service)" as svc
+participant "Argon2Service\n(Crypto Service)" as argon
+participant "JwtService\n(Token Provider)" as jwt
+database "PostgreSQL 16\n(Prisma ORM)" as db
+database "Redis 7\n(cts-redis)" as redis
+
+actor -> spa : Introduce credenciales (email, password)
+activate spa
+
+spa -> proxy : POST /api/v1/auth/login\nPayload: { email, password }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request (TLS offloaded)
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard -> redis : EVAL check_rate_limit(ip, limit=5, window=60s)
+activate redis
+redis --> guard : allowed: true (intentos restantes)
+deactivate redis
+guard --> ctrl : canActivate: true
+deactivate guard
+
+ctrl -> svc : login(loginDto: LoginDto)
+activate svc
+
+svc -> db : usuarios.findUnique({\n  where: { email },\n  select: { id, email, password_hash, rol, activo, intentos_fallidos, bloqueado_hasta }\n})
+activate db
+db --> svc : usuario | null
+deactivate db
+
+alt usuario no existe o activo == false
+    svc --> ctrl : throw UnauthorizedException("Credenciales inválidas")
+    ctrl --> proxy : 401 Unauthorized\n{ "statusCode": 401, "message": "Credenciales inválidas" }
+    proxy --> spa : 401 Unauthorized
+    spa --> actor : Renderiza "Credenciales incorrectas" (Anti-enumeración)
+else usuario existe y activo == true
+    alt cuenta bloqueada temporalmente (bloqueado_hasta > NOW())
+        svc --> ctrl : throw CustomLockedException("Cuenta bloqueada", tiempoRestante)
+        ctrl --> proxy : 423 Locked\n{ "statusCode": 423, "message": "Cuenta bloqueada...", "retryAfter": segundos }
+        proxy --> spa : 423 Locked
+        spa --> actor : Muestra diálogo de bloqueo con cuenta regresiva
+    else cuenta habilitada para intento
+        svc -> argon : verify(usuario.password_hash, loginDto.password)
+        activate argon
+        argon --> svc : esValida (true / false)
+        deactivate argon
+
+        alt contraseña incorrecta
+            svc -> db : usuarios.update({\n  where: { id: usuario.id },\n  data: { intentos_fallidos: { increment: 1 } }\n})
+            activate db
+            db --> svc : usuarioActualizado
+            deactivate db
+
+            alt intentos_fallidos + 1 >= 5
+                svc -> db : usuarios.update({\n  where: { id: usuario.id },\n  data: { bloqueado_hasta: NOW() + interval '15 min' }\n})
+                activate db
+                db --> svc : cuentaBloqueada
+                deactivate db
+            end
+
+            svc --> ctrl : throw UnauthorizedException("Credenciales inválidas")
+            ctrl --> proxy : 401 Unauthorized\n{ "statusCode": 401, "message": "Credenciales inválidas" }
+            proxy --> spa : 401 Unauthorized
+            spa --> actor : Renderiza "Credenciales incorrectas"
+        else contraseña válida
+            svc -> db : usuarios.update({\n  where: { id: usuario.id },\n  data: { intentos_fallidos: 0, bloqueado_hasta: null }\n})
+            activate db
+            db --> svc : resetExitoso
+            deactivate db
+
+            svc -> jwt : signAsync({\n  sub: usuario.id,\n  email: usuario.email,\n  rol: usuario.rol\n}, { expiresIn: '2h' })
+            activate jwt
+            jwt --> svc : accessToken (JWT string)
+            deactivate jwt
+
+            svc -> db : sesiones.create({\n  data: {\n    usuario_id: usuario.id,\n    token_hash: sha256(accessToken),\n    ip_origen: req.ip,\n    user_agent: req.headers['user-agent'],\n    expira_en: NOW() + interval '2 hours'\n  }\n})
+            activate db
+            db --> svc : sesionRegistrada
+            deactivate db
+
+            svc --> ctrl : AuthResponseDto {\n  accessToken, rol: usuario.rol,\n  redirectTo: resolvePath(usuario.rol)\n}
+            deactivate svc
+
+            ctrl --> proxy : 200 OK\n{ "statusCode": 200, "data": { accessToken, user, redirectTo } }
+            deactivate ctrl
+
+            proxy --> spa : 200 OK (JSON + Set-Cookie / Token)
+            deactivate proxy
+
+            spa -> spa : Almacena accessToken en memoria segura
+            spa --> actor : Redirección reactiva según rol ([ADR-011])\n(Candidato -> /postulacion | Alumno -> /formacion |\n Lider -> /squad | Gestor -> /admisiones)
+            deactivate spa
+        end
+    end
+end
+
+@enduml
