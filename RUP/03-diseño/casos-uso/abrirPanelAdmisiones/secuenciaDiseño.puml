@@ -1,0 +1,68 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "GobernanzaController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "GobernanzaService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Accede a /portal/admisiones
+activate spa
+
+spa -> proxy : GET /api/v1/equipos/gestor/dashboard\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : getAdmissionsManagerDashboard(userId: string)
+activate svc
+
+svc -> db : convocatorias.findFirst({\n  where: { estado: 'ABIERTA' },\n  include: {\n    semestre: { include: { curso_academico: true } }\n  }\n})
+activate db
+db --> svc : convocatoriaActiva
+deactivate db
+
+svc -> db : candidatos.groupBy({\n  by: ['estado_postulacion'],\n  where: { convocatoria_id: convocatoriaActiva.id },\n  _count: { id: true }\n})
+activate db
+db --> svc : embudoStats
+deactivate db
+
+svc -> db : alumnos_profer.groupBy({\n  by: ['equipo_id'],\n  _count: { id: true }\n})
+activate db
+db --> svc : distribucionEquipos
+deactivate db
+
+svc -> db : candidatos.groupBy({\n  by: ['sede_origen'],\n  where: { convocatoria_id: convocatoriaActiva.id },\n  _count: { id: true }\n})
+activate db
+db --> svc : distribucionSedes
+deactivate db
+
+svc -> svc : mapDashboardData(convocatoriaActiva, embudoStats, distribucionEquipos, distribucionSedes)
+
+svc --> ctrl : GestorDashboardDto {\n  convocatoria: { id, denominacion, estado, semestre, curso },\n  embudo: { total, enProceso, testsCompletados, entrevistasAgendadas, admitidos, rechazados },\n  distribucionEquipos: [...],\n  distribucionSedes: [...]\n}
+deactivate svc
+
+ctrl --> proxy : 200 OK (JSON Data)
+deactivate ctrl
+
+proxy --> spa : 200 OK
+deactivate proxy
+
+spa --> actor : Renderiza panel de analítica de admisión y gobernanza PROFER
+deactivate spa
+
+@enduml

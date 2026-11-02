@@ -51,11 +51,11 @@ Este directorio centraliza las realizaciones técnicas de diseño para los **35 
 │   ├── crearPregunta/                  ──► POST   /api/v1/formacion/modulos/:id/preguntas
 │   ├── editarPregunta/                 ──► PUT    /api/v1/formacion/preguntas/:id
 │   └── eliminarPregunta/               ──► DELETE /api/v1/formacion/preguntas/:id
-└── PK04 - MotorEquipos (4 CUs)         ──► En cola (0/4)
-    ├── abrirPanelLider/
-    ├── abrirPanelAdmisiones/
-    ├── abrirPeriodoIngreso/
-    └── cerrarCorteSemestral/
+└── PK04 - MotorEquipos (4 CUs)         ──► Completado (4/4)
+    ├── abrirPanelLider/                ──► GET  /api/v1/equipos/tech-lead/dashboard
+    ├── abrirPanelAdmisiones/           ──► GET  /api/v1/equipos/gestor/dashboard
+    ├── abrirPeriodoIngreso/            ──► POST /api/v1/equipos/convocatorias
+    └── cerrarCorteSemestral/           ──► POST /api/v1/equipos/cortes/cerrar
 ```
 
 ---
@@ -128,12 +128,12 @@ Este directorio centraliza las realizaciones técnicas de diseño para los **35 
 
 <div align=center>
 
-| Caso de Uso | Método & Endpoint REST Previsto | Módulo Responsable | Estado |
-| :--- | :--- | :--- | :---: |
-| **`abrirPanelLider()`** | `GET /api/v1/equipos/tech-lead/dashboard` | `EquiposController` | Pendiente |
-| **`abrirPanelAdmisiones()`** | `GET /api/v1/equipos/gestor/dashboard` | `GobernanzaController` | Pendiente |
-| **`abrirPeriodoIngreso()`** | `POST /api/v1/equipos/convocatorias` | `GobernanzaController` | Pendiente |
-| **`cerrarCorteSemestral()`** | `POST /api/v1/equipos/cortes/cerrar` | `GobernanzaController` | Pendiente |
+| Caso de Uso | Método & Endpoint REST | Módulo Responsable | Realización de Diseño | Estado |
+| :--- | :--- | :--- | :---: | :---: |
+| **`abrirPanelLider()`** | `GET /api/v1/equipos/tech-lead/dashboard` | `EquiposController` | [Ver Diseño](abrirPanelLider/README.md) | **Completado** |
+| **`abrirPanelAdmisiones()`** | `GET /api/v1/equipos/gestor/dashboard` | `GobernanzaController` | [Ver Diseño](abrirPanelAdmisiones/README.md) | **Completado** |
+| **`abrirPeriodoIngreso()`** | `POST /api/v1/equipos/convocatorias` | `GobernanzaController` | [Ver Diseño](abrirPeriodoIngreso/README.md) | **Completado** |
+| **`cerrarCorteSemestral()`** | `POST /api/v1/equipos/cortes/cerrar` | `GobernanzaController` | [Ver Diseño](cerrarCorteSemestral/README.md) | **Completado** |
 
 </div>
 

@@ -1,0 +1,65 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Tech Leader" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "EquiposController\n(NestJS)" as ctrl
+participant "RolesGuard('LIDER_EQUIPO')\n(NestJS)" as guard
+participant "EquiposService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Accede a /portal/lider
+activate spa
+
+spa -> proxy : GET /api/v1/equipos/tech-lead/dashboard\nHeader: Authorization Bearer <token>
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'LIDER_EQUIPO')
+deactivate guard
+
+ctrl -> svc : getSquadLeaderDashboard(userId: string)
+activate svc
+
+svc -> db : equipos.findUnique({\n  where: { lider_usuario_id: userId },\n  include: {\n    alumnos: {\n      include: {\n        usuario: { select: { id, email, nombre, apellidos } },\n        entregas_laboratorio: true\n      }\n    }\n  }\n})
+activate db
+db --> svc : equipoRecord
+deactivate db
+
+alt usuario no tiene squad asignado
+    svc --> ctrl : throw NotFoundException("No diriges ningún squad activo")
+    ctrl --> proxy : 404 Not Found
+    proxy --> spa : 404 Not Found
+    spa --> actor : Muestra advertencia
+else squad localizado
+    svc -> db : entregas_laboratorio.count({\n  where: { estado: 'EN_REVISION', alumno: { equipo_id: equipoRecord.id } }\n})
+    activate db
+    db --> svc : totalPendientesRevision
+    deactivate db
+
+    svc -> svc : mapTeamMetrics(equipoRecord, totalPendientesRevision):\n- Roster de becarios (distribución flexible: 1, 4 o 12 integrantes [ADR-013])\n- Tasa de aprobación de laboratorios por alumno
+
+    svc --> ctrl : SquadLeaderDashboardDto {\n  equipo: { id: equipoRecord.id, codigo: equipoRecord.codigo, nombre: equipoRecord.nombre },\n  totalBecarios: equipoRecord.alumnos.length,\n  pendientesRevision: totalPendientesRevision,\n  alumnos: [...]\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Renderiza panel de control técnico del Squad
+    deactivate spa
+end
+
+@enduml

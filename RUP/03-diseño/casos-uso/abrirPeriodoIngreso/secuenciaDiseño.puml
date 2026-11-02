@@ -1,0 +1,63 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "GobernanzaController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "GobernanzaService\n(Application Service)" as svc
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Define denominación, fechas y confirma "Abrir Convocatoria"
+activate spa
+
+spa -> proxy : POST /api/v1/equipos/convocatorias\nPayload: { semestreId, denominacion, fechaApertura, fechaCierre, modeloAdmision }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : openAdmissionPeriod(dto: AbrirConvocatoriaDto)
+activate svc
+
+svc -> db : semestres.findUnique({\n  where: { id: dto.semestreId },\n  include: { curso_academico: true }\n})
+activate db
+db --> svc : semestreDb
+deactivate db
+
+alt semestre inexistente o inactivo
+    svc --> ctrl : throw BadRequestException("El semestre académico no se encuentra activo")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Muestra advertencia
+else periodo válido
+    svc -> db : convocatorias.create({\n  data: {\n    semestre_id: dto.semestreId,\n    denominacion: dto.denominacion,\n    fecha_apertura: dto.fechaApertura,\n    fecha_cierre: dto.fechaCierre,\n    modelo_admision: 'CONTINUA',\n    estado: 'ABIERTA',\n    creado_en: NOW(),\n    actualizado_en: NOW()\n  }\n})
+    activate db
+    db --> svc : nuevaConvocatoria
+    deactivate db
+
+    svc --> ctrl : ConvocatoriaCreadaResponseDto {\n  id: nuevaConvocatoria.id, denominacion: nuevaConvocatoria.denominacion,\n  estado: 'ABIERTA', fechaApertura: nuevaConvocatoria.fecha_apertura\n}
+    deactivate svc
+
+    ctrl --> proxy : 201 Created (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 201 Created
+    deactivate proxy
+
+    spa --> actor : Notifica convocatoria abierta y habilita recepción de candidaturas
+    deactivate spa
+end
+
+@enduml

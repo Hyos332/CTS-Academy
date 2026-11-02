@@ -1,0 +1,71 @@
+@startuml secuenciaDiseño
+!theme plain
+skinparam style strictuml
+autonumber
+skinparam roundcorner 5
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Gestor" as actor
+participant "SPA Client\n(React 18 / Vite)" as spa
+participant "Reverse Proxy\n(Nginx Gateway)" as proxy
+participant "GobernanzaController\n(NestJS)" as ctrl
+participant "RolesGuard('GESTOR')\n(NestJS)" as guard
+participant "GobernanzaService\n(Application Service)" as svc
+participant "CryptoSignatureService\n(SHA-256 Hasher)" as crypto
+database "PostgreSQL 16\n(Prisma ORM)" as db
+
+actor -> spa : Confirma "Cerrar Corte Semestral"
+activate spa
+
+spa -> proxy : POST /api/v1/equipos/cortes/cerrar\nPayload: { convocatoriaId }
+activate proxy
+
+proxy -> ctrl : Proxy HTTP Request
+activate ctrl
+
+ctrl -> guard : canActivate(context)
+activate guard
+guard --> ctrl : authorized: true (rol: 'GESTOR')
+deactivate guard
+
+ctrl -> svc : closeSemesterCut(dto: CerrarCorteDto, gestorId: string)
+activate svc
+
+svc -> db : convocatorias.findUnique({\n  where: { id: dto.convocatoriaId },\n  include: { candidatos: true }\n})
+activate db
+db --> svc : convocatoriaDb
+deactivate db
+
+alt convocatoria ya cerrada
+    svc --> ctrl : throw BadRequestException("La convocatoria ya fue formalizada y cerrada")
+    ctrl --> proxy : 400 Bad Request
+    proxy --> spa : 400 Bad Request
+    spa --> actor : Muestra advertencia
+else convocatoria abierta
+    svc -> svc : Computa agregados:\n- totalPostulados, totalAdmitidos, totalRechazados, totalAbandonos\n- distribucionEquipos (JSONB)\n- distribucionSedes (JSONB)
+
+    svc -> crypto : calculateReportHash(reportPayload)
+    activate crypto
+    crypto --> svc : firmaHashSha256
+    deactivate crypto
+
+    svc -> db : $transaction([\n  informes_corte.create({\n    data: {\n      convocatoria_id: dto.convocatoriaId,\n      gestor_id: gestorId,\n      total_postulados: stats.postulados,\n      total_admitidos: stats.admitidos,\n      total_rechazados: stats.rechazados,\n      total_abandonos: stats.abandonos,\n      distribucion_equipos: stats.equiposJson,\n      distribucion_sedes: stats.sedesJson,\n      firma_hash_inmutable: firmaHashSha256,\n      creado_en: NOW()\n    }\n  }),\n  convocatorias.update({\n    where: { id: dto.convocatoriaId },\n    data: { estado: 'CERRADA', fecha_cierre: NOW(), actualizado_en: NOW() }\n  })\n])
+    activate db
+    db --> svc : [nuevoInforme, convocatoriaCerrada]
+    deactivate db
+
+    svc --> ctrl : InformeCorteResponseDto {\n  informeId: nuevoInforme.id, convocatoriaId: dto.convocatoriaId,\n  totalAdmitidos: nuevoInforme.total_admitidos,\n  firmaHashInmutable: nuevoInforme.firma_hash_inmutable,\n  fechaCierre: nuevoInforme.creado_en\n}
+    deactivate svc
+
+    ctrl --> proxy : 200 OK (JSON Data)
+    deactivate ctrl
+
+    proxy --> spa : 200 OK
+    deactivate proxy
+
+    spa --> actor : Muestra acta formal de corte y hash criptográfico inmutable ([RN-CORTE-03])
+    deactivate spa
+end
+
+@enduml

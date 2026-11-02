@@ -20,8 +20,8 @@ Desde aquí se accede a cada una de las fases del ciclo de desarrollo, al regist
 | Seguimiento y Decisiones | Modelo del Dominio | Requisitos | Análisis | Diseño |
 | :---: | :---: | :---: | :---: | :---: |
 | **[Bitácora RUP (ADR)](/RUP/BITACORA.md)** | [Modelo del Dominio](/RUP/00-modelo-del-dominio/README.md) | [Hub de Requisitos](/RUP/01-requisitos/README.md) | [Fase 02: Análisis](/RUP/02-analisis/README.md) | [Fase 03: Diseño](/RUP/03-diseño/README.md) |
-| Historial de refinamientos | [Glosario de entidades](/RUP/00-modelo-del-dominio/README.md#glosario-de-entidades-por-microservicio) | [Actores y Contexto](/RUP/01-requisitos/01-actores-casos-uso/README.md) | Clases de análisis (BCE) | Diagrama Entidad-Relación |
-| Registro de acuerdos RUP | [3 Microservicios](/RUP/00-modelo-del-dominio/README.md#microservicios-del-sistema) | [Detalle Casos de Uso (35)](/RUP/01-requisitos/03-detalle-casos-uso/README.md) | Colaboraciones de análisis | Despliegue Docker |
+| Historial de refinamientos | [Glosario de entidades](/RUP/00-modelo-del-dominio/README.md#glosario-de-entidades-por-microservicio) | [Actores y Contexto](/RUP/01-requisitos/01-actores-casos-uso/README.md) | Clases de análisis (BCE) | Diagrama Entidad-Relación (DER) |
+| Registro de acuerdos RUP | [3 Microservicios](/RUP/00-modelo-del-dominio/README.md#microservicios-del-sistema) | [Detalle Casos de Uso (35)](/RUP/01-requisitos/03-detalle-casos-uso/README.md) | Colaboraciones de análisis | OpenAPI REST & Secuencias (35/35) |
 
 </div>
 
