@@ -29,7 +29,7 @@ En esta fase se formalizan:
 
 | Artefacto de Diseño | Alcance / Componentes | Especificación Técnica | Estado |
 | :--- | :--- | :---: | :---: |
-| **Modelo de Datos Relacional (DER)** | 29 tablas, 3 esquemas PostgreSQL (`equipos`, `evaluacion`, `formacion`), UUID v4, JSONB, auditoría e índices | [Ver DER y Diccionario](modelo-datos/README.md) | Completado |
+| **Modelo de Datos Relacional (DER)** | 25 tablas, 3 esquemas PostgreSQL (`equipos`, `evaluacion`, `formacion`), UUID v4, radar JSONB, auditoría e índices | [Ver DER y Diccionario](modelo-datos/README.md) | Completado |
 | **Arquitectura de Despliegue Físico** | Topología Docker Compose multi-stage, 4 redes aisladas, PostgreSQL 16, Redis 7 y sandbox CI | [Ver Despliegue](despliegue/README.md) | Completado |
 | **Contratos de Interfaces OpenAPI / REST** | Especificación formal de endpoints HTTP, payloads JSON, DTOs y cabeceras JWT | [Ver Contratos API](casos-uso/README.md) | Siguiente |
 | **Diagramas de Secuencia de Diseño** | Interacción detallada controladores NestJS/Express, repositorios Prisma y APIs externas | [Ver Secuencias](casos-uso/README.md) | En cola |
@@ -42,7 +42,7 @@ En esta fase se formalizan:
 
 > [!NOTE]
 > **Infraestructura Base de Diseño Formalizada**:
-> 1. **Modelo de Datos Relacional (DER)**: 29 tablas en PostgreSQL 16 con esquemas lógicos nativos ([ADR-012](/RUP/BITACORA.md#adr-012-elecci%C3%B3n-de-postgresql-16-para-persistencia-relacional-y-soporte-de-microservicios)).
+> 1. **Modelo de Datos Relacional (DER)**: 25 tablas en PostgreSQL 16 con esquemas lógicos nativos ([ADR-012](/RUP/BITACORA.md#adr-012-elecci%C3%B3n-de-postgresql-16-para-persistencia-relacional-y-soporte-de-microservicios)), adaptado a la operativa real de CTS ([ADR-013](/RUP/BITACORA.md#adr-013-simplificaci%C3%B3n-pragm%C3%A1tica-del-modelo-de-datos-der-y-alineaci%C3%B3n-con-la-operativa-real-de-cts)).
 > 2. **Arquitectura y Despliegue Físico**: Diagrama de despliegue UML, topología de 4 redes virtuales independientes (`public`, `app`, `data`, `sandbox`) y especificación `docker-compose.yml` multi-contenedor con sandbox no privilegiado.
 > Los artefactos se encuentran compilados vectorialmente en `/images/RUP/03-diseño/`. Siguiente objetivo: formalización de Contratos OpenAPI / REST y Diagramas de Secuencia de Diseño.
 

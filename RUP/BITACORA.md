@@ -30,6 +30,7 @@ Registro formal y cronológico de decisiones de diseño, acuerdos de modelado y 
 | **[ADR-010](#adr-010-refinamiento-estructural-del-dominio-top-to-bottom-transición-candidato-alumno-y-rediseño-pedagógico-de-materiales)** | 2026-10-22 | Refinamiento estructural del dominio top-to-bottom, transición Candidato-Alumno y rediseño pedagógico de materiales | Aprobado | — |
 | **[ADR-011](#adr-011-patrón-canónico-de-acceso-usuarionologueado-exclusividad-de-cerrarsesion-en-roles-y-extend-condicional)** | 2026-10-23 | Patrón canónico de acceso: UsuarioNoLogueado, exclusividad de cerrarSesion en roles y <<extend>> condicional | Aprobado | — |
 | **[ADR-012](#adr-012-elección-de-postgresql-16-para-persistencia-relacional-y-soporte-de-microservicios)** | 2026-10-29 | Elección de PostgreSQL 16 para persistencia relacional y soporte de microservicios | Aprobado | — |
+| **[ADR-013](#adr-013-simplificación-pragmática-del-modelo-de-datos-der-y-alineación-con-la-operativa-real-de-cts)** | 2026-11-02 | Simplificación pragmática del modelo de datos DER y alineación con la operativa real de CTS | Aprobado | — |
 
 ---
 
@@ -182,6 +183,26 @@ Registro formal y cronológico de decisiones de diseño, acuerdos de modelado y 
     3. **Capacidades Avanzadas de `JSONB` e Índices GIN**: Requeridas para almacenar y consultar de forma ultra-rápida las rúbricas dinámicas de calificación, los resultados de ejecución emitidos por el runner de Docker y los payloads de evaluación práctica.
     4. **Tipos Especializados de Auditoría**: Empleo del tipo `INET` para control de concurrencia e IPs de aspirantes, y `TIMESTAMPTZ` con soporte estricto de UTC para el sincronismo del temporizador de exámenes.
 * **Artefactos afectados**: `RUP/03-diseño/modelo-datos/`, diagramas DER (`derGeneral.puml`, `derMotorEquipos.puml`, `derMotorEvaluacion.puml`, `derMotorFormacion.puml`) y `RUP/03-diseño/README.md`.
+
+---
+
+### ADR-013: Simplificación pragmática del modelo de datos DER y alineación con la operativa real de CTS
+* **Fecha**: 2026-11-02
+* **Contexto**: Tras una auditoría exhaustiva del primer borrador de la Fase 03 (Diseño de Datos), se detectaron elementos heredados de supuestos iniciales o sobre-ingeniería que no reflejaban la realidad operativa del Centro Tecnológico de Desarrollo (CTS) ni del Programa PROFER:
+  1. Existía una tabla `programas_profer` a pesar de que PROFER es el único programa activo del sistema.
+  2. Se modelaban cupos y cuotas rígidas (`cupo_maximo`, `cupos_equipo_convocatoria`) cuando la asignación real a los 6 squads es flexible y dinámica según demandas de proyectos (desde 1 hasta 12 becarios por equipo).
+  3. Se exigía `titulacion_universitaria` en los candidatos, cuando en realidad son estudiantes que postulan para cursar el grado universitario.
+  4. Se persistía una nota escalar numérica (`nota_final_bateria`), contradiciendo el acuerdo de [ADR-007](/RUP/BITACORA.md#adr-007-admisi%C3%B3n-continua-por-ciclos-acad%C3%A9micos-bater%C3%ADa-de-3-tests-e-inclusi%C3%B3n-de-entrevista) donde la batería de 3 tests consolida un gráfico de radar de competencias multidimensional.
+  5. Se habían introducido tablas para comentarios línea por línea de revisiones de código (`comentarios_revision`, `revisiones_codigo`), cuando los becarios y Tech Leaders operan nativamente sobre Pull Requests reales de GitHub/GitLab.
+* **Decisión**:
+  * **Eliminación de `programas_profer`**: `equipos` pasa a ser entidad raíz de primer nivel en `motor_equipos`.
+  * **Flexibilidad de Asignación a Squads**: Se eliminan `cupos_equipo_convocatoria` y los bloqueos restrictivos de cupo.
+  * **Eliminación de Titulación Previa**: Retirar el campo de titulación universitaria de `candidatos`.
+  * **Radar de Competencias JSONB**: Sustituir la nota escalar por `perfil_competencias: jsonb` en `candidatos`, almacenando los puntajes por dimensión que alimentan el gráfico de radar en el panel del Gestor.
+  * **Delegación de Code Review a GitHub**: Eliminar `revisiones_codigo` y `comentarios_revision`. En `entregas_laboratorio` se mantiene la URL del PR, commit hash, estado, feedback general cualitativo y resultado del sandbox CI.
+  * **Ratificación de Markdown para Materiales**: Se mantiene `contenido_markdown: text` en `materiales` para guías técnicas vivas y renderizado interactivo sin inyección de HTML.
+* **Artefactos afectados**: `RUP/03-diseño/modelo-datos/derGeneral.puml`, `derMotorEquipos.puml`, `derMotorEvaluacion.puml`, `derMotorFormacion.puml`, `RUP/03-diseño/modelo-datos/README.md` y diagramas vectoriales compilados.
+
 
 
 

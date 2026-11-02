@@ -7,7 +7,7 @@
 
 # Modelo de Datos Relacional (DER) — PostgreSQL
 
-Este documento especifica el diseño de persistencia relacional en **PostgreSQL 16** para **CTS Academy & Evaluator**, estructurado en estricta conformidad con la descomposición arquitectónica en tres microservicios independientes ([ADR-006](/RUP/BITACORA.md#adr-006-descomposici%C3%B3n-arquitect%C3%B3nica-en-3-microservicios)) y trazado con las 35 colaboraciones de análisis formalizadas en la Fase 02.
+Este documento especifica el diseño de persistencia relacional en **PostgreSQL 16** para **CTS Academy & Evaluator**, estructurado en estricta conformidad con la descomposición arquitectónica en tres microservicios independientes ([ADR-006](/RUP/BITACORA.md#adr-006-descomposici%C3%B3n-arquitect%C3%B3nica-en-3-microservicios)) y simplificado según las directivas pragmáticas de gobernanza y operativa real de CTS ([ADR-013](/RUP/BITACORA.md#adr-013-simplificaci%C3%B3n-pragm%C3%A1tica-del-modelo-de-datos-der-y-alineaci%C3%B3n-con-la-operativa-real-de-cts)).
 
 ---
 
@@ -30,7 +30,7 @@ El esquema general ilustra las entidades de los tres esquemas de base de datos (
 
 ### 2.1 Subsistema `motor_equipos` (Gobernanza y Estructura Organizativa)
 
-Centraliza los usuarios autenticados, perfiles de rol, convenios universitarios y los 6 squads técnicos permanentes de CTS ([ADR-004](/RUP/BITACORA.md#adr-004-embudo-en-2-fases-y-asignaci%C3%B3n-a-los-6-equipos-de-cts)).
+Centraliza los usuarios autenticados, perfiles de rol y los 6 squads técnicos permanentes de CTS ([ADR-004](/RUP/BITACORA.md#adr-004-embudo-en-2-fases-y-asignaci%C3%B3n-a-los-6-equipos-de-cts)). Se prescinde de tablas intermedias de programas al ser PROFER el único marco institucional de la plataforma.
 
 <div align="center">
 
@@ -41,11 +41,11 @@ Centraliza los usuarios autenticados, perfiles de rol, convenios universitarios 
 
 </div>
 
-#### Diccionario de Tablas: `motor_equipos`
+#### Diccionario de Tablas: `motor_equipos` (6 Tablas)
 
 * **`usuarios`**:
   * `id` (`uuid`, PK): Identificador universal único generado mediante `gen_random_uuid()`.
-  * `email` (`varchar(255)`, UNIQUE, NOT NULL): Correo electrónico institucional.
+  * `email` (`varchar(255)`, UNIQUE, NOT NULL): Correo institucional.
   * `password_hash` (`varchar(255)`, NOT NULL): Hash argon2id para autenticación.
   * `nombre` (`varchar(100)`, NOT NULL), `apellidos` (`varchar(150)`, NOT NULL).
   * `rol` (`varchar(30)`, NOT NULL): `CHECK (rol IN ('CANDIDATO', 'ALUMNO', 'LIDER_EQUIPO', 'GESTOR'))`.
@@ -59,22 +59,20 @@ Centraliza los usuarios autenticados, perfiles de rol, convenios universitarios 
   * `ip_origen` (`inet`), `user_agent` (`text`): Trazabilidad de accesos.
   * `expira_en` (`timestamptz`, NOT NULL), `activa` (`boolean`, DEFAULT true).
 
-* **`programas_profer`**:
-  * `id` (`uuid`, PK), `denominacion` (`varchar(150)`), `convenio_universidad` (`varchar(255)`).
-
-* **`equipos`** (Los 6 squads permanentes de desarrollo CTS):
-  * `id` (`uuid`, PK), `programa_id` (`uuid`, FK -> `programas_profer.id`).
+* **`equipos`** (Los 6 squads técnicos de CTS):
+  * `id` (`uuid`, PK).
   * `codigo` (`varchar(20)`, UNIQUE, NOT NULL): Clave unívoca (`TEAM-01` a `TEAM-06`).
   * `nombre` (`varchar(100)`, NOT NULL): Denominación funcional del equipo.
   * `especialidad` (`varchar(50)`, NOT NULL): Especialidad técnica predominante.
-  * `cupo_maximo` (`integer`, NOT NULL, CHECK > 0): Capacidad máxima autorizada de becarios.
+  * *Nota de diseño:* No se fijan límites rígidos de cupo; la distribución de becarios entre squads es flexible (equipos con 12, 4 o 1 integrante) según demanda de proyectos.
 
 * **`lideres_equipo`** (Tech Leaders titulares):
   * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`).
   * `equipo_id` (`uuid`, FK -> `equipos.id`): Squad asignado bajo su tutoría exclusiva ([RN-TL-01](/RUP/01-requisitos/03-detalle-casos-uso/abrirPanelLider/README.md)).
+  * `especialidad_tecnica` (`varchar(100)`), `activo` (`boolean`).
 
 * **`gestores_profer`**:
-  * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`), `departamento` (`varchar(100)`).
+  * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`), `departamento` (`varchar(100)`), `cargo` (`varchar(100)`).
 
 * **`alumnos_profer`**:
   * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`).
@@ -89,7 +87,7 @@ Centraliza los usuarios autenticados, perfiles de rol, convenios universitarios 
 
 ### 2.2 Subsistema `motor_evaluacion` (Captación, Admisión y Exámenes)
 
-Gobierna el ciclo de admisión continua de 365 días ([ADR-007](/RUP/BITACORA.md#adr-007-admisi%C3%B3n-continua-por-ciclos-acad%C3%A9micos-bater%C3%ADa-de-3-tests-e-inclusi%C3%B3n-de-entrevista)), la batería diagnóstica de 3 tests y la formalización de entrevistas Google Meet ([ADR-009](/RUP/BITACORA.md#adr-009-delimitaci%C3%B3n-de-actores-opacidad-de-tests-para-el-candidato-entrevistas-google-meet-en-el-perfil-por-el-gestor-y-aislamiento-del-tl)).
+Gobierna el ciclo de admisión continua de 365 días ([ADR-007](/RUP/BITACORA.md#adr-007-admisi%C3%B3n-continua-por-ciclos-acad%C3%A9micos-bater%C3%ADa-de-3-tests-e-inclusi%C3%B3n-de-entrevista)), la batería diagnóstica de 3 tests con perfil competencial para gráfico de radar y la formalización de entrevistas Google Meet ([ADR-009](/RUP/BITACORA.md#adr-009-delimitaci%C3%B3n-de-actores-opacidad-de-tests-para-el-candidato-entrevistas-google-meet-en-el-perfil-por-el-gestor-y-aislamiento-del-tl)).
 
 <div align="center">
 
@@ -100,7 +98,7 @@ Gobierna el ciclo de admisión continua de 365 días ([ADR-007](/RUP/BITACORA.md
 
 </div>
 
-#### Diccionario de Tablas: `motor_evaluacion`
+#### Diccionario de Tablas: `motor_evaluacion` (10 Tablas)
 
 * **`cursos_academicos`** y **`semestres`**:
   * Marco temporal lectivo (`anio_inicio`, `anio_fin`, `periodo` 'S1'/'S2', `fecha_inicio`, `fecha_fin`).
@@ -111,16 +109,13 @@ Gobierna el ciclo de admisión continua de 365 días ([ADR-007](/RUP/BITACORA.md
   * `fecha_apertura`, `fecha_cierre` (`timestamptz`, NOT NULL, `CHECK (fecha_apertura < fecha_cierre)`).
   * `modelo_admision` (`varchar(30)`, DEFAULT 'CONTINUO_365').
 
-* **`cupos_equipo_convocatoria`**:
-  * `id` (`uuid`, PK), `convocatoria_id` (`uuid`, FK), `equipo_id` (`uuid`, FK).
-  * `cupo_autorizado` (`integer`, NOT NULL, CHECK > 0), `total_admitidos` (`integer`, DEFAULT 0).
-  * `UNIQUE (convocatoria_id, equipo_id)`: Garantiza cuotas fijadas para los 6 equipos ([RN-PER-02](/RUP/01-requisitos/03-detalle-casos-uso/abrirPeriodoIngreso/README.md)).
-
 * **`candidatos`**:
   * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`), `convocatoria_id` (`uuid`, FK).
   * `sede_origen` (`varchar(50)`, NOT NULL): Santander, México, Colombia, Perú, etc. ([ADR-008](/RUP/BITACORA.md#adr-008-canalizaci%C3%B3n-de-candidatos-por-sedes-internacionales-y-eliminaci%C3%B3n-de-usuarionologueado)).
   * `estado_postulacion` (`varchar(40)`, NOT NULL): `REGISTRADO`, `EN_EVALUACION`, `EVALUADO`, `ENTREVISTA_PENDIENTE`, `ENTREVISTADO`, `ADMITIDO`, `RECHAZADO`, `ABANDONO`.
-  * `nota_final_bateria` (`numeric(4,2)`, NULL), `decision_admision` (`varchar(30)`, NULL).
+  * `perfil_competencias` (`jsonb`, NULL): Desglose multidimensional de aptitudes obtenido de los tests (ej. `{"actitud": 85, "logica": 90, "frontend": 75, "backend": 40}`), utilizado para renderizar el **gráfico de radar** en el perfil del Gestor ([ADR-007](/RUP/BITACORA.md#adr-007-admisi%C3%B3n-continua-por-ciclos-acad%C3%A9micos-bater%C3%ADa-de-3-tests-e-inclusi%C3%B3n-de-entrevista)).
+  * `decision_admision` (`varchar(30)`, NULL), `motivo_rechazo` (`text`, NULL).
+  * *Nota de diseño:* No se solicita titulación universitaria previa, ya que los candidatos ingresan a cursar estudios de grado universitario.
 
 * **`tests`**:
   * `id` (`uuid`, PK), `candidato_id` (`uuid`, NULL), `alumno_id` (`uuid`, NULL).
@@ -148,7 +143,7 @@ Gobierna el ciclo de admisión continua de 365 días ([ADR-007](/RUP/BITACORA.md
 
 ### 2.3 Subsistema `motor_formacion` (LMS, Módulos, Entregables y Banco de Preguntas)
 
-Soporta la plataforma formativa para alumnos matriculados, seguimiento curricular por módulos, Pull Requests de laboratorio, revisiones de código y el banco transversal de reactivos.
+Soporta la plataforma formativa para alumnos matriculados, seguimiento curricular por módulos, integración con Pull Requests de GitHub y el banco transversal de reactivos.
 
 <div align="center">
 
@@ -159,7 +154,7 @@ Soporta la plataforma formativa para alumnos matriculados, seguimiento curricula
 
 </div>
 
-#### Diccionario de Tablas: `motor_formacion`
+#### Diccionario de Tablas: `motor_formacion` (9 Tablas)
 
 * **`capacitaciones`**:
   * `id` (`uuid`, PK), `nombre` (`varchar(100)`), `track_especialidad` (`varchar(50)`).
@@ -172,19 +167,21 @@ Soporta la plataforma formativa para alumnos matriculados, seguimiento curricula
   * `UNIQUE (capacitacion_id, orden_secuencial)`.
 
 * **`materiales`** y **`lecturas_material`**:
-  * Guías didácticas Markdown, enlaces externos y registro de lectura obligatoria completada por alumno ([RN-FORM-05](/RUP/01-requisitos/03-detalle-casos-uso/consultarMaterial/README.md)).
+  * `contenido_markdown` (`text`): Guías didácticas vivas redactadas en formato Markdown por el Tech Leader (incluyen bloques de código con resaltado de sintaxis, listas y notas), consumidas y renderizadas directamente por la SPA sin riesgo de inyecciones HTML ni dependencia de archivos binarios pesados.
+  * Registro de lectura obligatoria completada por el alumno ([RN-FORM-05](/RUP/01-requisitos/03-detalle-casos-uso/consultarMaterial/README.md)).
 
 * **`laboratorios`**:
   * Retos prácticos, tickets simulados, plantilla base Git y rúbricas en JSONB.
 
 * **`entregas_laboratorio`**:
-  * `id` (`uuid`, PK), `laboratorio_id` (`uuid`, FK), `alumno_id` (`uuid`, FK).
-  * `url_pull_request` (`varchar(255)`), `commit_hash` (`varchar(40)`).
+  * `id` (`uuid`, PK), `laboratorio_id` (`uuid`, FK), `alumno_id` (`uuid`, FK), `tech_leader_id` (`uuid`, NULL, FK).
+  * `url_pull_request` (`varchar(255)`): Enlace directo al Pull Request de GitHub entregado por el becario.
+  * `commit_hash` (`varchar(40)`): Hash del commit auditado.
   * `estado` (`varchar(30)`): `PENDIENTE_REVISION`, `EN_REVISION`, `APROBADO`, `CAMBIOS_SOLICITADOS`.
+  * `calificacion` (`numeric(4,2)`, NULL): Calificación global (umbral mínimo de 7.0/10.0 [RN-FORM-06](/RUP/01-requisitos/03-detalle-casos-uso/consultarFeedbackEntregable/README.md)).
+  * `feedback_general` (`text`, NULL): Resumen cualitativo de la evaluación emitido por el Tech Leader.
   * `resultado_sandbox_ci` (`jsonb`, NULL): Salida del contenedor Docker de pruebas automáticas.
-
-* **`revisiones_codigo`** y **`comentarios_revision`**:
-  * Veredicto cualitativo y cuantitativo del Tech Leader, feedback línea por línea y calificación mínima de 7.0/10.0 ([RN-FORM-06](/RUP/01-requisitos/03-detalle-casos-uso/consultarFeedbackEntregable/README.md)).
+  * *Nota de diseño:* Se delega la revisión línea por línea a la interfaz nativa de GitHub/GitLab PRs, simplificando la base de datos al prescindir de tablas redundantes de comentarios de código.
 
 * **`preguntas`** y **`opciones_pregunta`**:
   * Banco de reactivos teóricos y prácticos compartidos con `MotorEvaluacion`.
@@ -200,11 +197,15 @@ Soporta la plataforma formativa para alumnos matriculados, seguimiento curricula
 
 1. **Estrategia de Claves Primarias**: Toda tabla utiliza identificadores `UUID v4` generados nativamente por el motor PostgreSQL (`gen_random_uuid()`), garantizando unicidad global e impidiendo enumeración predecible de recursos en APIs REST.
 2. **Auditoría Append-Only e Inmutabilidad**: Las evaluaciones completadas, respuestas de candidatos e informes de corte formalizados tienen prohibida la mutación (`UPDATE`/`DELETE`). Cualquier recalificación o corrección crea una nueva transacción auditada.
-3. **Optimización con Índices Compuestos (B-Tree)**:
+3. **Optimización con Índices Compuestos (B-Tree y GIN)**:
    * `CREATE INDEX idx_candidatos_convocatoria_estado ON motor_evaluacion.candidatos (convocatoria_id, estado_postulacion);`
-   * `CREATE INDEX idx_entregas_equipo_estado ON motor_formacion.entregas_laboratorio (laboratorio_id, estado);`
+   * `CREATE INDEX idx_candidatos_perfil_gin ON motor_evaluacion.candidatos USING GIN (perfil_competencias);`
+   * `CREATE INDEX idx_entregas_laboratorio_estado ON motor_formacion.entregas_laboratorio (laboratorio_id, estado);`
    * `CREATE INDEX idx_sesiones_usuario_activa ON motor_equipos.sesiones (usuario_id, activa);`
-4. **Almacenamiento Semiestructurado (JSONB)**: Se emplea `jsonb` exclusivamente para estructuras de configuración dinámica: resultados de pipelines Docker CI, criterios de rúbrica y consolidación agregada de informes de corte.
+4. **Almacenamiento Semiestructurado (JSONB)**: Se emplea `jsonb` para:
+   * El perfil multidimensional de competencias del candidato (datos del gráfico de radar).
+   * Los resultados de pipelines del sandbox Docker CI.
+   * La distribución agregada de cohortes en informes de corte.
 
 ---
 

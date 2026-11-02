@@ -68,35 +68,16 @@ package "motor_formacion" {
         --
         * laboratorio_id : uuid <<FK>>
         * alumno_id : uuid <<FK>>
+        tech_leader_id : uuid <<FK>>
         * numero_intento : integer
         * url_pull_request : varchar(255)
         * commit_hash : varchar(40)
         * estado : varchar(30)
         calificacion : numeric(4,2)
+        feedback_general : text
         resultado_sandbox_ci : jsonb
         * fecha_envio : timestamptz
         fecha_calificacion : timestamptz
-    }
-
-    entity "revisiones_codigo" as revisiones {
-        * id : uuid <<PK>>
-        --
-        * entrega_laboratorio_id : uuid <<FK>>
-        * tech_leader_id : uuid <<FK>>
-        * veredicto : varchar(30)
-        * calificacion_asignada : numeric(4,2)
-        * resumen_feedback : text
-        * fecha_revision : timestamptz
-    }
-
-    entity "comentarios_revision" as comentarios {
-        * id : uuid <<PK>>
-        --
-        * revision_codigo_id : uuid <<FK>>
-        * archivo_ruta : varchar(255)
-        * linea_codigo : integer
-        * comentario : text
-        * creado_en : timestamptz
     }
 
     entity "preguntas" as preguntas {
@@ -141,8 +122,6 @@ materiales ||--o{ lecturas : "registra lectura"
 
 modulos ||--o{ laboratorios : "asigna retos"
 laboratorios ||--o{ entregas : "recibe entregables PR"
-entregas ||--o{ revisiones : "audita con code review"
-revisiones ||--o{ comentarios : "detalla líneas"
 
 modulos ||--o{ preguntas : "nutre banco de reactivos"
 preguntas ||--|{ opciones : "define opciones"

@@ -54,13 +54,7 @@ package "MotorEvaluacion" #F0F7FF {
         * usuario_id : uuid <<FK>>
         * convocatoria_id : uuid <<FK>>
         * estado_postulacion : varchar(40)
-    }
-
-    entity "cupos_equipo_convocatoria" as ev_cupos {
-        * id : uuid <<PK>>
-        --
-        * convocatoria_id : uuid <<FK>>
-        * equipo_id : uuid <<FK>>
+        perfil_competencias : jsonb
     }
 
     entity "tests" as ev_tests {
@@ -111,6 +105,7 @@ package "MotorFormacion" #F9FFF0 {
         * id : uuid <<PK>>
         --
         * modulo_id : uuid <<FK>>
+        contenido_markdown : text
     }
 
     entity "lecturas_material" as fm_lecturas {
@@ -120,19 +115,21 @@ package "MotorFormacion" #F9FFF0 {
         * alumno_id : uuid <<FK>>
     }
 
+    entity "laboratorios" as fm_laboratorios {
+        * id : uuid <<PK>>
+        --
+        * modulo_id : uuid <<FK>>
+    }
+
     entity "entregas_laboratorio" as fm_entregas {
         * id : uuid <<PK>>
         --
         * laboratorio_id : uuid <<FK>>
         * alumno_id : uuid <<FK>>
+        tech_leader_id : uuid <<FK>>
+        * url_pull_request : varchar(255)
         * estado : varchar(30)
-    }
-
-    entity "revisiones_codigo" as fm_revisiones {
-        * id : uuid <<PK>>
-        --
-        * entrega_laboratorio_id : uuid <<FK>>
-        * tech_leader_id : uuid <<FK>>
+        feedback_general : text
     }
 
     entity "preguntas" as fm_preguntas {
@@ -153,7 +150,6 @@ package "MotorFormacion" #F9FFF0 {
 ' Relaciones Inter-Microservicios
 eq_usuarios ||..o{ ev_candidatos : "credenciales"
 ev_candidatos |o..o| eq_alumnos : "transiciona al admitir [ADR-010]"
-eq_equipos ||..o{ ev_cupos : "cuotas autorizadas"
 eq_gestores ||..o{ ev_entrevistas : "conduce [ADR-009]"
 eq_gestores ||..o{ ev_informes : "formaliza cierre"
 
@@ -163,7 +159,7 @@ fm_preguntas ||..o{ ev_respuestas : "reactivos de examen"
 
 eq_alumnos ||..o{ fm_lecturas : "tracking formativo"
 eq_alumnos ||..o{ fm_entregas : "remite PRs"
-eq_lideres ||..o{ fm_revisiones : "audita código"
+eq_lideres ||..o{ fm_entregas : "califica y retroalimenta"
 eq_alumnos ||..o{ fm_sumativas : "evaluación final"
 eq_lideres ||..o{ fm_sumativas : "emite veredicto"
 

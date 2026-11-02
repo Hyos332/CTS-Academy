@@ -37,15 +37,6 @@ package "motor_evaluacion" {
         * actualizado_en : timestamptz
     }
 
-    entity "cupos_equipo_convocatoria" as cupos {
-        * id : uuid <<PK>>
-        --
-        * convocatoria_id : uuid <<FK>>
-        * equipo_id : uuid <<FK>>
-        * cupo_autorizado : integer
-        * total_admitidos : integer
-    }
-
     entity "candidatos" as candidatos {
         * id : uuid <<PK>>
         --
@@ -54,9 +45,8 @@ package "motor_evaluacion" {
         * sede_origen : varchar(50)
         lote_importacion_id : uuid
         telefono : varchar(30)
-        titulacion_universitaria : varchar(150)
         * estado_postulacion : varchar(40)
-        nota_final_bateria : numeric(4,2)
+        perfil_competencias : jsonb
         decision_admision : varchar(30)
         motivo_rechazo : text
         * creado_en : timestamptz
@@ -140,7 +130,6 @@ package "motor_evaluacion" {
 
 cursos ||--|{ semestres : "compone"
 semestres ||--o{ convocatorias : "organiza"
-convocatorias ||--|{ cupos : "asigna cupos"
 convocatorias ||--o{ candidatos : "inscribe"
 convocatorias ||--o| informes : "consolida"
 

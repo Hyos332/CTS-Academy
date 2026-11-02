@@ -32,23 +32,12 @@ package "motor_equipos" {
         * creado_en : timestamptz
     }
 
-    entity "programas_profer" as programas {
-        * id : uuid <<PK>>
-        --
-        * denominacion : varchar(150)
-        * convenio_universidad : varchar(255)
-        * activo : boolean
-        * creado_en : timestamptz
-    }
-
     entity "equipos" as equipos {
         * id : uuid <<PK>>
         --
-        * programa_id : uuid <<FK>>
         * codigo : varchar(20) <<UNIQUE>>
         * nombre : varchar(100)
         * especialidad : varchar(50)
-        * cupo_maximo : integer
         * creado_en : timestamptz
     }
 
@@ -88,7 +77,6 @@ usuarios ||--o| lideres : "perfila"
 usuarios ||--o| gestores : "perfila"
 usuarios ||--o| alumnos : "perfila"
 
-programas ||--|{ equipos : "estructura"
 equipos ||--o{ lideres : "dirige"
 equipos ||--o{ alumnos : "adscribe"
 
