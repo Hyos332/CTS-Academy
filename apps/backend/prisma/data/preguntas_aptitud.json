@@ -1,0 +1,647 @@
+[
+  {
+    "orden": 1,
+    "tipo_bateria": "APTITUD",
+    "categoria": "SysAdmin",
+    "enunciado": "[SysAdmin] GIT: Nivel de dominio y experiencia con GIT (control de versiones, branching, merge, rebase).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 2,
+    "tipo_bateria": "APTITUD",
+    "categoria": "SysAdmin",
+    "enunciado": "[SysAdmin] Redes de Computación: Conocimientos de redes de computación (protocolos TCP/IP, DNS, subredes, routing).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 3,
+    "tipo_bateria": "APTITUD",
+    "categoria": "SysAdmin",
+    "enunciado": "[SysAdmin] Seguridad Informática: Fundamentos de seguridad informática (OWASP, cifrado, autenticación, firewalls).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 4,
+    "tipo_bateria": "APTITUD",
+    "categoria": "SysAdmin",
+    "enunciado": "[SysAdmin] Cloud Computing: Experiencia en servicios de Cloud Computing (AWS, GCP, Azure, infra cloud).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 5,
+    "tipo_bateria": "APTITUD",
+    "categoria": "SysAdmin",
+    "enunciado": "[SysAdmin] Docker / Kubernetes: Uso y gestión de contenedores Docker y orquestación con Kubernetes.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 6,
+    "tipo_bateria": "APTITUD",
+    "categoria": "SysAdmin",
+    "enunciado": "[SysAdmin] Mantenimiento de Ordenadores: Diagnóstico de hardware, sistemas operativos, instalación y mantenimiento de ordenadores.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 7,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Bases de Datos",
+    "enunciado": "[Bases de Datos] Bases de Datos Relacionales: Diseño y operación en Bases de Datos Relacionales (PostgreSQL, MySQL, MariaDB).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 8,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Bases de Datos",
+    "enunciado": "[Bases de Datos] Bases de Datos No Relacionales: Experiencia con Bases de Datos No Relacionales / NoSQL (MongoDB, Redis, Firestore).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 9,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Bases de Datos",
+    "enunciado": "[Bases de Datos] ORM / ODM: Uso de ORM / ODM (Prisma, TypeORM, Hibernate, Mongoose).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 10,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Bases de Datos",
+    "enunciado": "[Bases de Datos] Normalización: Modelado conceptual, formas normales (1FN, 2FN, 3FN) e integridad referencial.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 11,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Bases de Datos",
+    "enunciado": "[Bases de Datos] Consultas SQL: Complejidad en redacción de consultas SQL (JOINs, agregaciones, subqueries, índices).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 12,
+    "tipo_bateria": "APTITUD",
+    "categoria": "BackEnd",
+    "enunciado": "[BackEnd] Creación de APIs: Diseño e implementación de APIs RESTful y GraphQL con buenas prácticas de arquitectura.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 13,
+    "tipo_bateria": "APTITUD",
+    "categoria": "BackEnd",
+    "enunciado": "[BackEnd] Implementación de Inteligencia Artificial: Integración de modelos de Machine Learning, LLMs, APIs de IA y procesamiento de lenguaje.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 14,
+    "tipo_bateria": "APTITUD",
+    "categoria": "BackEnd",
+    "enunciado": "[BackEnd] Desarrollo Apps Móviles: Desarrollo de aplicaciones móviles (React Native, Flutter, Kotlin, Swift).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 15,
+    "tipo_bateria": "APTITUD",
+    "categoria": "BackEnd",
+    "enunciado": "[BackEnd] Programación Orientada a Objetos: Dominio de POO, patrones de diseño (SOLID, Factory, Singleton, Puertos y Adaptadores).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 16,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Lenguajes de Programación",
+    "enunciado": "[Lenguajes de Programación] PHP: Nivel de programación en PHP (PHP 8+, OOP, tipado estricto).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 17,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Lenguajes de Programación",
+    "enunciado": "[Lenguajes de Programación] JavaScript: Nivel de dominio de JavaScript moderno (ES6+, promesas, event loop, async/await).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 18,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Lenguajes de Programación",
+    "enunciado": "[Lenguajes de Programación] Python: Nivel de programación en Python (estructuras, scripts, backend/data).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 19,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Lenguajes de Programación",
+    "enunciado": "[Lenguajes de Programación] Java: Nivel de programación en Java (Spring, OOP, tipado estricto).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 20,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Lenguajes de Programación",
+    "enunciado": "[Lenguajes de Programación] TypeScript: Nivel de dominio de TypeScript (tipado estricto, interfaces, generics, utilidades).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 21,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Lenguajes de Programación",
+    "enunciado": "[Lenguajes de Programación] C / C# / C++: Nivel de programación en C, C# (.NET) o C++.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 22,
+    "tipo_bateria": "APTITUD",
+    "categoria": "FrontEnd",
+    "enunciado": "[FrontEnd] HTML: Maquetación semántica HTML5 y estándares de accesibilidad web.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 23,
+    "tipo_bateria": "APTITUD",
+    "categoria": "FrontEnd",
+    "enunciado": "[FrontEnd] CSS: Estilizado avanzado con CSS (Flexbox, Grid, selectores, animaciones, responsive).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 24,
+    "tipo_bateria": "APTITUD",
+    "categoria": "FrontEnd",
+    "enunciado": "[FrontEnd] Bootstrap: Uso de Bootstrap y frameworks utilitarios de diseño rápido.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 25,
+    "tipo_bateria": "APTITUD",
+    "categoria": "FrontEnd",
+    "enunciado": "[FrontEnd] SCSS / SASS: Preprocesadores de estilos CSS (SCSS, variables, mixins, anidamiento).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 26,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Diseño y Usabilidad",
+    "enunciado": "[Diseño y Usabilidad] Creación de Wireframes / Prototipado: Habilidad para plasmar flujos de usuario y prototipos de pantallas.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 27,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Diseño y Usabilidad",
+    "enunciado": "[Diseño y Usabilidad] Figma: Manejo de herramientas de diseño Figma (componentes, auto-layout, variantes).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 28,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Diseño y Usabilidad",
+    "enunciado": "[Diseño y Usabilidad] UI / UX: Principios de experiencia de usuario, ergonomía visual y accesibilidad.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 29,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Diseño y Usabilidad",
+    "enunciado": "[Diseño y Usabilidad] Illustrator: Creación y manipulación de gráficos vectoriales con Adobe Illustrator.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 30,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Diseño y Usabilidad",
+    "enunciado": "[Diseño y Usabilidad] Photoshop: Edición de imágenes y recursos visuales con Adobe Photoshop.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 31,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Sistemas OpenSource",
+    "enunciado": "[Sistemas OpenSource] Drupal: Conocimiento y desarrollo sobre CMS Drupal.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 32,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Sistemas OpenSource",
+    "enunciado": "[Sistemas OpenSource] WordPress: Desarrollo de temas, plugins y administración de WordPress.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 33,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Sistemas OpenSource",
+    "enunciado": "[Sistemas OpenSource] Moodle: Gestión, integración o extensión de la plataforma LMS Moodle.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 34,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Frameworks",
+    "enunciado": "[Frameworks] Laravel: Desarrollo backend con el framework PHP Laravel.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 35,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Frameworks",
+    "enunciado": "[Frameworks] SailsJS: Desarrollo backend MVC con SailsJS sobre Node.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 36,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Frameworks",
+    "enunciado": "[Frameworks] ExpressJS: Creación de servicios web y microservicios con Express.js.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 37,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Frameworks",
+    "enunciado": "[Frameworks] Vue: Desarrollo frontend reactivo con Vue.js.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 38,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Frameworks",
+    "enunciado": "[Frameworks] React: Desarrollo de interfaces declarativas con React (Hooks, Context, Estado).",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 39,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Área de Desempeño",
+    "enunciado": "[Área de Desempeño] Desempeño en BackEnd: Autopercepción de solidez y confort resolviendo problemas de BackEnd.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 40,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Área de Desempeño",
+    "enunciado": "[Área de Desempeño] Desempeño en FrontEnd: Autopercepción de solidez y confort diseñando interfaces FrontEnd.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 41,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Área de Desempeño",
+    "enunciado": "[Área de Desempeño] Desempeño en SysAdmin: Autopercepción de solidez y confort en administración de sistemas y DevOps.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 42,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Área de Desempeño",
+    "enunciado": "[Área de Desempeño] Desempeño en Base de Datos: Autopercepción de solidez y confort en modelado y consultas de Bases de Datos.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "0 - Sin experiencia",
+      "1 - Básico (conocimientos elementales)",
+      "2 - Principiante (prácticas académicas)",
+      "3 - Intermedio (resolución autónoma de tareas)",
+      "4 - Avanzado (experiencia en proyectos reales)",
+      "5 - Experimentado (dominio profesional sólido)"
+    ]
+  },
+  {
+    "orden": 43,
+    "tipo_bateria": "APTITUD",
+    "categoria": "Especialización Futura",
+    "enunciado": "¿En qué área de la informática desearía especializarse prioritariamente durante su estancia en PROFER?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Arquitectura Cloud y Fullstack TypeScript (NestJS, React, PostgreSQL)",
+      "Backend Distribuido, Microservicios y DevOps (Go, Kubernetes, Observabilidad)",
+      "Frontend Moderno, UI/UX y Aplicaciones Móviles (React, Next.js, Mobile)",
+      "Data Engineering, Big Data e Inteligencia Artificial (Python, ML, Analytics)",
+      "QA Automatizado, Calidad de Software y Ciberseguridad (E2E, OWASP)",
+      "Modernización de Software, Refactorización de Integraciones y APIs"
+    ]
+  }
+]

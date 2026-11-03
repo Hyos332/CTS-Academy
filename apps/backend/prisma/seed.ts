@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -513,6 +515,9 @@ async function main() {
     await prisma.pregunta.create({
       data: {
         modulo_id: modulo.id,
+        tipo_bateria: 'TECNICO',
+        categoria: 'Arquitectura de Software',
+        orden: 1,
         tipo_pregunta: 'TEORICA',
         enunciado: '¿Cuál es el propósito primordial de los "Puertos y Adaptadores" en la Arquitectura Hexagonal?',
         peso_puntos: 1.0,
@@ -531,6 +536,9 @@ async function main() {
     await prisma.pregunta.create({
       data: {
         modulo_id: modulo.id,
+        tipo_bateria: 'TECNICO',
+        categoria: 'Frameworks & NestJS',
+        orden: 2,
         tipo_pregunta: 'TEORICA',
         enunciado: 'En NestJS, ¿cuál es el ámbito (scope) predeterminado de un proveedor (@Injectable())?',
         peso_puntos: 1.0,
@@ -549,6 +557,9 @@ async function main() {
     await prisma.pregunta.create({
       data: {
         modulo_id: modulo.id,
+        tipo_bateria: 'TECNICO',
+        categoria: 'Bases de Datos & Persistencia',
+        orden: 3,
         tipo_pregunta: 'TEORICA',
         enunciado: '¿Qué ventaja aporta la partición por Esquemas Lógicos (Schemas) nativos en PostgreSQL frente a bases de datos aisladas?',
         peso_puntos: 1.0,
@@ -567,6 +578,9 @@ async function main() {
     await prisma.pregunta.create({
       data: {
         modulo_id: modulo.id,
+        tipo_bateria: 'TECNICO',
+        categoria: 'Lenguajes & TypeScript',
+        orden: 4,
         tipo_pregunta: 'TEORICA',
         enunciado: 'En TypeScript, ¿cuál es la principal diferencia semántica y de seguridad entre "unknown" y "any"?',
         peso_puntos: 1.0,
@@ -585,6 +599,9 @@ async function main() {
     await prisma.pregunta.create({
       data: {
         modulo_id: modulo.id,
+        tipo_bateria: 'TECNICO',
+        categoria: 'Algoritmia & Testing',
+        orden: 5,
         tipo_pregunta: 'PRACTICA',
         enunciado: 'Implementa una función en TypeScript `calcularRadar(evaluaciones: number[]): { promedio: number, nivel: string }` que reciba un arreglo de notas (0 a 100), filtre valores inválidos y retorne el promedio con el nivel ("JUNIOR" si < 70, "INTERMEDIO" si 70-85, "AVANZADO" si > 85).',
         peso_puntos: 2.0,
@@ -595,6 +612,76 @@ async function main() {
         timeout_ms: 5000,
       },
     });
+  }
+
+  // 8. Batería de Actitud (102 preguntas oficiales del test actitud.pdf)
+  console.log('🧠 Sembrando 102 preguntas oficiales del Test de Actitud PROFER...');
+  const preguntasActitudFile = path.join(__dirname, 'data/preguntas_actitud.json');
+  if (fs.existsSync(preguntasActitudFile)) {
+    const rawActitud = JSON.parse(fs.readFileSync(preguntasActitudFile, 'utf-8'));
+    const existentesActitud = await prisma.pregunta.count({
+      where: { tipo_bateria: 'ACTITUD' },
+    });
+
+    if (existentesActitud === 0) {
+      for (const q of rawActitud) {
+        await prisma.pregunta.create({
+          data: {
+            modulo_id: modulo.id,
+            tipo_bateria: 'ACTITUD',
+            categoria: q.categoria,
+            orden: q.orden,
+            enunciado: q.enunciado,
+            tipo_pregunta: 'TEORICA',
+            peso_puntos: 1.0,
+            opciones: {
+              create: q.opciones.map((opt: string) => ({
+                texto: opt,
+                es_correcta: false, // Sin respuestas correctas/incorrectas
+              })),
+            },
+          },
+        });
+      }
+      console.log(`✅ ${rawActitud.length} preguntas de Actitud creadas.`);
+    } else {
+      console.log(`ℹ️ ${existentesActitud} preguntas de Actitud ya existen en base de datos.`);
+    }
+  }
+
+  // 9. Batería de Aptitud (43 preguntas oficiales del test aptitud.pdf)
+  console.log('📐 Sembrando 43 preguntas oficiales del Test de Aptitud PROFER...');
+  const preguntasAptitudFile = path.join(__dirname, 'data/preguntas_aptitud.json');
+  if (fs.existsSync(preguntasAptitudFile)) {
+    const rawAptitud = JSON.parse(fs.readFileSync(preguntasAptitudFile, 'utf-8'));
+    const existentesAptitud = await prisma.pregunta.count({
+      where: { tipo_bateria: 'APTITUD' },
+    });
+
+    if (existentesAptitud === 0) {
+      for (const q of rawAptitud) {
+        await prisma.pregunta.create({
+          data: {
+            modulo_id: modulo.id,
+            tipo_bateria: 'APTITUD',
+            categoria: q.categoria,
+            orden: q.orden,
+            enunciado: q.enunciado,
+            tipo_pregunta: 'TEORICA',
+            peso_puntos: 1.0,
+            opciones: {
+              create: q.opciones.map((opt: string) => ({
+                texto: opt,
+                es_correcta: false,
+              })),
+            },
+          },
+        });
+      }
+      console.log(`✅ ${rawAptitud.length} preguntas de Aptitud creadas.`);
+    } else {
+      console.log(`ℹ️ ${existentesAptitud} preguntas de Aptitud ya existen en base de datos.`);
+    }
   }
 
   console.log('✅ Seed finalizado exitosamente.');

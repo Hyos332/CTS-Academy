@@ -140,16 +140,32 @@ export class EvaluacionService {
       where: { test_id: testId },
     });
 
-    // Preguntas asociadas al módulo de evaluación
-    const preguntas = await this.prisma.pregunta.findMany({
-      where: { activo: true },
-      take: 10,
+    // Preguntas asociadas al tipo de batería específico (ACTITUD, APTITUD o TECNICO)
+    let preguntas = await this.prisma.pregunta.findMany({
+      where: {
+        activo: true,
+        tipo_bateria: test.tipo_bateria,
+      },
+      orderBy: [{ orden: 'asc' }, { creado_en: 'asc' }],
       include: {
         opciones: {
           select: { id: true, texto: true }, // Nunca revelar es_correcta
         },
       },
     });
+
+    if (preguntas.length === 0) {
+      // Fallback a preguntas activas generales si no hay específicas de la batería
+      preguntas = await this.prisma.pregunta.findMany({
+        where: { activo: true },
+        take: 10,
+        include: {
+          opciones: {
+            select: { id: true, texto: true },
+          },
+        },
+      });
+    }
 
     return {
       test: {
@@ -164,6 +180,8 @@ export class EvaluacionService {
         id: p.id,
         enunciado: p.enunciado,
         tipoPregunta: p.tipo_pregunta,
+        categoria: p.categoria,
+        orden: p.orden,
         opciones: p.opciones,
       })),
       respuestasGuardadas: respuestasPrevias.map((r) => ({

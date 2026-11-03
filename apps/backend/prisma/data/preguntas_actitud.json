@@ -1,0 +1,1226 @@
+[
+  {
+    "orden": 1,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "1. ¿Está su memoria mejor ahora que antes?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 2,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "2. ¿Puede usted vivir solo, lejos de todo el mundo, como un ermitaño?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 3,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "3. ¿Cómo llamaría a una persona que dijera que el cielo esta abajo y que en  el invierno hace calor?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Un criminal",
+      "Un loco",
+      "Una nube"
+    ]
+  },
+  {
+    "orden": 4,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "4. ¿Qué hace cuando se encuentra con personas desarreglada y desordenada?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "La Acepta",
+      "Intermedio",
+      "Se siente disgustado y molesto"
+    ]
+  },
+  {
+    "orden": 5,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "5. ¿A veces trata de ser gentil con los meseros?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 6,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "6. ¿En una fiesta, prefiere usted esperar que otra gente empiece a contar los chistes y los cuentos?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Siempre",
+      "Ocasionalmente",
+      "Casi Nunca"
+    ]
+  },
+  {
+    "orden": 7,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "7. Cree usted, ¿Qué la gente debería seguir las leyes morales más frecuentemente?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 8,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "8. ¿A la mayoría de la gente que conoce, le da verdadero gusto encontrarle  en una fiesta?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A Veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 9,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "9. Preferiría usted hacer ejercicio con:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Esgrima y baile",
+      "Intermedio",
+      "El box y beisbol"
+    ]
+  },
+  {
+    "orden": 10,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "10. ¿Le dan risa las grandes diferencias entre lo que hace la gente y lo que  dice que hace?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Cierto",
+      "Inseguro",
+      "No Cierto"
+    ]
+  },
+  {
+    "orden": 11,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "11. ¿Cuándo era niño sentía tristeza al salir de la casa para ir a la escuela cada día?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 12,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "12. ¿Qué hace usted, si pasan por alto algún comentario suyo?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Lo olvida",
+      "Intermedio",
+      "Lo repite hasta que la gente lo comprenda"
+    ]
+  },
+  {
+    "orden": 13,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "13. ¿Se ve usted en la necesidad de evitar actividades porque lo cansan?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 14,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "14. ¿De ser posible, qué preferiría jugar?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Ajedrez",
+      "Intermedio",
+      "Bolos/boliche"
+    ]
+  },
+  {
+    "orden": 15,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "15. ¿Cuándo piensa hacer algo solo, lo trata de hacer completamente a solas?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 16,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "16. ¿Se rehúsa usted a dedicar tiempo pensando en “lo que podría haber sido”?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 17,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "17. ¿Es usted una persona que se deshace fácilmente de las preocupaciones y responsabilidades?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 18,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "18. ¿En alguna ocasión, aunque haya sido por un momento, ha sentido usted resentimiento por sus padres?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 19,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "19. ¿Tomaría usted un trabajo en el que tuviera que escuchar quejas de los  empleados o de los clientes durante el día entero?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 20,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "20. ¿Cuál de las siguientes palabras es el opuesto del opuesto de inexacto?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Casual",
+      "Preciso",
+      "Aproximado"
+    ]
+  },
+  {
+    "orden": 21,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "21. ¿Siempre cuenta usted con bastante energía, más de la necesaria?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 22,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "22. ¿Le daría vergüenza pertenecer a un campo nudista?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 23,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "23. ¿Busca usted las reuniones grandes, como las fiestas o los bailes?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 24,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "24. ¿Cree usted que?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Hay trabajos que no requieren el mismo cuidado que otros",
+      "Intermedio",
+      "Cualquier trabajo, si es que se va a hacer, debe hacerse bien."
+    ]
+  },
+  {
+    "orden": 25,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "25. Al caminar por la calle, a veces se disgusta por la manera en que le mira la gente",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 26,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "26. ¿Qué preferiría ser usted?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Obispo",
+      "Ninguno",
+      "Coronel"
+    ]
+  },
+  {
+    "orden": 27,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "27. Si su vecino constantemente se aprovecha de usted, ¿considera que es  mejor simplemente callarse que desenmascararlo?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "Nunca"
+    ]
+  },
+  {
+    "orden": 28,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "28. Preferiría ver",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Una buena película sobre la época difícil de la colonización",
+      "Intermedio",
+      "Una farsa ingeniosa sobre la sociedad del futuro"
+    ]
+  },
+  {
+    "orden": 29,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "29. Cuando se le ha hecho responsable por algún proyecto, insiste usted en  imponer siempre su punto de vista o renunciar",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 30,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "30. Qué hace cuando una persona muestra mala educación:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "No dice nada por no querer ser fastidioso",
+      "Intermedio",
+      "Le hace ver claramente a esta persona lo que piensa"
+    ]
+  },
+  {
+    "orden": 31,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "31. Cuando le presentan a alguien, prefiere usted",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Tener una charla placentera sobre política y puntos de vista sociales.",
+      "Intermedio",
+      "Que le cuente algunos chistes"
+    ]
+  },
+  {
+    "orden": 32,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "32. ¿Cree usted que es cruel vacunar a los niños pequeños, y que los padres deben tener el derecho de aplazar la vacuna?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 33,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "33. ¿Qué preferiría usted?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Un seguro de vida",
+      "Intermedio",
+      "La capacitación personal"
+    ]
+  },
+  {
+    "orden": 34,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "34. Cuando está pendiente de la salida de un tren, siente usted apuros, tensión, ansiedad, aunque sabe que cuenta con bastante tiempo",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 35,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "35. Le es difícil admitir que está equivocado",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 36,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "36. En una fábrica, ¿preferiría usted encargarse de?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Máquinas",
+      "Intermedio",
+      "Entrevistar y contratar al personal"
+    ]
+  },
+  {
+    "orden": 37,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "37. ¿Cuál palabra no va con las otras dos?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Gato",
+      "Atrás",
+      "Sol"
+    ]
+  },
+  {
+    "orden": 38,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "38. Tiene usted salud variable, que a veces incluso le obliga a cambiar sus proyectos inesperadamente.",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 39,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "39. ¿Le gustaría ser atendido por sirvientes personales?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 40,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "40. ¿Se siente usted incómodo en compañía de otras personas?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 41,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "41. ¿Si le sobrara dinero de sus necesidades cotidianas, cree que debería  donar gran parte del sobrante a la iglesia o alguna otra causa merecedora?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 42,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "42. ¿Hay veces que se enfurece tanto que le parece mejor no decir nada?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 43,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "43. ¿Puede usted hacer trabajo físico sin fatigarse tanto como la mayoría de  las personas?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 44,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "44. Usted cree que la mayoría de los testigos dice la verdad, aunque les cueste:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 45,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "45. ¿Le ayuda el caminar cuando piensa?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 46,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "46. Cree usted que nuestro país debería gastar más en",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Armamento",
+      "Intermedio",
+      "Educación"
+    ]
+  },
+  {
+    "orden": 47,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "47. Preferiría usted pasarse la noche",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "En un juego reñido de cartas",
+      "Intermedio",
+      "Viendo fotos de vacaciones pasadas"
+    ]
+  },
+  {
+    "orden": 48,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "48. Preferiría usted leer",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Una buena novela histórica",
+      "Intermedio",
+      "Un ensayo de un cientí co sobre como aprovechar los recursos"
+    ]
+  },
+  {
+    "orden": 49,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "49. ¿Está usted verdaderamente seguro que hay mas gente amable que gente tonta en el mundo?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 50,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "50. ¿Hace usted más proyectos y es usted más enérgico en cuanto a llevar  a cabo su trabajo que otras personas que han tenido éxito?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 51,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "51. ¿Hay veces que no le quiero ver a nadie?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Muy rara vez",
+      "Intermedio",
+      "Muy a menudo"
+    ]
+  },
+  {
+    "orden": 52,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "52. ¿Cuándo sabe que hace lo correcto, siempre le es fácil hacerlo?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 53,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "53. ¿Preferiría?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Trabajar en una o cina de negocios, organizando gente",
+      "Intermedio",
+      "Ser arquitecto, proyectando edi cios"
+    ]
+  },
+  {
+    "orden": 54,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "54. El negro se compara con el gris como el dolor se compara con:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "La Herida",
+      "La Enfermedad",
+      "La molestia"
+    ]
+  },
+  {
+    "orden": 55,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "55. ¿Siempre duerme usted bien, sin hablar o caminar dormido?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 56,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "56. ¿Si le es necesario, puede usted decirle una mentira a un desconocido sin cambiar de expresión?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 57,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "57. ¿Ha participado usted activamente en la organización de algún club, equipo, o grupo social?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 58,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "58. ¿A quien admira más?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Una persona lista pero poco con able",
+      "Ocasionalmente",
+      "Una persona media con la voluntad de resistir las tentaciones"
+    ]
+  },
+  {
+    "orden": 59,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "59. ¿Cuando presenta usted una queja justa, siempre consigue satisfacción?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 60,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "60. ¿Las circunstancias desalentadoras lo dejan al borde de las lágrimas?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 61,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "61. ¿Cree usted que muchos países extranjeros sienten más amistad con nosotros de lo que suponemos?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 62,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "62. ¿Hay momentos del día en que le gusta estar solo con sus pensamientos, apartado de la gente?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 63,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "63. Hay veces que se exaspera usted con reglas y restricciones pequeñas que en los momentos más difíciles",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 64,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "64. ¿Cree usted que mucho de la educación moderna, dizque “progresiva” no es tan buena como las reglas disciplinarias de sentido común de la escuela antigua?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 65,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "65. Aprendió usted más en la escuela...:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Asistiendo a clases",
+      "Intermedio",
+      "Leyendo textos"
+    ]
+  },
+  {
+    "orden": 66,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "66. ¿Trata usted de evitar mezclarse en responsabilidades sociales?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 67,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "67. Cuando usted tiene mucho que hacer y un problema se vuelve demasiado difícil, prefiere",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Un problema distinto",
+      "Intermedio",
+      "Otra manera de resolver el mismo problema"
+    ]
+  },
+  {
+    "orden": 68,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "68. ¿Deriva usted ánimos fuertes, como la ansiedad, la risa, la ira, etc. de incidentes pequeños?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 69,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "69. ¿Hay veces que su mente no funciona tan bien como en otras ocasiones?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 70,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "70. ¿Complace usted a la gente cumpliendo con citas que les conviene a ellos?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 71,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "71. ¿Si la mamá de María es la hermana del papá de Federico, que parentesco tiene Federico con el papá de María?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Primo",
+      "Sobrino",
+      "Tío"
+    ]
+  },
+  {
+    "orden": 72,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "72. ¿Se siente usted crítico del trabajo de mucha gente?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 73,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "73. ¿Le molesta la gente que dice que puede hacer las cosas mejor que los  demás?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 74,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "74. ¿Le encanta salir de viaje casi todo el tiempo?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 75,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "75. ¿Ha llegado usted casi a desmayarse por algún dolor repentino o al ver  la sangre?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 76,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "76. ¿Dedica usted mucho tiempo a platicar sobre los problemas regionales con la gente?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 77,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "77. Preferiría usted ser:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Ingeniero",
+      "Intermedio",
+      "Profesor de teoría sociales"
+    ]
+  },
+  {
+    "orden": 78,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "78. ¿Es necesario a menudo dominarse para no tratar de resolver los problemas de otras personas?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Si",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 79,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "79. ¿Cuántos de sus vecinos le aburren platicando?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "La mayoría",
+      "Intermedio",
+      "Casi ninguno"
+    ]
+  },
+  {
+    "orden": 80,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "80. ¿Si hay propaganda escondida en lo que está leyendo usted generalmente lo nota antes de que alguien se lo indique?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 81,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "81. ¿Cree usted que cada cuento indica alguna moraleja?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 82,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "82. Causa más dificultad el hecho de que la gente:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Cambia y modi ca métodos ya bien comprobados",
+      "Intermedio",
+      "Rechaza los métodos nuevos y modernizados"
+    ]
+  },
+  {
+    "orden": 83,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "83. ¿Hay veces que no se atreve a utilizar sus propias ideas porque le parecen poco prácticas?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 84,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "84. ¿Parecen molestarse algunas personas engreídas al ver que usted se acerca?, suponemos",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 85,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "85. ¿Puede usted confiar en que su memoria no le traiciona, aun en detalles  pequeños?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Intermedio",
+      "No"
+    ]
+  },
+  {
+    "orden": 86,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "86. ¿A veces es usted menos considerado con las demás personas, que ellas con usted?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Si",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 87,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "87. ¿Es usted lento para decir lo que siente, en comparación con los demás?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Si",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 88,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "88. ¿El número correcto para continuar la sería de números 1, 2, 3, 6, 5 es?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "5",
+      "7",
+      "10"
+    ]
+  },
+  {
+    "orden": 89,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "89. ¿Se impacienta usted hasta enfurecerse cuando alguien lo retrasa?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Si",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 90,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "90. ¿Dice la gente que usted es una persona que tiende a salirse con la suya?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 91,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "91. ¿Es usted lento para quejarse si no se le da el material adecuado para su trabajo?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 92,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "92. En casa:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Utiliza tiempo en platicar y descansar",
+      "Intermedio",
+      "Piensa ocupar su tiempo con trabajos especiales"
+    ]
+  },
+  {
+    "orden": 93,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "93. ¿Es usted tímido y cauteloso en hacer nuevas amistades?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 94,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "94. ¿Cree usted que lo que se trata de expresar en la poesía se podría expresar con la misma claridad en lenguaje común y corriente?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 95,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "95. ¿Sospecha usted que las personas que aparentan amistad con usted a  veces le son desleales en su ausencia?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 96,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "96. ¿Generalmente dejan sin cambio en su personalidad las experiencias más dramáticas en el curso del año?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 97,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "97. ¿Habla usted con voz baja y lentamente?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 98,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "98. ¿Siente usted temor o disgusto casi incontrolable hacia algunas cosas:  ejemplo, algún animal, algo en particular, etc.?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  },
+  {
+    "orden": 99,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "99. Dentro de un grupo, preferiría usted ser la persona que:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Trabaja sobre desarrollos técnicos",
+      "Intermedio",
+      "Se encarga de los registros y la vigilancia de los reglamentos"
+    ]
+  },
+  {
+    "orden": 100,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "100. Para saber cómo votar sobre alguna cuestión social, leería usted:",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Una novela inteligente que ha recibido buenas enseñanzas sobre el",
+      "Intermedio",
+      "Algún texto que enumere estadísticas y otros datos"
+    ]
+  },
+  {
+    "orden": 101,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "101. ¿Tiene usted sueños que son algo fantásticos?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "Ocasionalmente",
+      "No"
+    ]
+  },
+  {
+    "orden": 102,
+    "tipo_bateria": "ACTITUD",
+    "categoria": "Psicométrico & Conductual",
+    "enunciado": "102. ¿Si se le deja solo en casa por algún tiempo, tiende a ponerse algo ansioso?",
+    "tipo_pregunta": "TEORICA",
+    "opciones": [
+      "Sí",
+      "A veces",
+      "No"
+    ]
+  }
+]

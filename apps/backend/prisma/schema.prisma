@@ -381,6 +381,9 @@ model EntregaLaboratorio {
 model Pregunta {
   id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   modulo_id           String                @db.Uuid
+  tipo_bateria        String                @default("TECNICO") @db.VarChar(30) // ACTITUD, APTITUD, TECNICO
+  categoria           String?               @db.VarChar(100)
+  orden               Int?                  @default(1)
   enunciado           String                @db.Text
   tipo_pregunta       String                @db.VarChar(20) // TEORICA, PRACTICA
   peso_puntos         Decimal               @default(1.00) @db.Decimal(4, 2)

@@ -25,6 +25,8 @@ interface Pregunta {
   id: string;
   enunciado: string;
   tipoPregunta: 'TEORICA' | 'PRACTICA';
+  categoria?: string;
+  orden?: number;
   opciones?: Opcion[];
 }
 
@@ -273,7 +275,9 @@ export const TestRunnerPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-sm font-bold text-white">Batería de Admisión Técnica</h1>
+            <h1 className="text-sm font-bold text-white">
+              Batería de {data?.test?.tipoBateria ? `${data.test.tipoBateria}` : 'Admisión'}
+            </h1>
             <p className="text-xs text-slate-400">CTS Academy • Programa PROFER</p>
           </div>
         </div>
@@ -307,14 +311,14 @@ export const TestRunnerPage: React.FC = () => {
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Navegador de Preguntas (Sidebar) */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 h-fit shadow-sm">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
             <span>Preguntas</span>
-            <span className="text-brand-400 font-mono">
+            <span className="text-brand-400 font-mono text-xs">
               {Object.keys(respuestasTeoricas).length + Object.keys(respuestasPracticas).length}/{preguntas.length}
             </span>
           </h2>
 
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 sm:grid-cols-6 gap-1.5 max-h-[460px] overflow-y-auto pr-1">
             {preguntas.map((p, idx) => {
               const estaRespondida = Boolean(respuestasTeoricas[p.id] || respuestasPracticas[p.id]);
               const esActiva = idx === preguntaActivaIndex;
@@ -323,7 +327,7 @@ export const TestRunnerPage: React.FC = () => {
                 <button
                   key={p.id}
                   onClick={() => setPreguntaActivaIndex(idx)}
-                  className={`h-10 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center border ${
+                  className={`h-8 rounded-lg font-mono text-[11px] font-bold transition-all flex items-center justify-center border ${
                     esActiva
                       ? 'bg-brand-600 border-brand-500 text-white shadow-md shadow-brand-600/30 ring-2 ring-brand-400/30'
                       : estaRespondida
@@ -337,13 +341,13 @@ export const TestRunnerPage: React.FC = () => {
             })}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400 space-y-2">
+          <div className="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-400 space-y-1.5">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500/30 border border-emerald-500/50"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/30 border border-emerald-500/50"></div>
               <span>Respondida</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-slate-800 border border-slate-700"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-700"></div>
               <span>Sin responder</span>
             </div>
           </div>
@@ -353,11 +357,16 @@ export const TestRunnerPage: React.FC = () => {
         <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
           <div>
             {/* Cabecera de la Pregunta */}
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-800">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-6 border-b border-slate-800">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-slate-300">
                   Pregunta {preguntaActivaIndex + 1} de {preguntas.length}
                 </span>
+                {preguntaActual.categoria && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    {preguntaActual.categoria}
+                  </span>
+                )}
                 <span
                   className={`text-xs font-medium px-2.5 py-1 rounded-md flex items-center space-x-1 ${
                     preguntaActual.tipoPregunta === 'PRACTICA'
@@ -373,7 +382,7 @@ export const TestRunnerPage: React.FC = () => {
                   ) : (
                     <>
                       <FileCheck2 className="w-3 h-3" />
-                      <span>Teórica</span>
+                      <span>Opción Múltiple</span>
                     </>
                   )}
                 </span>
