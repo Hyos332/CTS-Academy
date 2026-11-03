@@ -92,7 +92,30 @@ export class EvaluacionService {
     }
 
     if (test.estado === EstadoTest.COMPLETADO || test.estado === EstadoTest.EXPIRADO) {
-      throw new BadRequestException('El test seleccionado ya ha finalizado.');
+      return {
+        test: {
+          id: test.id,
+          tipoBateria: test.tipo_bateria,
+          tiempoLimiteSegundos: 0,
+          tiempoRestanteSegundos: 0,
+          estado: test.estado,
+          calificacionObtenida: test.calificacion_obtenida ? Number(test.calificacion_obtenida) : 0,
+        },
+        preguntas: [],
+        completado: true,
+        perfilRadar: candidato.perfil_competencias,
+        respuestasGuardadas: [],
+      };
+    }
+
+    const ahora = new Date();
+    const fechaInicio = test.fecha_inicio || ahora;
+    const segundosTranscurridos = Math.floor((ahora.getTime() - fechaInicio.getTime()) / 1000);
+    const tiempoLimite = test.tiempo_limite_segundos || 3600;
+    const tiempoRestante = Math.max(0, tiempoLimite - segundosTranscurridos);
+
+    if (tiempoRestante <= 0 && test.estado === EstadoTest.EN_CURSO) {
+      return this.finalizarTest(usuarioId, testId);
     }
 
     // Actualizar estado del test a EN_CURSO si estaba NO_INICIADO
@@ -100,7 +123,7 @@ export class EvaluacionService {
       where: { id: testId },
       data: {
         estado: EstadoTest.EN_CURSO,
-        fecha_inicio: test.fecha_inicio || new Date(),
+        fecha_inicio: test.fecha_inicio || ahora,
       },
     });
 
@@ -111,6 +134,11 @@ export class EvaluacionService {
         data: { estado_postulacion: EstadoPostulacion.EN_PROCESO },
       });
     }
+
+    // Respuestas ya guardadas en este intento
+    const respuestasPrevias = await this.prisma.respuestaEvaluacion.findMany({
+      where: { test_id: testId },
+    });
 
     // Preguntas asociadas al módulo de evaluación
     const preguntas = await this.prisma.pregunta.findMany({
@@ -128,13 +156,20 @@ export class EvaluacionService {
         id: testActualizado.id,
         tipoBateria: testActualizado.tipo_bateria,
         tiempoLimiteSegundos: testActualizado.tiempo_limite_segundos,
+        tiempoRestanteSegundos: tiempoRestante,
         estado: testActualizado.estado,
       },
+      completado: false,
       preguntas: preguntas.map((p) => ({
         id: p.id,
         enunciado: p.enunciado,
         tipoPregunta: p.tipo_pregunta,
         opciones: p.opciones,
+      })),
+      respuestasGuardadas: respuestasPrevias.map((r) => ({
+        preguntaId: r.pregunta_id,
+        opcionSeleccionadaId: r.opcion_seleccionada_id,
+        codigoEntregado: r.codigo_entregado,
       })),
     };
   }

@@ -14,6 +14,8 @@ export const PostulacionPanelPage: React.FC = () => {
       const res = await apiClient.get('/evaluacion/candidatos/panel');
       return res.data;
     },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   if (isLoading) {

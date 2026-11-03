@@ -14,6 +14,7 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RolUsuario } from '@cts/shared-types';
 
@@ -178,6 +179,18 @@ export class EvaluacionController {
     @Body() dto: RechazarCandidaturaDto,
   ) {
     return this.evaluacionService.rechazarCandidatura(candidatoId, dto);
+  }
+
+  @Public()
+  @Post('candidatos/publico')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Auto-registro público de candidato (Postulación abierta)',
+    description: 'Permite a cualquier aspirante registrarse en la convocatoria abierta e iniciar su embudo de admisión.',
+  })
+  @ApiResponse({ status: 201, description: 'Postulación registrada exitosamente' })
+  async registrarCandidatoPublico(@Body() dto: RegistrarCandidatoDto) {
+    return this.evaluacionService.registrarCandidato(dto);
   }
 
   @Post('candidatos')

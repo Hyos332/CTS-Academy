@@ -12,6 +12,7 @@ import {
   UserX,
   MessageSquare,
   ShieldAlert,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -36,6 +37,8 @@ export const CandidatoPerfilPage: React.FC = () => {
   const [modalEntrevista, setModalEntrevista] = useState(false);
   const [modalAdmitir, setModalAdmitir] = useState(false);
   const [modalRechazar, setModalRechazar] = useState(false);
+  const [confirmarIrreversibleAdmitir, setConfirmarIrreversibleAdmitir] = useState(false);
+  const [confirmarIrreversibleRechazar, setConfirmarIrreversibleRechazar] = useState(false);
 
   // Obtener perfil detallado del candidato
   const { data: candidato, isLoading, error } = useQuery({
@@ -425,6 +428,17 @@ export const CandidatoPerfilPage: React.FC = () => {
               Selecciona el equipo de desarrollo (squad) al que se incorporará el alumno.
             </p>
 
+            {/* Aviso de Acción Irreversible */}
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-3.5 flex items-start space-x-3 text-amber-900">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-xs space-y-1">
+                <p className="font-bold">⚠️ ADVERTENCIA: Acción Irreversible de Admisión</p>
+                <p className="text-amber-800 leading-relaxed">
+                  Al admitir al postulante, su cuenta será promovida inmediatamente al rol institucional de <strong>ALUMNO PROFER</strong>, se formalizará su matrícula activa en el Centro Tecnológico y se integrará de forma definitiva en el squad seleccionado. Esta acción no se puede deshacer desde este panel.
+                </p>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">Equipo de Destino</label>
               <select
@@ -441,19 +455,34 @@ export const CandidatoPerfilPage: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-2">
+            <label className="flex items-start space-x-2 text-xs text-slate-700 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={confirmarIrreversibleAdmitir}
+                onChange={(e) => setConfirmarIrreversibleAdmitir(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span>
+                Confirmo que he verificado las calificaciones y deseo formalizar la <strong>admisión definitiva</strong> del candidato.
+              </span>
+            </label>
+
+            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
               <button
-                onClick={() => setModalAdmitir(false)}
+                onClick={() => {
+                  setModalAdmitir(false);
+                  setConfirmarIrreversibleAdmitir(false);
+                }}
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => admitirMutation.mutate()}
-                disabled={!equipoSeleccionadoId || admitirMutation.isPending}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold"
+                disabled={!equipoSeleccionadoId || !confirmarIrreversibleAdmitir || admitirMutation.isPending}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-colors"
               >
-                Confirmar Admisión
+                {admitirMutation.isPending ? 'Formalizando...' : 'Confirmar Admisión Definitiva'}
               </button>
             </div>
           </div>
@@ -469,6 +498,17 @@ export const CandidatoPerfilPage: React.FC = () => {
               Indica la justificación de la decisión para registro interno de auditoría.
             </p>
 
+            {/* Aviso de Acción Irreversible */}
+            <div className="bg-red-50 border border-red-300 rounded-xl p-3.5 flex items-start space-x-3 text-red-900">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="text-xs space-y-1">
+                <p className="font-bold">⚠️ ADVERTENCIA: Acción Irreversible de Rechazo</p>
+                <p className="text-red-800 leading-relaxed">
+                  La postulación será marcada de forma definitiva como <strong>RECHAZADA</strong> en la convocatoria actual y el aspirante no podrá continuar en el proceso de selección de este semestre. Esta decisión quedará asentada en la bitácora de auditoría.
+                </p>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">Motivo del Rechazo</label>
               <textarea
@@ -480,19 +520,34 @@ export const CandidatoPerfilPage: React.FC = () => {
               />
             </div>
 
-            <div className="flex justify-end space-x-2 pt-2">
+            <label className="flex items-start space-x-2 text-xs text-slate-700 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={confirmarIrreversibleRechazar}
+                onChange={(e) => setConfirmarIrreversibleRechazar(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+              />
+              <span>
+                Confirmo el <strong>rechazo definitivo e irrevocable</strong> de esta postulación.
+              </span>
+            </label>
+
+            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
               <button
-                onClick={() => setModalRechazar(false)}
+                onClick={() => {
+                  setModalRechazar(false);
+                  setConfirmarIrreversibleRechazar(false);
+                }}
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => rechazarMutation.mutate()}
-                disabled={!motivoRechazo || rechazarMutation.isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold"
+                disabled={!motivoRechazo.trim() || !confirmarIrreversibleRechazar || rechazarMutation.isPending}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-colors"
               >
-                Confirmar Rechazo
+                {rechazarMutation.isPending ? 'Procesando...' : 'Confirmar Rechazo Definitivo'}
               </button>
             </div>
           </div>

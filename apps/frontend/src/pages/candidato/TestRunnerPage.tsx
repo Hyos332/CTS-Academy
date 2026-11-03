@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
 import { Navbar } from '../../components/common/Navbar';
 import {
@@ -31,6 +31,7 @@ interface Pregunta {
 export const TestRunnerPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [preguntaActivaIndex, setPreguntaActivaIndex] = useState(0);
   const [respuestasTeoricas, setRespuestasTeoricas] = useState<Record<string, string>>({});
@@ -49,10 +50,37 @@ export const TestRunnerPage: React.FC = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Temporizador regresivo en segundos
+  // Restaurar estado guardado y respuestas previas
   useEffect(() => {
-    if (data?.test?.tiempoLimiteSegundos) {
+    if (!data) return;
+
+    if (data.completado) {
+      setTestFinalizadoData({
+        test: data.test,
+        perfilRadar: data.perfilRadar,
+      });
+      return;
+    }
+
+    if (data.test?.tiempoRestanteSegundos !== undefined) {
+      setTiempoRestante(data.test.tiempoRestanteSegundos);
+    } else if (data.test?.tiempoLimiteSegundos) {
       setTiempoRestante(data.test.tiempoLimiteSegundos);
+    }
+
+    if (data.respuestasGuardadas && Array.isArray(data.respuestasGuardadas)) {
+      const teoricas: Record<string, string> = {};
+      const practicas: Record<string, string> = {};
+      for (const r of data.respuestasGuardadas) {
+        if (r.opcionSeleccionadaId) {
+          teoricas[r.preguntaId] = r.opcionSeleccionadaId;
+        }
+        if (r.codigoEntregado) {
+          practicas[r.preguntaId] = r.codigoEntregado;
+        }
+      }
+      setRespuestasTeoricas(teoricas);
+      setRespuestasPracticas(practicas);
     }
   }, [data]);
 
@@ -102,8 +130,14 @@ export const TestRunnerPage: React.FC = () => {
     onSuccess: (resData) => {
       setTestFinalizadoData(resData);
       setShowConfirmModal(false);
+      queryClient.invalidateQueries({ queryKey: ['candidato-panel'] });
     },
   });
+
+  const handleVolver = () => {
+    queryClient.invalidateQueries({ queryKey: ['candidato-panel'] });
+    navigate('/evaluacion/panel');
+  };
 
   const handleSeleccionarOpcion = (preguntaId: string, opcionId: string) => {
     setRespuestasTeoricas((prev) => ({ ...prev, [preguntaId]: opcionId }));
@@ -204,7 +238,7 @@ export const TestRunnerPage: React.FC = () => {
           </div>
 
           <button
-            onClick={() => navigate('/evaluacion/panel')}
+            onClick={handleVolver}
             className="px-6 py-3 bg-brand-600 hover:bg-brand-500 font-medium rounded-xl text-white shadow-lg shadow-brand-600/30 transition-all flex items-center space-x-2"
           >
             <span>Regresar al Panel de Postulación</span>
@@ -226,7 +260,7 @@ export const TestRunnerPage: React.FC = () => {
       <header className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-md">
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => navigate('/evaluacion/panel')}
+            onClick={handleVolver}
             className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
             title="Volver"
           >

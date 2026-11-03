@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
+import { PostularPublicoPage } from './pages/candidato/PostularPublicoPage';
 import { PostulacionPanelPage } from './pages/candidato/PostulacionPanelPage';
 import { TestRunnerPage } from './pages/candidato/TestRunnerPage';
 import { AlumnoPanelPage } from './pages/alumno/AlumnoPanelPage';
@@ -46,6 +47,7 @@ export const App: React.FC = () => {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/postular" element={<PostularPublicoPage />} />
           <Route path="/" element={<HomeRedirect />} />
 
           {/* Portal de Postulante / Candidato */}

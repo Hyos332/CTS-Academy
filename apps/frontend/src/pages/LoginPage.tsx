@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
@@ -109,6 +110,15 @@ export const LoginPage: React.FC = () => {
               </button>
             </div>
           </form>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+            <Link
+              to="/postular"
+              className="text-xs text-brand-600 hover:text-brand-700 font-semibold"
+            >
+              ¿Eres nuevo aspirante? Inscríbete a la Convocatoria Abierta
+            </Link>
+          </div>
 
           <div className="mt-6 pt-4 border-t border-slate-200 text-center">
             <span className="text-xs text-slate-500">
