@@ -62,6 +62,19 @@ async function main() {
     },
   });
 
+  const carlosUser = await prisma.usuario.upsert({
+    where: { email: 'carlos.candidato@alumnos.uneatlantico.es' },
+    update: {},
+    create: {
+      email: 'carlos.candidato@alumnos.uneatlantico.es',
+      password_hash: defaultPasswordHash,
+      nombre: 'Carlos',
+      apellidos: 'Méndez Postulante',
+      rol: 'CANDIDATO',
+      activo: true,
+    },
+  });
+
   // 2. Equipo TEAM-01 (Fénix)
   console.log('🛡️ Creando equipos de desarrollo...');
   const equipoFenix = await prisma.equipo.upsert({
@@ -163,6 +176,42 @@ async function main() {
     testTecnico = await prisma.test.create({
       data: {
         candidato_id: candidato.id,
+        tipo_bateria: 'TECNICO',
+        estado: 'NO_INICIADO',
+        tiempo_limite_segundos: 3600,
+      },
+    });
+  }
+
+  // Candidato Carlos (Fresco para pruebas interactivas de admisión)
+  const carlosCandidato = await prisma.candidato.upsert({
+    where: { usuario_id: carlosUser.id },
+    update: {},
+    create: {
+      usuario_id: carlosUser.id,
+      convocatoria_id: convocatoria.id,
+      sede_origen: 'SDR_ESP',
+      telefono: '+34611223344',
+      estado_postulacion: 'REGISTRADO',
+      decision_admision: 'PENDIENTE',
+      perfil_competencias: {
+        dimensiones: {
+          actitud: { puntaje: 80 },
+          aptitud: { puntaje: 75 },
+          tecnico: { puntaje: 70 },
+        },
+        indiceAfinidadGlobal: 75,
+      },
+    },
+  });
+
+  let testCarlos = await prisma.test.findFirst({
+    where: { candidato_id: carlosCandidato.id, tipo_bateria: 'TECNICO' },
+  });
+  if (!testCarlos) {
+    await prisma.test.create({
+      data: {
+        candidato_id: carlosCandidato.id,
         tipo_bateria: 'TECNICO',
         estado: 'NO_INICIADO',
         tiempo_limite_segundos: 3600,
