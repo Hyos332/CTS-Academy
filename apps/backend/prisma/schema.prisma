@@ -1,0 +1,428 @@
+// ==========================================
+// Prisma Schema - CTS Academy & Evaluator
+// 23 Tablas distribuidas en 3 Esquemas Lógicos PostgreSQL
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["motor_equipos", "motor_evaluacion", "motor_formacion"]
+}
+
+// ==========================================
+// ESQUEMA 1: motor_equipos (4 Tablas)
+// ==========================================
+
+model Usuario {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String    @unique @db.VarChar(255)
+  password_hash    String    @db.VarChar(255)
+  nombre           String    @db.VarChar(100)
+  apellidos        String    @db.VarChar(150)
+  rol              String    @db.VarChar(30) // CANDIDATO, ALUMNO, LIDER_EQUIPO, GESTOR
+  activo           Boolean   @default(true)
+  intentos_fallidos Int      @default(0)
+  bloqueado_hasta  DateTime? @db.Timestamptz(6)
+  creado_en        DateTime  @default(now()) @db.Timestamptz(6)
+  actualizado_en   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  eliminado_en     DateTime? @db.Timestamptz(6)
+
+  // Relaciones
+  sesiones                  Sesion[]
+  equipo_liderado           Equipo?                 @relation("LiderEquipo")
+  alumno_profer             AlumnoProfer?
+  candidato                 Candidato?
+  entrevistas_conducidas    Entrevista[]            @relation("GestorEntrevistas")
+  informes_firmados         InformeCorte[]          @relation("GestorInformes")
+  entregas_calificadas      EntregaLaboratorio[]    @relation("TechLeaderEntregas")
+  evaluaciones_sumativas    EvaluacionSumativa[]    @relation("TechLeaderSumativas")
+
+  @@map("usuarios")
+  @@schema("motor_equipos")
+}
+
+model Sesion {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuario_id  String    @db.Uuid
+  token_hash  String    @db.VarChar(64)
+  ip_origen   String?   @db.VarChar(45)
+  user_agent  String?   @db.Text
+  revocado    Boolean   @default(false)
+  expira_en   DateTime  @db.Timestamptz(6)
+  creado_en   DateTime  @default(now()) @db.Timestamptz(6)
+  revocado_en DateTime? @db.Timestamptz(6)
+
+  usuario     Usuario   @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@index([token_hash])
+  @@map("sesiones")
+  @@schema("motor_equipos")
+}
+
+model Equipo {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lider_usuario_id String         @unique @db.Uuid
+  codigo           String         @unique @db.VarChar(20) // TEAM-01 a TEAM-06
+  nombre           String         @db.VarChar(100)
+  especialidad     String         @db.VarChar(50)
+  creado_en        DateTime       @default(now()) @db.Timestamptz(6)
+
+  lider            Usuario        @relation("LiderEquipo", fields: [lider_usuario_id], references: [id])
+  alumnos          AlumnoProfer[]
+  modulos          Modulo[]       @relation("EquipoPropietarioModulo")
+
+  @@map("equipos")
+  @@schema("motor_equipos")
+}
+
+model AlumnoProfer {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuario_id          String               @unique @db.Uuid
+  equipo_id           String               @db.Uuid
+  candidato_origen_id String?              @unique @db.Uuid
+  matricula_activa    Boolean              @default(true)
+  creado_en           DateTime             @default(now()) @db.Timestamptz(6)
+
+  usuario             Usuario              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  equipo              Equipo               @relation(fields: [equipo_id], references: [id])
+  lecturas_material   LecturaMaterial[]
+  entregas_laboratorio EntregaLaboratorio[]
+  evaluaciones_sumativas EvaluacionSumativa[]
+  tests_nivelacion    Test[]
+
+  @@map("alumnos_profer")
+  @@schema("motor_equipos")
+}
+
+// ==========================================
+// ESQUEMA 2: motor_evaluacion (10 Tablas)
+// ==========================================
+
+model CursoAcademico {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  denominacion String     @db.VarChar(50)
+  anio_inicio  Int        @db.SmallInt
+  anio_fin     Int        @db.SmallInt
+  activo       Boolean    @default(true)
+
+  semestres    Semestre[]
+
+  @@map("cursos_academicos")
+  @@schema("motor_evaluacion")
+}
+
+model Semestre {
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  curso_academico_id String         @db.Uuid
+  periodo            String         @db.VarChar(10)
+  fecha_inicio       DateTime       @db.Date
+  fecha_fin          DateTime       @db.Date
+
+  curso_academico    CursoAcademico @relation(fields: [curso_academico_id], references: [id])
+  convocatorias      Convocatoria[]
+
+  @@map("semestres")
+  @@schema("motor_evaluacion")
+}
+
+model Convocatoria {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  semestre_id     String        @db.Uuid
+  denominacion    String        @db.VarChar(150)
+  estado          String        @db.VarChar(30) // ABIERTA, CERRADA, PAUSADA
+  fecha_apertura  DateTime      @db.Timestamptz(6)
+  fecha_cierre    DateTime      @db.Timestamptz(6)
+  modelo_admision String        @default("CONTINUA") @db.VarChar(30)
+  creado_en       DateTime      @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+
+  semestre        Semestre      @relation(fields: [semestre_id], references: [id])
+  candidatos      Candidato[]
+  informe_corte   InformeCorte?
+
+  @@map("convocatorias")
+  @@schema("motor_evaluacion")
+}
+
+model Candidato {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuario_id          String       @unique @db.Uuid
+  convocatoria_id     String       @db.Uuid
+  sede_origen         String       @db.VarChar(50)
+  lote_importacion_id String?      @db.Uuid
+  telefono            String?      @db.VarChar(30)
+  estado_postulacion  String       @db.VarChar(40) // REGISTRADO, EN_PROCESO, TESTS_COMPLETADOS, ENTREVISTA_AGENDADA, ADMITIDO, RECHAZADO
+  perfil_competencias Json?        @db.JsonB
+  decision_admision   String?      @db.VarChar(30) // PENDIENTE, ADMITIDO, RECHAZADO
+  motivo_rechazo      String?      @db.Text
+  creado_en           DateTime     @default(now()) @db.Timestamptz(6)
+  actualizado_en      DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
+
+  usuario             Usuario      @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  convocatoria        Convocatoria @relation(fields: [convocatoria_id], references: [id])
+  tests               Test[]
+  entrevista          Entrevista?
+
+  @@map("candidatos")
+  @@schema("motor_evaluacion")
+}
+
+model Test {
+  id                     String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidato_id           String?               @db.Uuid
+  alumno_id              String?               @db.Uuid
+  tipo_bateria           String                @db.VarChar(30) // ACTITUD, APTITUD, TECNICO
+  estado                 String                @default("NO_INICIADO") @db.VarChar(30) // NO_INICIADO, EN_CURSO, COMPLETADO, EXPIRADO
+  tiempo_limite_segundos Int
+  segundos_consumidos    Int                   @default(0)
+  calificacion_obtenida  Decimal?              @db.Decimal(4, 2)
+  fecha_inicio           DateTime?             @db.Timestamptz(6)
+  fecha_finalizacion     DateTime?             @db.Timestamptz(6)
+  creado_en              DateTime              @default(now()) @db.Timestamptz(6)
+
+  candidato              Candidato?            @relation(fields: [candidato_id], references: [id], onDelete: Cascade)
+  alumno                 AlumnoProfer?         @relation(fields: [alumno_id], references: [id])
+  sesiones_evaluacion    SesionEvaluacion[]
+  respuestas             RespuestaEvaluacion[]
+
+  @@map("tests")
+  @@schema("motor_evaluacion")
+}
+
+model SesionEvaluacion {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  test_id              String   @db.Uuid
+  ip_remota            String?  @db.VarChar(45)
+  inicios_concurrencia Int      @default(1)
+  ultimo_latido        DateTime @default(now()) @db.Timestamptz(6)
+  desfase_servidor_ms  Int      @default(0)
+
+  test                 Test     @relation(fields: [test_id], references: [id], onDelete: Cascade)
+
+  @@map("sesiones_evaluacion")
+  @@schema("motor_evaluacion")
+}
+
+model RespuestaEvaluacion {
+  id                     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  test_id                String          @db.Uuid
+  pregunta_id            String          @db.Uuid
+  opcion_seleccionada_id String?         @db.Uuid
+  codigo_entregado       String?         @db.Text
+  calificacion_obtenida  Decimal?        @db.Decimal(4, 2)
+  es_correcta            Boolean?
+  respondida_en          DateTime        @default(now()) @db.Timestamptz(6)
+
+  test                   Test            @relation(fields: [test_id], references: [id], onDelete: Cascade)
+  pregunta               Pregunta        @relation(fields: [pregunta_id], references: [id])
+  opcion_seleccionada    OpcionPregunta? @relation(fields: [opcion_seleccionada_id], references: [id])
+
+  @@unique([test_id, pregunta_id])
+  @@map("respuestas_evaluacion")
+  @@schema("motor_evaluacion")
+}
+
+model Entrevista {
+  id                       String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidato_id             String                @unique @db.Uuid
+  gestor_id                String                @db.Uuid
+  enlace_google_meet       String                @db.VarChar(255)
+  google_calendar_event_id String?               @db.VarChar(255)
+  fecha_hora_programada    DateTime              @db.Timestamptz(6)
+  estado                   String                @default("PROGRAMADA") @db.VarChar(30)
+  creado_en                DateTime              @default(now()) @db.Timestamptz(6)
+
+  candidato                Candidato             @relation(fields: [candidato_id], references: [id], onDelete: Cascade)
+  gestor                   Usuario               @relation("GestorEntrevistas", fields: [gestor_id], references: [id])
+  anotaciones              AnotacionEntrevista[]
+
+  @@map("entrevistas")
+  @@schema("motor_evaluacion")
+}
+
+model AnotacionEntrevista {
+  id                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entrevista_id            String     @db.Uuid
+  competencia_evaluada     String     @db.VarChar(100)
+  calificacion_cualitativa String     @db.VarChar(50)
+  comentario               String     @db.Text
+  creado_en                DateTime   @default(now()) @db.Timestamptz(6)
+
+  entrevista               Entrevista @relation(fields: [entrevista_id], references: [id], onDelete: Cascade)
+
+  @@map("anotaciones_entrevista")
+  @@schema("motor_evaluacion")
+}
+
+model InformeCorte {
+  id                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  convocatoria_id      String       @unique @db.Uuid
+  gestor_id            String       @db.Uuid
+  total_postulados     Int
+  total_admitidos      Int
+  total_rechazados     Int
+  total_abandonos      Int
+  distribucion_equipos Json         @db.JsonB
+  distribucion_sedes   Json         @db.JsonB
+  firma_hash_inmutable String       @db.VarChar(64)
+  creado_en            DateTime     @default(now()) @db.Timestamptz(6)
+
+  convocatoria         Convocatoria @relation(fields: [convocatoria_id], references: [id])
+  gestor               Usuario      @relation("GestorInformes", fields: [gestor_id], references: [id])
+
+  @@map("informes_corte")
+  @@schema("motor_evaluacion")
+}
+
+// ==========================================
+// ESQUEMA 3: motor_formacion (9 Tablas)
+// ==========================================
+
+model Capacitacion {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  track_especialidad String   @db.VarChar(50)
+
+  modulos           Modulo[]
+
+  @@map("capacitaciones")
+  @@schema("motor_formacion")
+}
+
+model Modulo {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  capacitacion_id       String        @db.Uuid
+  equipo_propietario_id String        @db.Uuid
+  orden                 Int           @default(1)
+  titulo                String        @db.VarChar(150)
+  descripcion           String?       @db.Text
+
+  capacitacion          Capacitacion  @relation(fields: [capacitacion_id], references: [id])
+  equipo_propietario    Equipo        @relation("EquipoPropietarioModulo", fields: [equipo_propietario_id], references: [id])
+  materiales            Material[]
+  laboratorios          Laboratorio[]
+  preguntas             Pregunta[]
+
+  @@map("modulos")
+  @@schema("motor_formacion")
+}
+
+model Material {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  modulo_id          String            @db.Uuid
+  titulo             String            @db.VarChar(150)
+  orden              Int               @default(1)
+  estimado_minutos   Int               @default(15)
+  contenido_markdown String            @db.Text
+  creado_en          DateTime          @default(now()) @db.Timestamptz(6)
+  actualizado_en     DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+
+  modulo             Modulo            @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+  lecturas           LecturaMaterial[]
+
+  @@map("materiales")
+  @@schema("motor_formacion")
+}
+
+model LecturaMaterial {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  material_id String       @db.Uuid
+  alumno_id   String       @db.Uuid
+  leido_en    DateTime     @default(now()) @db.Timestamptz(6)
+
+  material    Material     @relation(fields: [material_id], references: [id], onDelete: Cascade)
+  alumno      AlumnoProfer @relation(fields: [alumno_id], references: [id], onDelete: Cascade)
+
+  @@unique([material_id, alumno_id])
+  @@map("lecturas_material")
+  @@schema("motor_formacion")
+}
+
+model Laboratorio {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  modulo_id   String               @db.Uuid
+  titulo      String               @db.VarChar(150)
+  orden       Int                  @default(1)
+  dificultad  String               @default("INTERMEDIA") @db.VarChar(30)
+
+  modulo      Modulo               @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+  entregas    EntregaLaboratorio[]
+
+  @@map("laboratorios")
+  @@schema("motor_formacion")
+}
+
+model EntregaLaboratorio {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  laboratorio_id       String        @db.Uuid
+  alumno_id            String        @db.Uuid
+  tech_leader_id       String?       @db.Uuid
+  numero_intento       Int           @default(1)
+  url_pull_request     String        @db.VarChar(255)
+  commit_hash          String        @db.VarChar(40)
+  estado               String        @default("EN_REVISION") @db.VarChar(30) // EN_REVISION, APROBADO, CAMBIOS_SOLICITADOS
+  calificacion         Decimal?      @db.Decimal(4, 2)
+  feedback_general     String?       @db.Text
+  resultado_sandbox_ci Json?         @db.JsonB
+  fecha_envio          DateTime      @default(now()) @db.Timestamptz(6)
+  fecha_calificacion   DateTime?     @db.Timestamptz(6)
+
+  laboratorio          Laboratorio   @relation(fields: [laboratorio_id], references: [id])
+  alumno               AlumnoProfer  @relation(fields: [alumno_id], references: [id], onDelete: Cascade)
+  tech_leader          Usuario?      @relation("TechLeaderEntregas", fields: [tech_leader_id], references: [id])
+
+  @@map("entregas_laboratorio")
+  @@schema("motor_formacion")
+}
+
+model Pregunta {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  modulo_id           String                @db.Uuid
+  enunciado           String                @db.Text
+  tipo_pregunta       String                @db.VarChar(20) // TEORICA, PRACTICA
+  peso_puntos         Decimal               @default(1.00) @db.Decimal(4, 2)
+  test_cases_json     Json?                 @db.JsonB
+  timeout_ms          Int?                  @default(10000)
+  activo              Boolean               @default(true)
+  creado_en           DateTime              @default(now()) @db.Timestamptz(6)
+  eliminado_en        DateTime?             @db.Timestamptz(6)
+
+  modulo              Modulo                @relation(fields: [modulo_id], references: [id])
+  opciones            OpcionPregunta[]
+  respuestas_evaluacion RespuestaEvaluacion[]
+
+  @@map("preguntas")
+  @@schema("motor_formacion")
+}
+
+model OpcionPregunta {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pregunta_id         String                @db.Uuid
+  texto               String                @db.Text
+  es_correcta         Boolean               @default(false)
+
+  pregunta            Pregunta              @relation(fields: [pregunta_id], references: [id], onDelete: Cascade)
+  respuestas_evaluacion RespuestaEvaluacion[]
+
+  @@map("opciones_pregunta")
+  @@schema("motor_formacion")
+}
+
+model EvaluacionSumativa {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  alumno_id           String       @db.Uuid
+  tech_leader_id      String       @db.Uuid
+  nota_final_practica Decimal      @db.Decimal(4, 2)
+  informe_desempeno   String       @db.Text
+  apto_promocion      Boolean      @default(false)
+  evaluado_en         DateTime     @default(now()) @db.Timestamptz(6)
+
+  alumno              AlumnoProfer @relation(fields: [alumno_id], references: [id], onDelete: Cascade)
+  tech_leader         Usuario      @relation("TechLeaderSumativas", fields: [tech_leader_id], references: [id])
+
+  @@map("evaluaciones_sumativas")
+  @@schema("motor_formacion")
+}

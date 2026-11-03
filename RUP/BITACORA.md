@@ -205,6 +205,21 @@ Registro formal y cronológico de decisiones de diseño, acuerdos de modelado y 
   * **Ratificación de Markdown para Materiales**: Se mantiene `contenido_markdown: text` en `materiales` para guías técnicas vivas y renderizado interactivo sin inyección de HTML.
 * **Artefactos afectados**: `RUP/03-diseño/modelo-datos/derGeneral.puml`, `derMotorEquipos.puml`, `derMotorEvaluacion.puml`, `derMotorFormacion.puml`, `RUP/03-diseño/modelo-datos/README.md` y diagramas vectoriales compilados.
 
+---
+
+### ADR-014: Stack tecnológico de desarrollo (Monorepo pnpm + NestJS + Prisma + React/Vite + Docker)
+* **Fecha**: 2026-11-02
+* **Contexto**: Para iniciar la Fase 04 (Desarrollo), se evaluaron las alternativas de framework de backend (NestJS con TypeScript vs Laravel 11 con PHP) y la organización del código fuente. Se requiere type-safety extremo entre cliente y servidor, gestión eficiente de cronómetros/WebSockets en tiempo real, integración nativa con Docker Engine API para el runner de sandbox y máxima productividad en la gestión de monorepositorio.
+* **Decisión**:
+  * **Estructura Monorepo con `pnpm` workspaces y Turborepo**: Unificar en un único repositorio el backend (`apps/backend`), frontend (`apps/frontend`), runner de sandboxes (`apps/runner-daemon`) y paquetes compartidos (`packages/shared-types`).
+  * **Backend**: Adopción de **NestJS 10 (Node.js 20 LTS)** con TypeScript estricto, estructurado según la arquitectura modular diseñada (bounded contexts: `MotorEquipos`, `MotorEvaluacion`, `MotorFormacion`).
+  * **Persistencia y ORM**: **Prisma ORM** con soporte nativo de `multiSchema` para los 3 esquemas relacionales sobre **PostgreSQL 16** ([ADR-012](/RUP/BITACORA.md#adr-012-elecci%C3%B3n-de-postgresql-16-para-persistencia-relacional-y-soporte-de-microservicios)), migraciones declarativas y Prisma Studio.
+  * **Seguridad y Caching**: **Redis 7** para rate-limiting distribuido (`@nestjs/throttler`), revocación de tokens JWT mediante lista negra deslizante (sliding blacklist) y procesamiento de colas con **BullMQ**.
+  * **Frontend**: **React 18 + Vite + TypeScript**, Tailwind CSS, **Recharts** para el renderizado del radar de competencias JSONB ([ADR-013](/RUP/BITACORA.md#adr-013-simplificaci%C3%B3n-pragm%C3%A1tica-del-modelo-de-datos-der-y-alineaci%C3%B3n-con-la-operativa-real-de-cts)), Monaco Editor para retos prácticos y `react-markdown` para guías técnicas.
+  * **Sandbox Runner**: Contenedores efímeros aislados confinados mediante Docker Engine API (`dockerode`, `network_mode: none`, 256MB RAM, timeout 10s).
+* **Artefactos afectados**: `RUP/BITACORA.md`, `RUP/04-desarrollo/README.md`, configuración raíz del repositorio (`pnpm-workspace.yaml`, `package.json`, `turbo.json`).
+
+
 
 
 
