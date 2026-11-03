@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, HttpStatus, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { EquiposService } from './equipos.service';
 import { CrearConvocatoriaDto, CerrarCorteSemestralDto } from './dto/periodo-ingreso.dto';
@@ -64,5 +64,20 @@ export class EquiposController {
     @Body() dto: CerrarCorteSemestralDto,
   ) {
     return this.equiposService.cerrarCorteSemestral(convocatoriaId, gestorId, dto);
+  }
+
+  @Put('alumnos/:id/squad')
+  @Roles(RolUsuario.GESTOR)
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'UUID del AlumnoProfer' })
+  @ApiOperation({
+    summary: 'Asignar o transferir alumno PROFER a un squad técnico',
+    description: 'Permite al Gestor adscribir o cambiar a un becario entre los 6 equipos de CTS durante su permanencia en el programa.',
+  })
+  async transferirAlumnoEquipo(
+    @Param('id') alumnoId: string,
+    @Body('equipoId') nuevoEquipoId: string | null,
+  ) {
+    return this.equiposService.transferirAlumnoEquipo(alumnoId, nuevoEquipoId);
   }
 }

@@ -210,27 +210,33 @@ export const TestRunnerPage: React.FC = () => {
 
           <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 w-full max-w-lg mb-8 text-left shadow-xl">
             <div className="flex justify-between items-center pb-4 border-b border-slate-700">
-              <span className="text-slate-400 text-sm">Calificación Calculada</span>
-              <span className="text-2xl font-bold text-brand-400">{Number(nota).toFixed(1)} / 10</span>
+              <span className="text-slate-400 text-sm">
+                {testFinalizadoData.test?.tipo_bateria === 'TECNICO' ? 'Calificación Técnica' : 'Resultado de Evaluación'}
+              </span>
+              <span className="text-2xl font-bold text-brand-400">
+                {testFinalizadoData.test?.tipo_bateria === 'TECNICO'
+                  ? `${Number(nota).toFixed(1)} / 10`
+                  : 'Espectro Cualitativo Registrado'}
+              </span>
             </div>
 
             {radar && (
               <div className="pt-4 space-y-3">
                 <h3 className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
-                  Puntajes Diagnósticos de Competencia
+                  Diagnóstico por Dimensión
                 </h3>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
                     <span className="text-xs text-slate-400 block">Técnico</span>
-                    <span className="text-lg font-bold text-white">{radar.tecnico?.puntaje ?? 0} pts</span>
+                    <span className="text-base font-bold text-emerald-400">{Number(nota).toFixed(1)} / 10</span>
                   </div>
                   <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
                     <span className="text-xs text-slate-400 block">Aptitud</span>
-                    <span className="text-lg font-bold text-white">{radar.aptitud?.puntaje ?? 0} pts</span>
+                    <span className="text-xs font-bold text-indigo-300">Espectro Registrado</span>
                   </div>
                   <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
                     <span className="text-xs text-slate-400 block">Actitud</span>
-                    <span className="text-lg font-bold text-white">{radar.actitud?.puntaje ?? 0} pts</span>
+                    <span className="text-xs font-bold text-amber-300">Espectro Registrado</span>
                   </div>
                 </div>
               </div>

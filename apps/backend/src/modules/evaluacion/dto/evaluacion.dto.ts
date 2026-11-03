@@ -122,10 +122,10 @@ export class RegistrarAnotacionesEntrevistaDto {
 }
 
 export class AdmitirAlumnoDto {
-  @ApiProperty({ example: '12345678-1234-1234-1234-123456789020', description: 'UUID del equipo de destino' })
+  @ApiPropertyOptional({ example: '12345678-1234-1234-1234-123456789020', description: 'UUID del equipo de destino (opcional al dar el sí; se puede asignar cuando el alumno se incorpora)' })
   @IsUUID('4')
-  @IsNotEmpty({ message: 'El equipo de destino es obligatorio' })
-  equipoId: string;
+  @IsOptional()
+  equipoId?: string;
 
   @ApiPropertyOptional({ example: 'Perfil asignado al equipo TEAM-01 Fénix.' })
   @IsString()

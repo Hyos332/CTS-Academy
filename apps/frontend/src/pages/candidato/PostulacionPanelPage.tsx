@@ -88,8 +88,11 @@ export const PostulacionPanelPage: React.FC = () => {
                     </div>
                     <p className="text-xs text-slate-500 mt-1">
                       Estado: <span className="font-medium text-slate-700">{test.estado}</span>
-                      {test.calificacionObtenida && (
-                        <span> • Calificación: <strong>{test.calificacionObtenida} / 10</strong></span>
+                      {test.tipoBateria === 'TECNICO' && test.calificacionObtenida !== null && test.calificacionObtenida !== undefined && (
+                        <span> • Calificación Técnica: <strong>{Number(test.calificacionObtenida).toFixed(1)} / 10</strong></span>
+                      )}
+                      {test.tipoBateria !== 'TECNICO' && test.estado === 'COMPLETADO' && (
+                        <span> • Diagnóstico: <strong className="text-indigo-600">Espectro Psicométrico Registrado</strong></span>
                       )}
                     </p>
                   </div>

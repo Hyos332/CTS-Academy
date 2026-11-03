@@ -114,13 +114,25 @@ export class EquiposService {
       where: convocatoriaActiva ? { convocatoria_id: convocatoriaActiva.id } : undefined,
     });
 
-    // Equipos y número de alumnos actuales
+    // Equipos con detalle completo de líderes y miembros
     const equipos = await this.prisma.equipo.findMany({
+      orderBy: { codigo: 'asc' },
       include: {
-        lider: { select: { nombre: true, apellidos: true } },
-        _count: {
-          select: { alumnos: { where: { matricula_activa: true } } },
+        lider: { select: { id: true, nombre: true, apellidos: true, email: true } },
+        alumnos: {
+          where: { matricula_activa: true },
+          include: {
+            usuario: { select: { id: true, nombre: true, apellidos: true, email: true } },
+          },
         },
+      },
+    });
+
+    // Alumnos admitidos en el programa que aún no tienen equipo asignado
+    const alumnosSinEquipo = await this.prisma.alumnoProfer.findMany({
+      where: { equipo_id: null, matricula_activa: true },
+      include: {
+        usuario: { select: { id: true, nombre: true, apellidos: true, email: true } },
       },
     });
 
@@ -195,8 +207,67 @@ export class EquiposService {
         nombre: eq.nombre,
         especialidad: eq.especialidad,
         lider: `${eq.lider.nombre} ${eq.lider.apellidos}`,
-        alumnosActivos: eq._count.alumnos,
+        alumnosActivos: eq.alumnos.length,
+        miembros: eq.alumnos.map((a) => ({
+          id: a.id,
+          usuarioId: a.usuario.id,
+          nombreCompleto: `${a.usuario.nombre} ${a.usuario.apellidos}`,
+          email: a.usuario.email,
+          creadoEn: a.creado_en,
+        })),
       })),
+      alumnosSinEquipo: alumnosSinEquipo.map((a) => ({
+        id: a.id,
+        usuarioId: a.usuario.id,
+        nombreCompleto: `${a.usuario.nombre} ${a.usuario.apellidos}`,
+        email: a.usuario.email,
+        creadoEn: a.creado_en,
+      })),
+    };
+  }
+
+  async transferirAlumnoEquipo(alumnoId: string, nuevoEquipoId: string | null) {
+    const alumno = await this.prisma.alumnoProfer.findUnique({
+      where: { id: alumnoId },
+      include: { usuario: true, equipo: true },
+    });
+
+    if (!alumno) {
+      throw new NotFoundException(`Alumno PROFER con ID ${alumnoId} no encontrado.`);
+    }
+
+    let equipoDestino: any = null;
+    if (nuevoEquipoId) {
+      equipoDestino = await this.prisma.equipo.findUnique({
+        where: { id: nuevoEquipoId },
+      });
+      if (!equipoDestino) {
+        throw new NotFoundException(`Equipo de destino ${nuevoEquipoId} no encontrado.`);
+      }
+    }
+
+    const alumnoActualizado = await this.prisma.alumnoProfer.update({
+      where: { id: alumnoId },
+      data: { equipo_id: nuevoEquipoId },
+      include: { usuario: true, equipo: true },
+    });
+
+    this.logger.log(
+      `Alumno ${alumno.usuario.nombre} ${alumno.usuario.apellidos} reasignado de [${
+        alumno.equipo ? alumno.equipo.nombre : 'Sin Equipo'
+      }] a [${equipoDestino ? equipoDestino.nombre : 'Sin Asignar'}]`,
+    );
+
+    return {
+      success: true,
+      mensaje: equipoDestino
+        ? `Alumno ${alumno.usuario.nombre} asignado exitosamente al equipo ${equipoDestino.nombre}.`
+        : `Alumno ${alumno.usuario.nombre} desvinculado del equipo (en espera de nueva asignación).`,
+      alumno: {
+        id: alumnoActualizado.id,
+        nombreCompleto: `${alumnoActualizado.usuario.nombre} ${alumnoActualizado.usuario.apellidos}`,
+        equipo: alumnoActualizado.equipo ? alumnoActualizado.equipo.nombre : null,
+      },
     };
   }
 

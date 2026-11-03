@@ -75,8 +75,74 @@ async function main() {
     },
   });
 
-  // 2. Equipo TEAM-01 (Fénix)
-  console.log('🛡️ Creando equipos de desarrollo...');
+  // Líderes para los 6 squads de CTS
+  const liderVulcano = await prisma.usuario.upsert({
+    where: { email: 'lider.vulcano@ctdesarrollo.org' },
+    update: {},
+    create: {
+      email: 'lider.vulcano@ctdesarrollo.org',
+      password_hash: defaultPasswordHash,
+      nombre: 'Alejandro',
+      apellidos: 'Ruiz TechLead',
+      rol: 'LIDER_EQUIPO',
+      activo: true,
+    },
+  });
+
+  const liderTitan = await prisma.usuario.upsert({
+    where: { email: 'lider.titan@ctdesarrollo.org' },
+    update: {},
+    create: {
+      email: 'lider.titan@ctdesarrollo.org',
+      password_hash: defaultPasswordHash,
+      nombre: 'Lucía',
+      apellidos: 'Vargas TechLead',
+      rol: 'LIDER_EQUIPO',
+      activo: true,
+    },
+  });
+
+  const liderOrion = await prisma.usuario.upsert({
+    where: { email: 'lider.orion@ctdesarrollo.org' },
+    update: {},
+    create: {
+      email: 'lider.orion@ctdesarrollo.org',
+      password_hash: defaultPasswordHash,
+      nombre: 'Marcos',
+      apellidos: 'Navarro TechLead',
+      rol: 'LIDER_EQUIPO',
+      activo: true,
+    },
+  });
+
+  const liderAtlas = await prisma.usuario.upsert({
+    where: { email: 'lider.atlas@ctdesarrollo.org' },
+    update: {},
+    create: {
+      email: 'lider.atlas@ctdesarrollo.org',
+      password_hash: defaultPasswordHash,
+      nombre: 'Sofía',
+      apellidos: 'Campos TechLead',
+      rol: 'LIDER_EQUIPO',
+      activo: true,
+    },
+  });
+
+  const liderHydra = await prisma.usuario.upsert({
+    where: { email: 'lider.hydra@ctdesarrollo.org' },
+    update: {},
+    create: {
+      email: 'lider.hydra@ctdesarrollo.org',
+      password_hash: defaultPasswordHash,
+      nombre: 'Javier',
+      apellidos: 'Ortiz TechLead',
+      rol: 'LIDER_EQUIPO',
+      activo: true,
+    },
+  });
+
+  // 2. Los 6 Equipos de Desarrollo CTS (TEAM-01 a TEAM-06)
+  console.log('🛡️ Creando los 6 squads permanentes de desarrollo CTS...');
   const equipoFenix = await prisma.equipo.upsert({
     where: { codigo: 'TEAM-01' },
     update: {},
@@ -85,6 +151,61 @@ async function main() {
       nombre: 'Team Fénix',
       especialidad: 'Fullstack TypeScript & Arquitectura Cloud',
       lider_usuario_id: liderUser.id,
+    },
+  });
+
+  const equipoVulcano = await prisma.equipo.upsert({
+    where: { codigo: 'TEAM-02' },
+    update: {},
+    create: {
+      codigo: 'TEAM-02',
+      nombre: 'Team Vulcano',
+      especialidad: 'Backend & Microservicios DevOps',
+      lider_usuario_id: liderVulcano.id,
+    },
+  });
+
+  const equipoTitan = await prisma.equipo.upsert({
+    where: { codigo: 'TEAM-03' },
+    update: {},
+    create: {
+      codigo: 'TEAM-03',
+      nombre: 'Team Titán',
+      especialidad: 'Frontend React, Mobile & UX',
+      lider_usuario_id: liderTitan.id,
+    },
+  });
+
+  const equipoOrion = await prisma.equipo.upsert({
+    where: { codigo: 'TEAM-04' },
+    update: {},
+    create: {
+      codigo: 'TEAM-04',
+      nombre: 'Team Orión',
+      especialidad: 'Data Engineering, IA & Analytics',
+      lider_usuario_id: liderOrion.id,
+    },
+  });
+
+  const equipoAtlas = await prisma.equipo.upsert({
+    where: { codigo: 'TEAM-05' },
+    update: {},
+    create: {
+      codigo: 'TEAM-05',
+      nombre: 'Team Atlas',
+      especialidad: 'QA Automatizado & Ciberseguridad',
+      lider_usuario_id: liderAtlas.id,
+    },
+  });
+
+  const equipoHydra = await prisma.equipo.upsert({
+    where: { codigo: 'TEAM-06' },
+    update: {},
+    create: {
+      codigo: 'TEAM-06',
+      nombre: 'Team Hydra',
+      especialidad: 'Integraciones & Modernización de Software',
+      lider_usuario_id: liderHydra.id,
     },
   });
 
@@ -145,43 +266,126 @@ async function main() {
     });
   }
 
-  // 5. Postulación del Candidato
+  // 5. Postulación del Candidato Laura (Con tests completados y espectro psicométrico)
   console.log('📝 Creando postulación del candidato y baterías...');
+  const espectroLaura = {
+    espectro: {
+      actitud: {
+        estiloTrabajo: {
+          poloIzquierdo: 'Autonomía e Iniciativa Individual',
+          poloDerecho: 'Colaboración en Squad & Sincronía',
+          posicionPorcentaje: 82,
+          etiqueta: 'Predominio Colaborativo',
+          descripcion: 'Demuestra alta disposición para el trabajo sinérgico en equipo, pair programming y alineación con objetivos comunes.',
+        },
+        enfoqueResolucion: {
+          poloIzquierdo: 'Pragmatismo Ágil & Entregas Rápidas',
+          poloDerecho: 'Rigor Arquitectónico & Perfeccionismo',
+          posicionPorcentaje: 75,
+          etiqueta: 'Equilibrio con Rigor Arquitectónico',
+          descripcion: 'Prioriza la robustez de diseño y desacoplamiento sin descuidar los plazos del sprint.',
+        },
+        adaptabilidad: {
+          poloIzquierdo: 'Procesos Predecibles & Estabilidad',
+          poloDerecho: 'Flexibilidad & Resiliencia al Cambio',
+          posicionPorcentaje: 88,
+          etiqueta: 'Alta Resiliencia al Cambio',
+          descripcion: 'Maneja adecuadamente la ambigüedad de requerimientos y evoluciona soluciones ante imprevistos.',
+        },
+      },
+      aptitud: {
+        razonamiento: {
+          poloIzquierdo: 'Empírico / Ensayo y Error',
+          poloDerecho: 'Lógico-Formal / Deductivo',
+          posicionPorcentaje: 84,
+          etiqueta: 'Razonamiento Deductivo Estructurado',
+          descripcion: 'Capacidad notable para desglosar problemas complejos en invariantes lógicas y estructuras claras.',
+        },
+        abstraccion: {
+          poloIzquierdo: 'Implementación Concreta Inmediata',
+          poloDerecho: 'Modelado Conceptual & Arquitectura',
+          posicionPorcentaje: 92,
+          etiqueta: 'Elevada Capacidad de Abstracción',
+          descripcion: 'Entiende y aplica patrones de arquitectura hexagonal, inversión de dependencias y límites de contexto.',
+        },
+        atencionDetalle: {
+          poloIzquierdo: 'Visión Macro Global',
+          poloDerecho: 'Foco Minucioso en Casos Borde',
+          posicionPorcentaje: 78,
+          etiqueta: 'Balance Sistémico y Casos Borde',
+          descripcion: 'Anticipa posibles fallos en condiciones excepcionales sin perder de vista el flujo principal.',
+        },
+      },
+    },
+    tecnico: {
+      nota: 8.5,
+      escala: '0 a 10',
+      superado: true,
+    },
+    dimensiones: {
+      actitud: { puntaje: 85 },
+      aptitud: { puntaje: 80 },
+      tecnico: { puntaje: 85 },
+    },
+    indiceAfinidadGlobal: 83,
+  };
+
   const candidato = await prisma.candidato.upsert({
     where: { usuario_id: candidatoUser.id },
-    update: {},
+    update: {
+      estado_postulacion: 'TESTS_COMPLETADOS',
+      perfil_competencias: espectroLaura,
+    },
     create: {
       usuario_id: candidatoUser.id,
       convocatoria_id: convocatoria.id,
       sede_origen: 'SDR_ESP',
       telefono: '+34600112233',
-      estado_postulacion: 'REGISTRADO',
+      estado_postulacion: 'TESTS_COMPLETADOS',
       decision_admision: 'PENDIENTE',
-      perfil_competencias: {
-        dimensiones: {
-          actitud: { puntaje: 85 },
-          aptitud: { puntaje: 80 },
-          tecnico: { puntaje: 75 },
-        },
-        indiceAfinidadGlobal: 80,
-      },
+      perfil_competencias: espectroLaura,
     },
   });
 
-  // Tests del candidato
-  let testTecnico = await prisma.test.findFirst({
-    where: { candidato_id: candidato.id, tipo_bateria: 'TECNICO' },
+  // Tests de Laura
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
+      candidato_id: candidato.id,
+      tipo_bateria: 'ACTITUD',
+      estado: 'COMPLETADO',
+      tiempo_limite_segundos: 1800,
+      calificacion_obtenida: null, // Sin puntuación numérica
+    },
   });
-  if (!testTecnico) {
-    testTecnico = await prisma.test.create({
-      data: {
-        candidato_id: candidato.id,
-        tipo_bateria: 'TECNICO',
-        estado: 'NO_INICIADO',
-        tiempo_limite_segundos: 3600,
-      },
-    });
-  }
+
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000002' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000002',
+      candidato_id: candidato.id,
+      tipo_bateria: 'APTITUD',
+      estado: 'COMPLETADO',
+      tiempo_limite_segundos: 2700,
+      calificacion_obtenida: null, // Sin puntuación numérica
+    },
+  });
+
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000003' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000003',
+      candidato_id: candidato.id,
+      tipo_bateria: 'TECNICO',
+      estado: 'COMPLETADO',
+      tiempo_limite_segundos: 3600,
+      calificacion_obtenida: 8.5, // Única batería con nota numérica
+    },
+  });
 
   // Candidato Carlos (Fresco para pruebas interactivas de admisión)
   const carlosCandidato = await prisma.candidato.upsert({
@@ -205,19 +409,41 @@ async function main() {
     },
   });
 
-  let testCarlos = await prisma.test.findFirst({
-    where: { candidato_id: carlosCandidato.id, tipo_bateria: 'TECNICO' },
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000004' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000004',
+      candidato_id: carlosCandidato.id,
+      tipo_bateria: 'TECNICO',
+      estado: 'NO_INICIADO',
+      tiempo_limite_segundos: 3600,
+    },
   });
-  if (!testCarlos) {
-    await prisma.test.create({
-      data: {
-        candidato_id: carlosCandidato.id,
-        tipo_bateria: 'TECNICO',
-        estado: 'NO_INICIADO',
-        tiempo_limite_segundos: 3600,
-      },
-    });
-  }
+
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000005' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000005',
+      candidato_id: carlosCandidato.id,
+      tipo_bateria: 'ACTITUD',
+      estado: 'NO_INICIADO',
+      tiempo_limite_segundos: 1800,
+    },
+  });
+
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000006' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000006',
+      candidato_id: carlosCandidato.id,
+      tipo_bateria: 'APTITUD',
+      estado: 'NO_INICIADO',
+      tiempo_limite_segundos: 2700,
+    },
+  });
 
   // 6. Capacitación, Módulo y Laboratorio
   console.log('📚 Creando tracks de formación y laboratorios...');

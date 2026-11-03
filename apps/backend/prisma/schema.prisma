@@ -82,13 +82,13 @@ model Equipo {
 model AlumnoProfer {
   id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   usuario_id          String               @unique @db.Uuid
-  equipo_id           String               @db.Uuid
+  equipo_id           String?              @db.Uuid
   candidato_origen_id String?              @unique @db.Uuid
   matricula_activa    Boolean              @default(true)
   creado_en           DateTime             @default(now()) @db.Timestamptz(6)
 
   usuario             Usuario              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-  equipo              Equipo               @relation(fields: [equipo_id], references: [id])
+  equipo              Equipo?              @relation(fields: [equipo_id], references: [id])
   lecturas_material   LecturaMaterial[]
   entregas_laboratorio EntregaLaboratorio[]
   evaluaciones_sumativas EvaluacionSumativa[]
