@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
 import { Navbar } from '../../components/common/Navbar';
-import { Users, ShieldAlert, Lock } from 'lucide-react';
+import { Users, ShieldAlert, Lock, ChevronRight, Video, FileText } from 'lucide-react';
 
 export const AdmisionesPanelPage: React.FC = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [motivoCierre, setMotivoCierre] = useState('');
@@ -49,7 +51,7 @@ export const AdmisionesPanelPage: React.FC = () => {
     );
   }
 
-  const { convocatoriaActiva, metricasPostulacion, equipos } = data;
+  const { convocatoriaActiva, metricasPostulacion, equipos, candidatos } = data;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -108,6 +110,114 @@ export const AdmisionesPanelPage: React.FC = () => {
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             <span className="text-xs font-medium text-red-600">Rechazados</span>
             <p className="text-2xl font-bold text-red-900 mt-1">{metricasPostulacion.rechazados}</p>
+          </div>
+        </div>
+
+        {/* Tabla de Postulantes Activos */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <FileText className="w-5 h-5 text-brand-600" />
+              <span>Aspirantes en Convocatoria Activa</span>
+            </h2>
+            <span className="text-xs text-slate-500 font-medium">
+              Total: {candidatos?.length || 0} candidatos
+            </span>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3.5">Candidato</th>
+                    <th className="px-6 py-3.5">Sede</th>
+                    <th className="px-6 py-3.5">Estado Postulación</th>
+                    <th className="px-6 py-3.5">Batería Técnica</th>
+                    <th className="px-6 py-3.5">Entrevista Meet</th>
+                    <th className="px-6 py-3.5 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {candidatos?.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-xs text-slate-400 italic">
+                        No hay candidatos registrados para la convocatoria activa.
+                      </td>
+                    </tr>
+                  ) : (
+                    candidatos?.map((cand: any) => {
+                      const test = cand.tests?.[0];
+                      const tieneMeet = Boolean(cand.entrevista);
+
+                      return (
+                        <tr key={cand.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="font-bold text-slate-900 block">{cand.nombreCompleto}</span>
+                            <span className="text-xs text-slate-400">{cand.email}</span>
+                          </td>
+                          <td className="px-6 py-4 text-xs font-mono font-medium text-slate-600">
+                            {cand.sedeOrigen}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                cand.estadoPostulacion === 'ADMITIDO'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : cand.estadoPostulacion === 'TESTS_COMPLETADOS'
+                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                  : cand.estadoPostulacion === 'EN_PROCESO'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                  : cand.estadoPostulacion === 'RECHAZADO'
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200'
+                              }`}
+                            >
+                              {cand.estadoPostulacion}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {test ? (
+                              <div className="text-xs">
+                                <span className="font-semibold text-slate-800">
+                                  {test.calificacion !== null
+                                    ? `${Number(test.calificacion).toFixed(1)} / 10`
+                                    : 'Sin calificar'}
+                                </span>
+                                <span className="text-[10px] text-slate-400 block font-mono">
+                                  {test.estado}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            {tieneMeet ? (
+                              <span className="inline-flex items-center text-xs text-indigo-600 font-medium">
+                                <Video className="w-3.5 h-3.5 mr-1" />
+                                {new Date(cand.entrevista.fechaHoraProgramada).toLocaleDateString()}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-400 italic">Pendiente</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => navigate(`/admisiones/candidatos/${cand.id}`)}
+                              className="px-3 py-1.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 text-xs font-semibold rounded-lg transition-colors inline-flex items-center space-x-1"
+                            >
+                              <span>Evaluar</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 

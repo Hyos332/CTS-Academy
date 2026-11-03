@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
 import { Navbar } from '../../components/common/Navbar';
@@ -6,6 +7,7 @@ import { CheckCircle2, Clock, Calendar, Video, FileText, ArrowRight } from 'luci
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 export const PostulacionPanelPage: React.FC = () => {
+  const navigate = useNavigate();
   const { data, isLoading, error } = useQuery({
     queryKey: ['candidato-panel'],
     queryFn: async () => {
@@ -91,13 +93,19 @@ export const PostulacionPanelPage: React.FC = () => {
                   </div>
 
                   {test.estado === 'NO_INICIADO' && (
-                    <button className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-1">
+                    <button
+                      onClick={() => navigate(`/evaluacion/test/${test.id}`)}
+                      className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-1"
+                    >
                       <span>Comenzar Test</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {test.estado === 'EN_CURSO' && (
-                    <button className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-1">
+                    <button
+                      onClick={() => navigate(`/evaluacion/test/${test.id}`)}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-1"
+                    >
                       <span>Reanudar Test</span>
                       <Clock className="w-3.5 h-3.5" />
                     </button>

@@ -4,9 +4,11 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { PostulacionPanelPage } from './pages/candidato/PostulacionPanelPage';
+import { TestRunnerPage } from './pages/candidato/TestRunnerPage';
 import { AlumnoPanelPage } from './pages/alumno/AlumnoPanelPage';
 import { LiderPanelPage } from './pages/lider/LiderPanelPage';
 import { AdmisionesPanelPage } from './pages/admisiones/AdmisionesPanelPage';
+import { CandidatoPerfilPage } from './pages/admisiones/CandidatoPerfilPage';
 import { RolUsuario } from '@cts/shared-types';
 
 const HomeRedirect: React.FC = () => {
@@ -49,6 +51,7 @@ export const App: React.FC = () => {
           {/* Portal de Postulante / Candidato */}
           <Route element={<ProtectedRoute allowedRoles={[RolUsuario.CANDIDATO]} />}>
             <Route path="/evaluacion/panel" element={<PostulacionPanelPage />} />
+            <Route path="/evaluacion/test/:testId" element={<TestRunnerPage />} />
           </Route>
 
           {/* Portal de Alumno Profer */}
@@ -64,6 +67,7 @@ export const App: React.FC = () => {
           {/* Portal de Admisiones / Gestor */}
           <Route element={<ProtectedRoute allowedRoles={[RolUsuario.GESTOR]} />}>
             <Route path="/admisiones/panel" element={<AdmisionesPanelPage />} />
+            <Route path="/admisiones/candidatos/:id" element={<CandidatoPerfilPage />} />
           </Route>
 
           {/* Fallback */}
