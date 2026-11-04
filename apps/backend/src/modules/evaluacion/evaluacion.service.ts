@@ -116,16 +116,16 @@ export class EvaluacionService {
     const tiempoLimite = test.tiempo_limite_segundos || 3600;
     const tiempoRestante = Math.max(0, tiempoLimite - segundosTranscurridos);
 
-    if (tiempoRestante <= 0 && test.estado === EstadoTest.EN_CURSO) {
+    if (tiempoRestante <= 0 && test.fecha_inicio) {
       return this.finalizarTest(usuarioId, testId);
     }
 
-    // Actualizar estado del test a EN_CURSO si estaba NO_INICIADO
+    // Actualizar estado del test a EN_CURSO preservando la fecha de inicio original sin pausar el reloj
     const testActualizado = await this.prisma.test.update({
       where: { id: testId },
       data: {
         estado: EstadoTest.EN_CURSO,
-        fecha_inicio: test.fecha_inicio || ahora,
+        fecha_inicio: test.fecha_inicio ? test.fecha_inicio : ahora,
       },
     });
 
@@ -211,6 +211,30 @@ export class EvaluacionService {
       throw new BadRequestException('El test no está activo.');
     }
 
+    // 1. Verificar si el tiempo límite expiró
+    const ahora = new Date();
+    if (test.fecha_inicio) {
+      const segundosTranscurridos = Math.floor((ahora.getTime() - test.fecha_inicio.getTime()) / 1000);
+      if (segundosTranscurridos >= test.tiempo_limite_segundos) {
+        await this.finalizarTest(usuarioId, testId);
+        throw new BadRequestException('El tiempo límite para esta batería ha expirado.');
+      }
+    }
+
+    // 2. Comprobar que la pregunta no fue respondida previamente (NO permitir volver a responder)
+    const respuestaExistente = await this.prisma.respuestaEvaluacion.findUnique({
+      where: {
+        test_id_pregunta_id: {
+          test_id: testId,
+          pregunta_id: dto.preguntaId,
+        },
+      },
+    });
+
+    if (respuestaExistente && respuestaExistente.opcion_seleccionada_id) {
+      throw new BadRequestException('Esta pregunta ya ha sido respondida previamente y no puede modificarse.');
+    }
+
     const opcion = await this.prisma.opcionPregunta.findUnique({
       where: { id: dto.opcionSeleccionadaId },
     });
@@ -259,6 +283,30 @@ export class EvaluacionService {
 
     if (!test || test.estado !== EstadoTest.EN_CURSO) {
       throw new BadRequestException('El test no está activo.');
+    }
+
+    // 1. Verificar si el tiempo límite expiró
+    const ahora = new Date();
+    if (test.fecha_inicio) {
+      const segundosTranscurridos = Math.floor((ahora.getTime() - test.fecha_inicio.getTime()) / 1000);
+      if (segundosTranscurridos >= test.tiempo_limite_segundos) {
+        await this.finalizarTest(usuarioId, testId);
+        throw new BadRequestException('El tiempo límite para esta batería ha expirado.');
+      }
+    }
+
+    // 2. Comprobar que la solución práctica no fue entregada previamente
+    const respuestaExistente = await this.prisma.respuestaEvaluacion.findUnique({
+      where: {
+        test_id_pregunta_id: {
+          test_id: testId,
+          pregunta_id: dto.preguntaId,
+        },
+      },
+    });
+
+    if (respuestaExistente && respuestaExistente.codigo_entregado) {
+      throw new BadRequestException('La solución práctica para esta pregunta ya fue entregada y no puede modificarse.');
     }
 
     const respuesta = await this.prisma.respuestaEvaluacion.upsert({

@@ -14,6 +14,7 @@ import {
   Send,
   ArrowLeft,
   Save,
+  Lock,
 } from 'lucide-react';
 
 interface Opcion {
@@ -41,6 +42,7 @@ export const TestRunnerPage: React.FC = () => {
   const [tiempoRestante, setTiempoRestante] = useState<number>(3600);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [testFinalizadoData, setTestFinalizadoData] = useState<any | null>(null);
+  const expiracionTimestampRef = React.useRef<number | null>(null);
 
   // Iniciar o recuperar test
   const { data, isLoading, error } = useQuery({
@@ -52,7 +54,7 @@ export const TestRunnerPage: React.FC = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Restaurar estado guardado y respuestas previas
+  // Restaurar estado guardado, respuestas previas y reanudar donde se quedó
   useEffect(() => {
     if (!data) return;
 
@@ -64,11 +66,13 @@ export const TestRunnerPage: React.FC = () => {
       return;
     }
 
-    if (data.test?.tiempoRestanteSegundos !== undefined) {
-      setTiempoRestante(data.test.tiempoRestanteSegundos);
-    } else if (data.test?.tiempoLimiteSegundos) {
-      setTiempoRestante(data.test.tiempoLimiteSegundos);
-    }
+    const segundosRestantes =
+      data.test?.tiempoRestanteSegundos !== undefined
+        ? data.test.tiempoRestanteSegundos
+        : data.test?.tiempoLimiteSegundos || 3600;
+
+    setTiempoRestante(segundosRestantes);
+    expiracionTimestampRef.current = Date.now() + segundosRestantes * 1000;
 
     if (data.respuestasGuardadas && Array.isArray(data.respuestasGuardadas)) {
       const teoricas: Record<string, string> = {};
@@ -83,25 +87,39 @@ export const TestRunnerPage: React.FC = () => {
       }
       setRespuestasTeoricas(teoricas);
       setRespuestasPracticas(practicas);
+
+      // Reanudar automáticamente en la primera pregunta no respondida
+      if (data.preguntas && data.preguntas.length > 0) {
+        const primerSinResponderIndex = data.preguntas.findIndex(
+          (p: Pregunta) => !teoricas[p.id] && !practicas[p.id],
+        );
+        if (primerSinResponderIndex !== -1) {
+          setPreguntaActivaIndex(primerSinResponderIndex);
+        } else {
+          setPreguntaActivaIndex(data.preguntas.length - 1);
+        }
+      }
     }
   }, [data]);
 
+  // Cronómetro continuo basado en tiempo real de pared (no se detiene al salir ni pausar pestaña)
   useEffect(() => {
-    if (testFinalizadoData || tiempoRestante <= 0) return;
+    if (testFinalizadoData) return;
 
     const interval = setInterval(() => {
-      setTiempoRestante((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleFinalizarTest();
-          return 0;
-        }
-        return prev - 1;
-      });
+      if (!expiracionTimestampRef.current) return;
+      const msRestantes = expiracionTimestampRef.current - Date.now();
+      const segundos = Math.max(0, Math.round(msRestantes / 1000));
+      setTiempoRestante(segundos);
+
+      if (segundos <= 0) {
+        clearInterval(interval);
+        handleFinalizarTest();
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [tiempoRestante, testFinalizadoData]);
+  }, [testFinalizadoData]);
 
   // Mutación para responder pregunta teórica
   const responderTeoricaMutation = useMutation({
@@ -142,8 +160,18 @@ export const TestRunnerPage: React.FC = () => {
   };
 
   const handleSeleccionarOpcion = (preguntaId: string, opcionId: string) => {
+    // Si la pregunta ya está respondida, no permitir modificarla
+    if (respuestasTeoricas[preguntaId]) return;
+
     setRespuestasTeoricas((prev) => ({ ...prev, [preguntaId]: opcionId }));
     responderTeoricaMutation.mutate({ preguntaId, opcionId });
+
+    // Auto-avanzar a la siguiente pregunta tras breve feedback visual
+    if (data?.preguntas && preguntaActivaIndex < data.preguntas.length - 1) {
+      setTimeout(() => {
+        setPreguntaActivaIndex((curr) => Math.min(data.preguntas.length - 1, curr + 1));
+      }, 300);
+    }
   };
 
   const handleGuardarPractica = (preguntaId: string) => {
@@ -327,15 +355,17 @@ export const TestRunnerPage: React.FC = () => {
                 <button
                   key={p.id}
                   onClick={() => setPreguntaActivaIndex(idx)}
-                  className={`h-8 rounded-lg font-mono text-[11px] font-bold transition-all flex items-center justify-center border ${
+                  className={`h-8 rounded-lg font-mono text-[11px] font-bold transition-all flex items-center justify-center space-x-0.5 border ${
                     esActiva
                       ? 'bg-brand-600 border-brand-500 text-white shadow-md shadow-brand-600/30 ring-2 ring-brand-400/30'
                       : estaRespondida
                       ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'
                       : 'bg-slate-800 border-slate-700/80 text-slate-400 hover:bg-slate-750 hover:text-white'
                   }`}
+                  title={estaRespondida ? `Pregunta ${idx + 1}: Respondida (Bloqueada)` : `Pregunta ${idx + 1}: Sin responder`}
                 >
-                  {idx + 1}
+                  <span>{idx + 1}</span>
+                  {estaRespondida && <Lock className="w-2.5 h-2.5 ml-0.5 text-emerald-400" />}
                 </button>
               );
             })}
@@ -344,7 +374,7 @@ export const TestRunnerPage: React.FC = () => {
           <div className="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-400 space-y-1.5">
             <div className="flex items-center space-x-2">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/30 border border-emerald-500/50"></div>
-              <span>Respondida</span>
+              <span>Respondida (Bloqueada)</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-700"></div>
@@ -395,71 +425,123 @@ export const TestRunnerPage: React.FC = () => {
             </h3>
 
             {/* Opciones Teóricas */}
-            {preguntaActual.tipoPregunta === 'TEORICA' && preguntaActual.opciones && (
-              <div className="space-y-3">
-                {preguntaActual.opciones.map((opcion) => {
-                  const esSeleccionada = respuestasTeoricas[preguntaActual.id] === opcion.id;
+            {preguntaActual.tipoPregunta === 'TEORICA' && preguntaActual.opciones && (() => {
+              const estaRespondida = Boolean(respuestasTeoricas[preguntaActual.id]);
+              return (
+                <div className="space-y-3">
+                  {estaRespondida && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center space-x-2.5 text-xs text-amber-300 mb-3">
+                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Respuesta registrada y bloqueada. No se permite modificar opciones una vez enviadas.</span>
+                    </div>
+                  )}
 
-                  return (
-                    <label
-                      key={opcion.id}
-                      onClick={() => handleSeleccionarOpcion(preguntaActual.id, opcion.id)}
-                      className={`flex items-start p-4 rounded-xl border cursor-pointer transition-all ${
-                        esSeleccionada
-                          ? 'bg-brand-600/15 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/50'
-                          : 'bg-slate-800/60 border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:border-slate-600'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name={`pregunta-${preguntaActual.id}`}
-                        checked={esSeleccionada}
-                        onChange={() => {}}
-                        className="mt-1 h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-700 bg-slate-900"
-                      />
-                      <span className="ml-3 text-sm leading-relaxed">{opcion.texto}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
+                  {preguntaActual.opciones.map((opcion) => {
+                    const esSeleccionada = respuestasTeoricas[preguntaActual.id] === opcion.id;
+
+                    return (
+                      <div
+                        key={opcion.id}
+                        onClick={() => {
+                          if (!estaRespondida) {
+                            handleSeleccionarOpcion(preguntaActual.id, opcion.id);
+                          }
+                        }}
+                        className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                          esSeleccionada
+                            ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-sm ring-1 ring-emerald-500/50'
+                            : estaRespondida
+                            ? 'bg-slate-800/30 border-slate-800 text-slate-500 opacity-40 cursor-not-allowed select-none'
+                            : 'bg-slate-800/60 border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:border-slate-600 cursor-pointer'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="radio"
+                            name={`pregunta-${preguntaActual.id}`}
+                            checked={esSeleccionada}
+                            disabled={estaRespondida}
+                            onChange={() => {}}
+                            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-700 bg-slate-900 cursor-pointer disabled:cursor-not-allowed"
+                          />
+                          <span className={`text-sm leading-relaxed ${esSeleccionada ? 'font-medium text-emerald-200' : ''}`}>
+                            {opcion.texto}
+                          </span>
+                        </div>
+
+                        {esSeleccionada && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1 shrink-0 ml-3">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            <span>Registrada</span>
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {/* Editor de Solución Práctica */}
-            {preguntaActual.tipoPregunta === 'PRACTICA' && (
-              <div className="space-y-4">
-                <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
-                  <div className="bg-slate-800/80 px-4 py-2 flex items-center justify-between text-xs text-slate-400 border-b border-slate-800">
-                    <span className="font-mono">solution.ts</span>
-                    <span>TypeScript 5.x</span>
-                  </div>
-                  <textarea
-                    rows={12}
-                    value={respuestasPracticas[preguntaActual.id] || ''}
-                    onChange={(e) =>
-                      setRespuestasPracticas((prev) => ({
-                        ...prev,
-                        [preguntaActual.id]: e.target.value,
-                      }))
-                    }
-                    placeholder="// Escribe aquí tu implementación en TypeScript...&#10;function calcularRadar(evaluaciones: number[]) {&#10;  // Tu código&#10;}"
-                    className="w-full bg-slate-950 text-slate-200 font-mono text-sm p-4 focus:outline-none resize-y"
-                  />
-                </div>
+            {preguntaActual.tipoPregunta === 'PRACTICA' && (() => {
+              const estaEntregada = Boolean(respuestasPracticas[preguntaActual.id]);
+              return (
+                <div className="space-y-4">
+                  {estaEntregada && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center space-x-2.5 text-xs text-amber-300">
+                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Solución práctica entregada y bloqueada para revisión del equipo técnico.</span>
+                    </div>
+                  )}
 
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => handleGuardarPractica(preguntaActual.id)}
-                    disabled={entregarPracticaMutation.isPending}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>
-                      {entregarPracticaMutation.isPending ? 'Guardando...' : 'Guardar Código'}
-                    </span>
-                  </button>
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
+                    <div className="bg-slate-800/80 px-4 py-2 flex items-center justify-between text-xs text-slate-400 border-b border-slate-800">
+                      <span className="font-mono">solution.ts</span>
+                      <span>TypeScript 5.x</span>
+                    </div>
+                    <textarea
+                      rows={12}
+                      readOnly={estaEntregada}
+                      value={respuestasPracticas[preguntaActual.id] || ''}
+                      onChange={(e) => {
+                        if (!estaEntregada) {
+                          setRespuestasPracticas((prev) => ({
+                            ...prev,
+                            [preguntaActual.id]: e.target.value,
+                          }));
+                        }
+                      }}
+                      placeholder="// Escribe aquí tu implementación en TypeScript...&#10;function calcularRadar(evaluaciones: number[]) {&#10;  // Tu código&#10;}"
+                      className={`w-full bg-slate-950 text-slate-200 font-mono text-sm p-4 focus:outline-none resize-y ${
+                        estaEntregada ? 'opacity-80 cursor-not-allowed select-text' : ''
+                      }`}
+                    />
+                  </div>
+
+                  {!estaEntregada ? (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleGuardarPractica(preguntaActual.id)}
+                        disabled={entregarPracticaMutation.isPending || !respuestasPracticas[preguntaActual.id]?.trim()}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>
+                          {entregarPracticaMutation.isPending ? 'Guardando...' : 'Guardar y Entregar Solución'}
+                        </span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end">
+                      <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex items-center space-x-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                        <span>Solución entregada con éxito</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Navegación Inferior */}
