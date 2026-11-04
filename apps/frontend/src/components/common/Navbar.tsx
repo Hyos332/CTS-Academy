@@ -1,56 +1,171 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, ShieldCheck } from 'lucide-react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import {
+  LogOut,
+  Users,
+  Building2,
+  GraduationCap,
+  ClipboardList,
+} from 'lucide-react';
+import { RolUsuario } from '@cts/shared-types';
 
 export const Navbar: React.FC = () => {
   const { usuario, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const getRoleBadge = (rol?: string) => {
     switch (rol) {
-      case 'LIDER_EQUIPO':
-        return <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-purple-300">Tech Leader</span>;
-      case 'GESTOR':
-        return <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-amber-300">Gestor Admisiones</span>;
-      case 'ALUMNO':
-        return <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-emerald-300">Alumno Profer</span>;
-      case 'CANDIDATO':
-        return <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-blue-300">Postulante</span>;
+      case RolUsuario.LIDER_EQUIPO:
+        return (
+          <span className="bg-white/95 text-[#01579B] text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs border border-white/40 uppercase tracking-wider">
+            Tech Leader
+          </span>
+        );
+      case RolUsuario.GESTOR:
+        return (
+          <span className="bg-amber-100 text-amber-900 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs border border-amber-300 uppercase tracking-wider">
+            Gestor Admisiones
+          </span>
+        );
+      case RolUsuario.ALUMNO:
+        return (
+          <span className="bg-emerald-100 text-emerald-900 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs border border-emerald-300 uppercase tracking-wider">
+            Alumno PROFER
+          </span>
+        );
+      case RolUsuario.CANDIDATO:
+        return (
+          <span className="bg-blue-100 text-blue-900 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs border border-blue-300 uppercase tracking-wider">
+            Postulante
+          </span>
+        );
       default:
         return null;
     }
   };
 
+  const iniciales = usuario
+    ? `${usuario.nombre?.[0] || ''}${usuario.apellidos?.[0] || ''}`.toUpperCase() || 'U'
+    : 'U';
+
+  const esGestorOLider =
+    usuario?.rol === RolUsuario.GESTOR || usuario?.rol === RolUsuario.LIDER_EQUIPO;
+
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <header className="bg-[#01579B] border-b border-[#004174] sticky top-0 z-50 shadow-md text-white no-print">
       <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="bg-brand-600 text-white p-2 rounded-lg font-bold flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="font-bold text-lg text-slate-900 tracking-tight">CTS Academy</span>
-            <span className="text-xs text-slate-500 block leading-none">Evaluator & Training Platform</span>
-          </div>
+        {/* Lado Izquierdo: Logotipo y Marca Grupo FUNIBER */}
+        <div className="flex items-center space-x-6">
+          <Link
+            to="/"
+            className="flex items-center space-x-3 group hover:opacity-95 transition-opacity"
+          >
+            <div className="w-10 h-10 rounded-lg bg-[#004174] text-white flex items-center justify-center font-black text-sm tracking-wider shadow-xs border border-white/20">
+              CTS
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-lg text-white tracking-tight leading-none">
+                  CTS Academy
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-wider bg-white/15 text-blue-100 px-1.5 py-0.5 rounded border border-white/20">
+                  Grupo FUNIBER
+                </span>
+              </div>
+              <span className="text-[11px] text-blue-100 block mt-0.5 leading-none">
+                Sistema de Evaluación & Formación PROFER
+              </span>
+            </div>
+          </Link>
+
+          {/* Navegación Central Superior (Tabs Oficiales FUNIBER SD) */}
+          {esGestorOLider && (
+            <nav className="hidden md:flex items-center space-x-1 pl-4 border-l border-white/20 h-8">
+              <button
+                onClick={() => navigate('/admisiones/panel')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  location.pathname.startsWith('/admisiones')
+                    ? 'bg-white/20 text-white shadow-xs'
+                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Admisiones</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/lider/panel')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  location.pathname.startsWith('/lider')
+                    ? 'bg-white/20 text-white shadow-xs'
+                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Squads CTS</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/formacion/panel')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  location.pathname.startsWith('/formacion')
+                    ? 'bg-white/20 text-white shadow-xs'
+                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Formación PROFER</span>
+              </button>
+            </nav>
+          )}
+
+          {usuario?.rol === RolUsuario.CANDIDATO && (
+            <nav className="hidden md:flex items-center space-x-1 pl-4 border-l border-white/20 h-8">
+              <button
+                onClick={() => navigate('/evaluacion/panel')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  location.pathname.startsWith('/evaluacion')
+                    ? 'bg-white/20 text-white shadow-xs'
+                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <ClipboardList className="w-3.5 h-3.5" />
+                <span>Mis Baterías de Admisión</span>
+              </button>
+            </nav>
+          )}
         </div>
 
+        {/* Lado Derecho: Chip de Rol, Usuario y Cierre de Sesión */}
         {usuario && (
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-right">
-              <div>
-                <p className="text-sm font-medium text-slate-800">{usuario.nombre} {usuario.apellidos}</p>
-                <p className="text-xs text-slate-500">{usuario.email}</p>
+            <div className="flex items-center space-x-3">
+              <div className="hidden sm:block text-right">
+                <div className="flex items-center justify-end space-x-2">
+                  <p className="text-xs font-bold text-white leading-tight">
+                    {usuario.nombre} {usuario.apellidos}
+                  </p>
+                  {getRoleBadge(usuario.rol)}
+                </div>
+                <p className="text-[11px] text-blue-100 truncate max-w-[220px]">
+                  {usuario.email}
+                </p>
               </div>
-              <div className="ml-2">
-                {getRoleBadge(usuario.rol)}
+
+              {/* Avatar Circular FUNIBER */}
+              <div className="w-9 h-9 rounded-full bg-[#004174] border-2 border-white/60 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
+                {iniciales}
               </div>
             </div>
 
             <button
               onClick={logout}
-              title="Cerrar sesión"
-              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+              title="Cerrar sesión segura"
+              className="p-2 text-blue-100 hover:text-white hover:bg-white/15 rounded-lg transition-colors border border-transparent hover:border-white/20"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -58,3 +173,5 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
+
+export default Navbar;

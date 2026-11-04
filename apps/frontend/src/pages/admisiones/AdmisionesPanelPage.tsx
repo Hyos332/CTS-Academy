@@ -328,25 +328,29 @@ export const AdmisionesPanelPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Menú de Navegación Vertical */}
-          <nav className="bg-white border border-slate-200 rounded-2xl p-2 shadow-xs space-y-1">
+          {/* Menú de Navegación Vertical (Estilo Oficial Lateral Navigation Grupo FUNIBER SD) */}
+          <nav className="bg-white border border-[#E0E0E0] rounded-lg p-2 shadow-funiber space-y-1">
+            <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#757575]">
+              Gestión de Convocatoria
+            </div>
+
             <button
               onClick={() => setSeccionActiva('candidatos')}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition-all ${
                 seccionActiva === 'candidatos'
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25 ring-1 ring-brand-500'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                  : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
               }`}
             >
               <div className="flex items-center space-x-2.5">
-                <Users className={`w-4 h-4 ${seccionActiva === 'candidatos' ? 'text-white' : 'text-slate-500'}`} />
+                <Users className={`w-4 h-4 ${seccionActiva === 'candidatos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
                 <span className="truncate">Aspirantes & Selección</span>
               </div>
               <span
                 className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
                   seccionActiva === 'candidatos'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'bg-[#01579B] text-white font-bold'
+                    : 'bg-[#EEEEEE] text-[#616161]'
                 }`}
               >
                 {candidatos?.length || 0}
@@ -355,21 +359,21 @@ export const AdmisionesPanelPage: React.FC = () => {
 
             <button
               onClick={() => setSeccionActiva('equipos')}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition-all ${
                 seccionActiva === 'equipos'
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25 ring-1 ring-brand-500'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                  : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
               }`}
             >
               <div className="flex items-center space-x-2.5">
-                <Building2 className={`w-4 h-4 ${seccionActiva === 'equipos' ? 'text-white' : 'text-slate-500'}`} />
+                <Building2 className={`w-4 h-4 ${seccionActiva === 'equipos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
                 <span className="truncate">Equipos CTS (Squads)</span>
               </div>
               <span
                 className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
                   seccionActiva === 'equipos'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'bg-[#01579B] text-white font-bold'
+                    : 'bg-[#EEEEEE] text-[#616161]'
                 }`}
               >
                 {equipos?.length || 6}
@@ -378,26 +382,26 @@ export const AdmisionesPanelPage: React.FC = () => {
 
             <button
               onClick={() => setSeccionActiva('alumnos')}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition-all ${
                 seccionActiva === 'alumnos'
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25 ring-1 ring-brand-500'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                  : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
               }`}
             >
               <div className="flex items-center space-x-2.5">
-                <GraduationCap className={`w-4 h-4 ${seccionActiva === 'alumnos' ? 'text-white' : 'text-slate-500'}`} />
+                <GraduationCap className={`w-4 h-4 ${seccionActiva === 'alumnos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
                 <span className="truncate">Alumnos PROFER</span>
               </div>
               {alumnosSinEquipo && alumnosSinEquipo.length > 0 ? (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500 text-white font-bold animate-pulse">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#F57C00] text-white font-bold animate-pulse">
                   {alumnosSinEquipo.length} pend.
                 </span>
               ) : (
                 <span
                   className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
                     seccionActiva === 'alumnos'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-slate-100 text-slate-600'
+                      ? 'bg-[#01579B] text-white font-bold'
+                      : 'bg-[#EEEEEE] text-[#616161]'
                   }`}
                 >
                   {todosLosAlumnos.length}
@@ -407,21 +411,21 @@ export const AdmisionesPanelPage: React.FC = () => {
 
             <button
               onClick={() => setSeccionActiva('convocatoria')}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition-all ${
                 seccionActiva === 'convocatoria'
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25 ring-1 ring-brand-500'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                  : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
               }`}
             >
               <div className="flex items-center space-x-2.5">
-                <Calendar className={`w-4 h-4 ${seccionActiva === 'convocatoria' ? 'text-white' : 'text-slate-500'}`} />
+                <Calendar className={`w-4 h-4 ${seccionActiva === 'convocatoria' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
                 <span className="truncate">Convocatoria & Periodo</span>
               </div>
               <span
                 className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
                   seccionActiva === 'convocatoria'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'bg-[#01579B] text-white font-bold'
+                    : 'bg-[#EEEEEE] text-[#616161]'
                 }`}
               >
                 {convocatoriaMostrar?.semestre || 'Periodo'}
@@ -429,11 +433,11 @@ export const AdmisionesPanelPage: React.FC = () => {
             </button>
           </nav>
 
-          {/* Botones de Acción Rápida en Sidebar */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-2.5">
+          {/* Botones de Acción Rápida en Sidebar (Estilo Button Grupo FUNIBER SD) */}
+          <div className="bg-white border border-[#E0E0E0] rounded-lg p-3.5 shadow-funiber space-y-2">
             <button
               onClick={() => setShowAperturarModal(true)}
-              className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5"
+              className="w-full py-2 px-3 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center justify-center space-x-1.5"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Aperturar Convocatoria</span>

@@ -280,37 +280,37 @@ export const CandidatoPerfilPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Ficha Principal del Candidato */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        {/* Ficha Principal del Candidato (Estilo Card Oficial Grupo FUNIBER SD) */}
+        <div className="bg-white rounded-lg border border-[#E0E0E0] p-6 shadow-funiber flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#212121]">
               {candidato.usuario?.nombre} {candidato.usuario?.apellidos}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Email: <span className="font-medium text-slate-700">{candidato.usuario?.email}</span> • Sede:{' '}
-              <span className="font-medium text-slate-700">{candidato.sede_origen}</span> • Tel:{' '}
-              <span className="font-medium text-slate-700">{candidato.telefono || 'N/A'}</span>
+            <p className="text-xs text-[#616161] mt-1">
+              Email: <span className="font-semibold text-[#212121]">{candidato.usuario?.email}</span> • Sede:{' '}
+              <span className="font-semibold text-[#212121]">{candidato.sede_origen}</span> • Tel:{' '}
+              <span className="font-semibold text-[#212121]">{candidato.telefono || 'N/A'}</span>
             </p>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-[#757575] mt-1 font-medium">
               Convocatoria: {candidato.convocatoria?.denominacion}
             </p>
           </div>
 
-          {/* Botones de Acción Editorial / Decisión */}
+          {/* Botones de Acción Editorial / Decisión (Estilo Button Grupo FUNIBER SD) */}
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setShowPdfModal(true)}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5"
+              className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5"
             >
-              <FileDown className="w-4 h-4 text-brand-300" />
+              <FileDown className="w-4 h-4 text-blue-200" />
               <span>Descargar Resumen PDF</span>
             </button>
 
             <button
               onClick={() => setModalInvitacion(true)}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+              className="px-3.5 py-2 border border-[#01579B] text-[#01579B] hover:bg-[#E6EFF5] text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-1.5"
             >
-              <Mail className="w-3.5 h-3.5 text-indigo-300" />
+              <Mail className="w-3.5 h-3.5 text-[#01579B]" />
               <span>Credenciales e Invitación</span>
             </button>
 
@@ -321,7 +321,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                     generarEnlaceMeet();
                     setModalEntrevista(true);
                   }}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+                  className="px-3.5 py-2 bg-[#084DC4] hover:bg-[#073E9D] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5"
                 >
                   <Calendar className="w-3.5 h-3.5" />
                   <span>Agendar Google Meet</span>
@@ -333,14 +333,14 @@ export const CandidatoPerfilPage: React.FC = () => {
                     }
                     setModalAdmitir(true);
                   }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+                  className="px-3.5 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
                   <span>Admitir en Programa</span>
                 </button>
                 <button
                   onClick={() => setModalRechazar(true)}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+                  className="px-3.5 py-2 border border-[#D32F2F] text-[#D32F2F] hover:bg-[#FFEBEE] text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5"
                 >
                   <UserX className="w-3.5 h-3.5" />
                   <span>Rechazar</span>
@@ -350,14 +350,14 @@ export const CandidatoPerfilPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Selector de Pestañas de Evaluación e Informes Oficiales */}
-        <div className="flex border-b border-slate-200 space-x-3 overflow-x-auto pb-px">
+        {/* Selector de Pestañas de Evaluación (Estilo Tabs Oficial Grupo FUNIBER SD) */}
+        <div className="flex border-b border-[#E0E0E0] space-x-4 overflow-x-auto pb-px bg-white px-4 rounded-lg shadow-funiber">
           <button
             onClick={() => setTabActiva('resumen')}
-            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
               tabActiva === 'resumen'
-                ? 'border-brand-600 text-brand-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[#01579B] text-[#01579B]'
+                : 'border-transparent text-[#757575] hover:text-[#212121]'
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -366,10 +366,10 @@ export const CandidatoPerfilPage: React.FC = () => {
 
           <button
             onClick={() => setTabActiva('actitud16pf')}
-            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
               tabActiva === 'actitud16pf'
-                ? 'border-rose-600 text-rose-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[#01579B] text-[#01579B]'
+                : 'border-transparent text-[#757575] hover:text-[#212121]'
             }`}
           >
             <HeartPulse className="w-4 h-4" />
@@ -378,10 +378,10 @@ export const CandidatoPerfilPage: React.FC = () => {
 
           <button
             onClick={() => setTabActiva('aptitudMatriz')}
-            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
               tabActiva === 'aptitudMatriz'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[#01579B] text-[#01579B]'
+                : 'border-transparent text-[#757575] hover:text-[#212121]'
             }`}
           >
             <FileSpreadsheet className="w-4 h-4" />
@@ -390,10 +390,10 @@ export const CandidatoPerfilPage: React.FC = () => {
 
           <button
             onClick={() => setTabActiva('tecnicoCts')}
-            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
               tabActiva === 'tecnicoCts'
-                ? 'border-emerald-600 text-emerald-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-[#01579B] text-[#01579B]'
+                : 'border-transparent text-[#757575] hover:text-[#212121]'
             }`}
           >
             <Terminal className="w-4 h-4" />
