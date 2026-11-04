@@ -24,7 +24,7 @@ package "MotorEquipos" #FAFAFA {
         * id : uuid <<PK>>
         --
         * usuario_id : uuid <<FK>>
-        * equipo_id : uuid <<FK>>
+        equipo_id : uuid <<FK, NULLABLE>>
         candidato_origen_id : uuid <<FK>>
     }
 }
@@ -138,7 +138,7 @@ package "MotorFormacion" #F9FFF0 {
 ' Relaciones Intra-MotorEquipos
 eq_usuarios ||--o| eq_equipos : "lidera (TL)"
 eq_usuarios ||--o| eq_alumnos : "perfila"
-eq_equipos ||--o{ eq_alumnos : "adscribe"
+eq_equipos ||..o{ eq_alumnos : "adscribe (opcional/diferida)"
 
 ' Relaciones Inter-Microservicios
 eq_usuarios ||..o{ ev_candidatos : "credenciales"

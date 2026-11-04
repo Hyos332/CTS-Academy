@@ -31,6 +31,11 @@ Registro formal y cronológico de decisiones de diseño, acuerdos de modelado y 
 | **[ADR-011](#adr-011-patrón-canónico-de-acceso-usuarionologueado-exclusividad-de-cerrarsesion-en-roles-y-extend-condicional)** | 2026-10-23 | Patrón canónico de acceso: UsuarioNoLogueado, exclusividad de cerrarSesion en roles y <<extend>> condicional | Aprobado | — |
 | **[ADR-012](#adr-012-elección-de-postgresql-16-para-persistencia-relacional-y-soporte-de-microservicios)** | 2026-10-29 | Elección de PostgreSQL 16 para persistencia relacional y soporte de microservicios | Aprobado | — |
 | **[ADR-013](#adr-013-simplificación-pragmática-del-modelo-de-datos-der-y-alineación-con-la-operativa-real-de-cts)** | 2026-11-02 | Simplificación pragmática del modelo de datos DER y alineación con la operativa real de CTS | Aprobado | — |
+| **[ADR-014](#adr-014-stack-tecnológico-de-desarrollo-monorepo-pnpm--nestjs--prisma--reactvite--docker)** | 2026-11-02 | Stack tecnológico de desarrollo (Monorepo pnpm + NestJS + Prisma + React/Vite + Docker) | Aprobado | — |
+| **[ADR-015](#adr-015-baremación-cualitativa-espectral-16pf-y-matriz-de-43-competencias-sin-notas-de-corte)** | 2026-11-03 | Baremación cualitativa espectral (16PF y matriz de 43 competencias) sin notas de corte | Aprobado | — |
+| **[ADR-016](#adr-016-asignación-diferida-de-squad-recomendador-de-afinidad-técnica-y-movilidad-inter-equipos)** | 2026-11-03 | Asignación diferida de Squad, recomendador de afinidad técnica y movilidad inter-equipos | Aprobado | — |
+| **[ADR-017](#adr-017-mecánica-de-ejecución-inmutable-con-cronómetro-wall-clock-en-servidor-y-bloqueo-de-respuestas)** | 2026-11-04 | Mecánica de ejecución inmutable con cronómetro Wall-Clock en servidor y bloqueo de respuestas | Aprobado | — |
+| **[ADR-018](#adr-018-ingesta-masiva-por-nómina-de-sede-universitaria-y-navegación-ejecutiva-por-sidebar)** | 2026-11-04 | Ingesta masiva por nómina de sede universitaria y navegación ejecutiva por sidebar | Aprobado | — |
 
 ---
 
@@ -218,6 +223,55 @@ Registro formal y cronológico de decisiones de diseño, acuerdos de modelado y 
   * **Frontend**: **React 18 + Vite + TypeScript**, Tailwind CSS, **Recharts** para el renderizado del radar de competencias JSONB ([ADR-013](/RUP/BITACORA.md#adr-013-simplificaci%C3%B3n-pragm%C3%A1tica-del-modelo-de-datos-der-y-alineaci%C3%B3n-con-la-operativa-real-de-cts)), Monaco Editor para retos prácticos y `react-markdown` para guías técnicas.
   * **Sandbox Runner**: Contenedores efímeros aislados confinados mediante Docker Engine API (`dockerode`, `network_mode: none`, 256MB RAM, timeout 10s).
 * **Artefactos afectados**: `RUP/BITACORA.md`, `RUP/04-desarrollo/README.md`, configuración raíz del repositorio (`pnpm-workspace.yaml`, `package.json`, `turbo.json`).
+
+---
+
+### ADR-015: Baremación cualitativa espectral (16PF y matriz de 43 competencias) sin notas de corte
+* **Fecha**: 2026-11-03
+* **Contexto**: Aclaraciones operativas emitidas por la coordinación del Programa PROFER y CTS establecieron que los tests de actitud y aptitud aplicados a los aspirantes no constituyen pruebas de examen cuantitativo eliminatorio (con umbrales escalares de aprobado/suspenso del tipo 0 a 10), sino instrumentos diagnósticos de evaluación psicológica y competencial cualitativa para orientar la formación y adscripción a proyectos.
+* **Decisión**:
+  * **Eliminación de Calificaciones Escalares de Corte**: Descartar cualquier nota numérica eliminatoria en los tests de actitud y aptitud.
+  * **Test de Actitud (Modelo 16PF de Cattell)**: Implementación del cuestionario oficial baremado en decatipos estandarizados (escala 1 a 10) que mide 16 factores primarios de la personalidad (Afabilidad, Razonamiento, Estabilidad Emocional, Dominancia, Animación, Atención a Normas, Atrevimiento, Sensibilidad, Vigilancia, Abstracción, Privacidad, Aprensión, Apertura al Cambio, Autosuficiencia, Perfeccionismo y Tensión), clasificando el perfil en un espectro psicológico descriptivo.
+  * **Test de Aptitud (Matriz de 43 Competencias)**: Baremación cualitativa en 5 niveles de competencia (Nivel 0: Sin evidencia a Nivel 4: Referente/Autónomo) sobre 43 habilidades técnicas, metodológicas y blandas requeridas en la factoría de software (DevOps, Frontend, Backend, QA, Arquitectura, Comunicación y Trabajo en Equipo).
+  * **Consolidación en `perfil_competencias` (JSONB)**: Las mediciones se persisten directamente como payload analítico en la entidad `candidatos`, alimentando la visualización del gráfico de radar y el informe directivo confidencial en el perfil del Gestor.
+* **Artefactos afectados**: `RUP/00-modelo-del-dominio/`, `RUP/01-requisitos/03-detalle-casos-uso/iniciarTest/`, `responderPreguntaTeorica/`, `abrirPerfilCandidato/`, `apps/backend/src/modules/evaluacion/` y componentes de evaluación en frontend.
+
+---
+
+### ADR-016: Asignación diferida de Squad, recomendador de afinidad técnica y movilidad inter-equipos
+* **Fecha**: 2026-11-03
+* **Contexto**: En la dinámica de admisiones de CTS, entre el momento en que se emite la resolución favorable de ingreso ("SÍ" al programa) y la incorporación presencial del becario a la sede de Santander transcurre una ventana temporal (traslados, visados, formalización académica). Forzar la asignación rígida e irreversible a un squad y rol técnico concreto en el instante exacto de la admisión no reflejaba la operativa real. Asimismo, durante su estancia en el programa, un alumno PROFER puede requerir movilidad o transferencia entre los 6 squads según su evolución técnica y las demandas de los proyectos.
+* **Decisión**:
+  * **Relación Opcional `alumnos_profer.equipo_id` (NULLABLE)**: Permitir formalizar la admisión de un candidato a `AlumnoProfer` dejando la asignación de squad diferida (`equipo_id = null`), marcando su ficha como "Pendiente de Asignación de Squad".
+  * **Motor de Recomendación de Squad**: Implementar en el perfil del aspirante un cálculo de afinidad técnica que analiza los resultados de los 3 tests (foco técnico, solvencia en backend/frontend/devops y perfil actitudinal) y recomienda el Squad óptimo (ej. Team Fénix, Team Hydra, Team Dragón, etc.) con su porcentaje de idoneidad estimado.
+  * **Bandeja de Asignación Prioritaria y Movilidad Dinámica**: Incorporar en el panel de admisiones una bandeja ámbar destacada con los alumnos pendientes de squad para asignarles equipo en un clic, así como un mecanismo modal de transferencia que permite al Gestor mover a cualquier alumno entre los 6 squads en cualquier momento de su ciclo sin destruir su historial ni sus entregables.
+* **Artefactos afectados**: `RUP/00-modelo-del-dominio/`, `RUP/01-requisitos/03-detalle-casos-uso/admitirAlumnoProfer/`, `RUP/03-diseño/modelo-datos/derMotorEquipos.puml`, `derGeneral.puml`, esquema Prisma y controladores/vistas de admisiones.
+
+---
+
+### ADR-017: Mecánica de ejecución inmutable con cronómetro Wall-Clock en servidor y bloqueo de respuestas
+* **Fecha**: 2026-11-04
+* **Contexto**: Se observaron potenciales vulnerabilidades operativas durante la ejecución de los tests diagnósticos: un aspirante podía pausar artificialmente el temporizador cerrando la pestaña o regresando al panel, y podía re-contestar preguntas ya enviadas.
+* **Decisión**:
+  * **Temporizador Wall-Clock Inmutable en Servidor**: El tiempo consumido se sincroniza contra la `fecha_inicio` registrada en base de datos (`sesiones_evaluacion`). Si el usuario navega fuera o cierra la ventana, el reloj real continúa corriendo; al reanudar la prueba, el cliente calcula los minutos consumidos en ausencia y resta el intervalo transcurrido.
+  * **Bloqueo Inmutable de Respuestas**: Las preguntas contestadas se persisten inmediatamente en `respuestas_evaluacion` y quedan selladas. En frontend, los selectores de opción quedan deshabilitados permanentemente y el aspirante es dirigido a la primera pregunta no respondida.
+  * **Expiración Estricta**: Al consumirse el `tiempo_limite_segundos`, el backend bloquea cualquier nuevo registro y transiciona el test a `FINALIZADO` automáticamente.
+* **Artefactos afectados**: `RUP/01-requisitos/03-detalle-casos-uso/iniciarTest/`, `responderPreguntaTeorica/`, `finalizarTest/`, servicios del backend y vistas de test en frontend.
+
+---
+
+### ADR-018: Ingesta masiva por nómina de sede universitaria y navegación ejecutiva por sidebar
+* **Fecha**: 2026-11-04
+* **Contexto**: Las sedes universitarias internacionales (Santander, Guatemala, Bogotá, CDMX, Lima) remiten lotes de aspirantes a través de listados estructurados. El registro manual uno a uno en la plataforma resultaba ineficiente. Por otro lado, la vista del panel de admisiones concentraba excesiva información en un scroll vertical continuo, dificultando la supervisión ejecutiva.
+* **Decisión**:
+  * **Implementación Integral de `importarCandidatosSede()`**: Modal de importación con selección de sede, soporte de carga de archivos (.csv / .txt) o pegado directo de líneas, validación previa no destructiva (informe de filas válidas, duplicadas y errores sintácticos), deduplicación automática y generación opcional de invitaciones/credenciales.
+  * **Rediseño del Panel de Admisiones en Sidebar Persistente**: Estructuración del panel del Gestor en 4 pestañas de navegación dedicadas:
+    1. `candidatos`: Embudo métrico de 6 fases, buscador en tiempo real, filtros por estado/sede, expedientes y envío de credenciales.
+    2. `equipos`: Visualización modular de los 6 Squads CTS, tech leaders, especialidad, miembros y acción rápida de traslado.
+    3. `alumnos`: Alumnos admitidos con asignación diferida de squad (alerta prioritaria) y padrón completo de becarios activos PROFER.
+    4. `convocatoria`: Ficha institucional del semestre, ratio de absorción y acta protegida para formalizar el Cierre de Corte Semestral.
+* **Artefactos afectados**: `RUP/01-requisitos/03-detalle-casos-uso/importarCandidatosSede/`, `abrirPanelAdmisiones/`, componentes `ImportarSedeModal.tsx`, `AdmisionesPanelPage.tsx` y endpoints de evaluación en backend.
+
 
 
 

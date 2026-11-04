@@ -46,7 +46,7 @@ package "motor_equipos" {
         * id : uuid <<PK>>
         --
         * usuario_id : uuid <<FK, UNIQUE>>
-        * equipo_id : uuid <<FK>>
+        equipo_id : uuid <<FK, NULLABLE>>
         * expediente_id : varchar(50) <<UNIQUE>>
         candidato_origen_id : uuid <<UNIQUE>>
         * rol_tecnico : varchar(50)
@@ -59,6 +59,6 @@ package "motor_equipos" {
 usuarios ||--o{ sesiones : "mantiene"
 usuarios ||--o| equipos : "lidera (Tech Leader)"
 usuarios ||--o| alumnos : "perfila (Becario)"
-equipos ||--o{ alumnos : "adscribe"
+equipos ||..o{ alumnos : "adscribe (opcional/diferida)"
 
 @enduml

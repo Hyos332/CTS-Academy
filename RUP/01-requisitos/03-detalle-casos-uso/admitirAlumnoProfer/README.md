@@ -30,10 +30,10 @@
 | Atributo | Valor |
 | :--- | :--- |
 | **Actores** | `Gestor` (`GestorProfer`) |
-| **Objetivo** | Formalizar la resolución favorable de admisión de un aspirante, promoviendo la entidad `Candidato` a `Alumno` (`AlumnoProfer`), asignándolo obligatoriamente a uno de los 6 equipos de desarrollo de CTS con un rol técnico específico, matriculándolo en la capacitación del equipo y despachando la carta de admisión institucional |
-| **Precondición** | El Gestor debe encontrarse autenticado y en el expediente del aspirante (`PERFIL_CANDIDATO_ABIERTO`); la candidatura debe estar en estado `EVALUACION_COMPLETADA` o con entrevista cualitativa realizada; el equipo seleccionado debe contar con plazas disponibles en el periodo activo |
-| **Postcondición Éxito** | Entidad `Candidatura` transiciona a `ADMITIDO`; se crea la instancia `Alumno` vinculada a `Equipo`, `LiderEquipo` y `Capacitacion`; se generan credenciales de acceso para rol `Alumno`; se despachan notificaciones transaccionales a candidato y sede; el contexto transiciona a `PANEL_ADMISIONES_ABIERTO` |
-| **Postcondición Bloqueo** | Si el expediente ya contaba con dictamen previo o el equipo seleccionado no dispone de vacantes, el sistema emite un aviso de bloqueo y mantiene al Gestor en el perfil sin alterar el estado |
+| **Objetivo** | Formalizar la resolución favorable de admisión de un aspirante, promoviendo la entidad `Candidato` a `Alumno` (`AlumnoProfer`), permitiendo asignarlo de inmediato o diferir su asignación de Squad a la ventana previa a su incorporación física con asistencia del recomendador de afinidad técnica, matriculándolo en el programa y despachando la notificación institucional |
+| **Precondición** | El Gestor debe encontrarse autenticado y en el expediente del aspirante (`PERFIL_CANDIDATO_ABIERTO`); la candidatura debe estar en estado `EVALUACION_COMPLETADA` o con entrevista cualitativa realizada |
+| **Postcondición Éxito** | Entidad `Candidatura` transiciona a `ADMITIDO`; se crea la instancia `AlumnoProfer` vinculada (con o sin squad asignado según la modalidad seleccionada); se generan credenciales de acceso para rol `Alumno`; se despachan notificaciones transaccionales a candidato y sede; el contexto transiciona a `PANEL_ADMISIONES_ABIERTO` |
+| **Postcondición Bloqueo** | Si el expediente ya contaba con dictamen previo cerrado, el sistema emite un aviso de bloqueo y mantiene al Gestor en el perfil sin alterar el estado |
 
 </div>
 
@@ -41,10 +41,10 @@
 
 ## Reglas de Negocio Asociadas
 
-1. **RN-ADM-01 — Asignación Obligatoria de Equipo y Rol Técnico**:
-   * Ningún candidato puede ser admitido sin asignación explícita a uno de los 6 equipos formadores de CTS (`Equipo 01` a `Equipo 06`) y a un rol técnico junior específico, vinculándose de inmediato al `LiderEquipo` tutor responsable de su seguimiento y code reviews.
-2. **RN-ADM-02 — Control de Plazas y Capacidad por Equipo**:
-   * Cada equipo de desarrollo cuenta con una cuota máxima de becarios por ciclo académico (definida en `MotorEquipos`). El sistema valida la disponibilidad de vacantes en el momento de la confirmación, bloqueando la admisión si el cupo se encuentra saturado.
+1. **RN-ADM-01 — Asignación Inmediata o Diferida de Squad (ADR-016)**:
+   * Al formalizar el dictamen favorable ("SÍ" al programa), el Gestor puede optar por asignar inmediatamente al aspirante a uno de los 6 Squads tecnológicos de CTS (asistido por el recomendador de afinidad técnica basado en los 3 tests) o bien diferir la asignación a la ventana temporal entre la resolución y la llegada física del estudiante. En caso diferido, el alumno se incorpora a la bandeja prioritaria de "Pendientes de Squad" en el panel del Gestor.
+2. **RN-ADM-02 — Flexibilidad Operativa de Plazas y Movilidad Inter-Squads (ADR-013 y ADR-016)**:
+   * La asignación a los squads se rige por demandas reales de proyecto sin cupos rígidos artificiales. Asimismo, durante su ciclo formativo en el centro, el Gestor puede reasignar y transferir al alumno entre squads para responder a rotaciones de proyectos sin perder su expediente formativo ni sus entregables.
 3. **RN-ADM-03 — Promoción de Rol y Activación de Credenciales**:
    * La admisión ejecuta la transición de rol en el subsistema de acceso (`PK01 - Acceso`). Las credenciales anteriores de `Candidato` quedan revocadas y se generan los permisos operativos de `Alumno`, habilitando el acceso a `INICIO_ALUMNO_ABIERTO` y a los módulos de formación.
 4. **RN-ADM-04 — Inmutabilidad del Dictamen Favorable**:
@@ -59,6 +59,8 @@
 * [Diagrama de Contexto Gestor](/RUP/01-requisitos/01-actores-casos-uso/diagramaContextoGestor.puml)
 * [Caso de Uso: `abrirPerfilCandidato()`](/RUP/01-requisitos/03-detalle-casos-uso/abrirPerfilCandidato/README.md)
 * [ADR-007: Admisión continua y batería de 3 tests diagnósticos](/RUP/BITACORA.md#adr-007-admisi%C3%B3n-continua-por-ciclos-acad%C3%A9micos-bater%C3%ADa-de-3-tests-e-inclusi%C3%B3n-de-entrevista)
+* [ADR-013: Simplificación pragmática del modelo de datos DER y operativa real CTS](/RUP/BITACORA.md#adr-013-simplificaci%C3%B3n-pragm%C3%A1tica-del-modelo-de-datos-der-y-alineaci%C3%B3n-con-la-operativa-real-de-cts)
+* [ADR-016: Asignación diferida de Squad, recomendador de afinidad técnica y movilidad](/RUP/BITACORA.md#adr-016-asignaci%C3%B3n-diferida-de-squad-recomendador-de-afinidad-t%C3%A9cnica-y-movilidad-inter-equipos)
 ---
 
 <div align="center">

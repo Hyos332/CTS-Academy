@@ -69,7 +69,7 @@ Centraliza los usuarios autenticados, perfiles de rol y los 6 squads técnicos p
 
 * **`alumnos_profer`**:
   * `id` (`uuid`, PK), `usuario_id` (`uuid`, UNIQUE, FK -> `usuarios.id`).
-  * `equipo_id` (`uuid`, FK -> `equipos.id`): Squad al que pertenece el becario.
+  * `equipo_id` (`uuid`, FK -> `equipos.id`, NULLABLE): Squad al que pertenece el becario (permite adscripción inmediata o asignación diferida en la ventana previa a la incorporación presencial [ADR-016]).
   * `expediente_id` (`varchar(50)`, UNIQUE, NOT NULL): Código de matrícula institucional.
   * `candidato_origen_id` (`uuid`, UNIQUE, NULL): Trazabilidad con el candidato admitido ([ADR-010](/RUP/BITACORA.md#adr-010-refinamiento-estructural-del-dominio-top-to-bottom-transici%C3%B3n-candidato-alumno-y-redise%C3%B1o-pedag%C3%B3gico-de-materiales)).
   * `rol_tecnico` (`varchar(50)`, NOT NULL): `CHECK (rol_tecnico IN ('FRONTEND', 'BACKEND', 'FULLSTACK', 'DEVOPS'))`.
