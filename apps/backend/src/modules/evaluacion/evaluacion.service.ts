@@ -1095,6 +1095,16 @@ Centro de Tecnología de Software • Universidad Europea del Atlántico`;
             telefono: cand.telefono,
             estado_postulacion: EstadoPostulacion.REGISTRADO,
             decision_admision: DecisionAdmision.PENDIENTE,
+            perfil_competencias:
+              dto.enviarInvitaciones !== false
+                ? {
+                    invitacion: {
+                      enviada: true,
+                      fecha: new Date().toISOString(),
+                      destinatario: emailNorm,
+                    },
+                  }
+                : undefined,
           },
         });
 

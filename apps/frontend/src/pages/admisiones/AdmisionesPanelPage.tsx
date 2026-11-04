@@ -22,8 +22,10 @@ import {
   GraduationCap,
   Calendar,
   Filter,
+  UploadCloud,
 } from 'lucide-react';
 import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
+import { ImportarSedeModal } from '../../components/admisiones/ImportarSedeModal';
 
 export const AdmisionesPanelPage: React.FC = () => {
   const navigate = useNavigate();
@@ -45,6 +47,7 @@ export const AdmisionesPanelPage: React.FC = () => {
   const [motivoCierre, setMotivoCierre] = useState('');
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showImportSedeModal, setShowImportSedeModal] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevoApellidos, setNuevoApellidos] = useState('');
   const [nuevoEmail, setNuevoEmail] = useState('');
@@ -327,6 +330,14 @@ export const AdmisionesPanelPage: React.FC = () => {
               <span>Inscribir Aspirante</span>
             </button>
 
+            <button
+              onClick={() => setShowImportSedeModal(true)}
+              className="w-full py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center space-x-1.5"
+            >
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span>Importar Nómina de Sede</span>
+            </button>
+
             {convocatoriaActiva && (
               <button
                 onClick={() => setShowCloseModal(true)}
@@ -359,13 +370,22 @@ export const AdmisionesPanelPage: React.FC = () => {
                     Seguimiento individual de postulantes, credenciales enviadas y convocatorias a entrevista.
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowRegisterModal(true)}
-                  className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors inline-flex items-center space-x-1.5 self-start sm:self-auto"
-                >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>Nuevo Aspirante</span>
-                </button>
+                <div className="flex items-center space-x-2 self-start sm:self-auto">
+                  <button
+                    onClick={() => setShowImportSedeModal(true)}
+                    className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl shadow-2xs transition-colors inline-flex items-center space-x-1.5"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>Importar Nómina Sede</span>
+                  </button>
+                  <button
+                    onClick={() => setShowRegisterModal(true)}
+                    className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors inline-flex items-center space-x-1.5"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Nuevo Aspirante</span>
+                  </button>
+                </div>
               </div>
 
               {/* Embudo de Candidatos (Métricas en 6 Tarjetas) */}
@@ -1182,6 +1202,14 @@ export const AdmisionesPanelPage: React.FC = () => {
           candidatoEmail={candidatoParaInvitacion.email}
           isOpen={Boolean(candidatoParaInvitacion)}
           onClose={() => setCandidatoParaInvitacion(null)}
+        />
+      )}
+
+      {/* Modal: Importación Masiva de Nómina por Sede */}
+      {showImportSedeModal && (
+        <ImportarSedeModal
+          isOpen={showImportSedeModal}
+          onClose={() => setShowImportSedeModal(false)}
         />
       )}
     </div>

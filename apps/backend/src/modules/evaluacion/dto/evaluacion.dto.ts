@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsEmail, IsOptional, IsUUID, IsUrl, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional, IsUUID, IsUrl, IsEnum, IsBoolean, IsArray } from 'class-validator';
 import { CalificacionCualitativa } from '@cts/shared-types';
 
 export class RegistrarCandidatoDto {
@@ -51,6 +51,12 @@ export class ImportarCandidatosSedeDto {
     ],
     description: 'Lista de candidatos a registrar masivamente',
   })
+  @ApiPropertyOptional({ example: true, description: 'Marcar y despachar credenciales de inmediato' })
+  @IsBoolean()
+  @IsOptional()
+  enviarInvitaciones?: boolean;
+
+  @IsArray()
   candidatos: Array<{ nombre: string; apellidos: string; email: string; telefono?: string }>;
 }
 
