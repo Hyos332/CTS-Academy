@@ -69,8 +69,10 @@ export const CandidatoPerfilPage: React.FC = () => {
   // Mutación: Agendar Google Meet
   const agendarMutation = useMutation({
     mutationFn: async () => {
+      const iso = new Date(fechaEntrevista).toISOString();
       return apiClient.post(`/evaluacion/candidatos/${id}/entrevista`, {
-        fechaHoraProgramada: new Date(fechaEntrevista).toISOString(),
+        fechaProgramada: iso,
+        fechaHoraProgramada: iso,
         enlaceGoogleMeet: enlaceMeet || 'https://meet.google.com/cts-eval-demo',
       });
     },

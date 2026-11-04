@@ -93,9 +93,15 @@ export class FinalizarTestDto {
 }
 
 export class AgendarEntrevistaDto {
-  @ApiProperty({ example: '2026-03-15T10:00:00.000Z', description: 'Fecha y hora programada' })
-  @IsNotEmpty()
-  fechaProgramada: string;
+  @ApiPropertyOptional({ example: '2026-03-15T10:00:00.000Z', description: 'Fecha y hora programada' })
+  @IsString()
+  @IsOptional()
+  fechaProgramada?: string;
+
+  @ApiPropertyOptional({ example: '2026-03-15T10:00:00.000Z', description: 'Fecha y hora programada (alias frontend)' })
+  @IsString()
+  @IsOptional()
+  fechaHoraProgramada?: string;
 
   @ApiProperty({ example: 'https://meet.google.com/xyz-abcd-uvw', description: 'Enlace a Google Meet' })
   @IsUrl()

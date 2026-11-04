@@ -702,11 +702,21 @@ export class EvaluacionService {
       throw new NotFoundException(`Candidato con ID ${candidatoId} no encontrado.`);
     }
 
+    const fechaIso = dto.fechaProgramada || dto.fechaHoraProgramada;
+    if (!fechaIso) {
+      throw new BadRequestException('Debe proporcionar la fecha y hora programada para la sesión de entrevista.');
+    }
+
+    const fechaDate = new Date(fechaIso);
+    if (isNaN(fechaDate.getTime())) {
+      throw new BadRequestException('Formato de fecha inválido para la entrevista.');
+    }
+
     const entrevista = await this.prisma.entrevista.upsert({
       where: { candidato_id: candidatoId },
       update: {
         gestor_id: gestorId,
-        fecha_hora_programada: new Date(dto.fechaProgramada),
+        fecha_hora_programada: fechaDate,
         enlace_google_meet: dto.enlaceGoogleMeet,
         google_calendar_event_id: dto.googleCalendarEventId,
         estado: EstadoEntrevista.PROGRAMADA,
@@ -714,7 +724,7 @@ export class EvaluacionService {
       create: {
         candidato_id: candidatoId,
         gestor_id: gestorId,
-        fecha_hora_programada: new Date(dto.fechaProgramada),
+        fecha_hora_programada: fechaDate,
         enlace_google_meet: dto.enlaceGoogleMeet,
         google_calendar_event_id: dto.googleCalendarEventId,
         estado: EstadoEntrevista.PROGRAMADA,
@@ -726,7 +736,7 @@ export class EvaluacionService {
       data: { estado_postulacion: EstadoPostulacion.ENTREVISTA_AGENDADA },
     });
 
-    this.logger.log(`Entrevista agendada para candidato ${candidatoId} en ${dto.fechaProgramada}`);
+    this.logger.log(`Entrevista agendada para candidato ${candidatoId} en ${fechaDate.toISOString()}`);
     return entrevista;
   }
 
