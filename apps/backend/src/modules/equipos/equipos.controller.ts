@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, HttpStatus, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { EquiposService } from './equipos.service';
-import { CrearConvocatoriaDto, CerrarCorteSemestralDto } from './dto/periodo-ingreso.dto';
+import { CrearConvocatoriaDto, CerrarCorteSemestralDto, EditarConvocatoriaDto } from './dto/periodo-ingreso.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -77,6 +77,36 @@ export class EquiposController {
   @ApiResponse({ status: 200, description: 'Convocatoria reabierta exitosamente' })
   async reabrirConvocatoria(@Param('id') convocatoriaId: string) {
     return this.equiposService.reabrirConvocatoria(convocatoriaId);
+  }
+
+  @Patch('convocatorias/:id')
+  @Roles(RolUsuario.GESTOR)
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'UUID de la convocatoria a editar' })
+  @ApiOperation({
+    summary: 'Editar datos de una convocatoria existente',
+    description: 'Permite al gestor corregir la denominación, fechas o modelo de admisión de una convocatoria.',
+  })
+  @ApiResponse({ status: 200, description: 'Convocatoria actualizada exitosamente' })
+  async editarConvocatoria(
+    @Param('id') convocatoriaId: string,
+    @Body() dto: EditarConvocatoriaDto,
+  ) {
+    return this.equiposService.editarConvocatoria(convocatoriaId, dto);
+  }
+
+  @Patch('periodos-ingreso/:id')
+  @Roles(RolUsuario.GESTOR)
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'UUID de la convocatoria a editar' })
+  @ApiOperation({
+    summary: 'Editar datos de una convocatoria existente (alias periodo-ingreso)',
+  })
+  async editarPeriodoIngreso(
+    @Param('id') convocatoriaId: string,
+    @Body() dto: EditarConvocatoriaDto,
+  ) {
+    return this.equiposService.editarConvocatoria(convocatoriaId, dto);
   }
 
   @Put('alumnos/:id/squad')

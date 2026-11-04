@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CrearConvocatoriaDto, CerrarCorteSemestralDto } from './dto/periodo-ingreso.dto';
+import { CrearConvocatoriaDto, CerrarCorteSemestralDto, EditarConvocatoriaDto } from './dto/periodo-ingreso.dto';
 import { EstadoPostulacion, EstadoEntregaLaboratorio } from '@cts/shared-types';
 
 @Injectable()
@@ -420,6 +420,48 @@ export class EquiposService {
     });
 
     this.logger.log(`Convocatoria ${convocatoria.denominacion} reabierta exitosamente.`);
+    return actualizada;
+  }
+
+  async editarConvocatoria(convocatoriaId: string, dto: EditarConvocatoriaDto) {
+    const convocatoria = await this.prisma.convocatoria.findUnique({
+      where: { id: convocatoriaId },
+    });
+
+    if (!convocatoria) {
+      throw new NotFoundException(`Convocatoria ${convocatoriaId} no encontrada.`);
+    }
+
+    const dataToUpdate: any = {};
+    if (dto.denominacion !== undefined && dto.denominacion.trim() !== '') {
+      dataToUpdate.denominacion = dto.denominacion.trim();
+    }
+    if (dto.fechaApertura) {
+      dataToUpdate.fecha_apertura = new Date(dto.fechaApertura);
+    }
+    if (dto.fechaCierre) {
+      dataToUpdate.fecha_cierre = new Date(dto.fechaCierre);
+    }
+    if (dto.modeloAdmision) {
+      dataToUpdate.modelo_admision = dto.modeloAdmision;
+    }
+    if (dto.estado) {
+      dataToUpdate.estado = dto.estado;
+    }
+
+    const actualizada = await this.prisma.convocatoria.update({
+      where: { id: convocatoriaId },
+      data: dataToUpdate,
+      include: {
+        semestre: {
+          include: { curso_academico: true },
+        },
+      },
+    });
+
+    this.logger.log(
+      `Convocatoria ${convocatoriaId} editada exitosamente por Gestor: ${actualizada.denominacion}`,
+    );
     return actualizada;
   }
 

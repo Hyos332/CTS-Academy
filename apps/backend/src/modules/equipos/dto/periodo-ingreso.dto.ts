@@ -55,3 +55,31 @@ export class CerrarCorteSemestralDto {
   @IsOptional()
   motivoCierre?: string;
 }
+
+export class EditarConvocatoriaDto {
+  @ApiPropertyOptional({ example: 'Convocatoria Admisión Febrero 2026' })
+  @IsString()
+  @IsOptional()
+  denominacion?: string;
+
+  @ApiPropertyOptional({ example: '2026-02-01T00:00:00.000Z' })
+  @IsDateString({}, { message: 'La fecha de apertura debe ser una fecha ISO válida' })
+  @IsOptional()
+  fechaApertura?: string;
+
+  @ApiPropertyOptional({ example: '2026-06-30T23:59:59.000Z' })
+  @IsDateString({}, { message: 'La fecha de cierre debe ser una fecha ISO válida' })
+  @IsOptional()
+  fechaCierre?: string;
+
+  @ApiPropertyOptional({ example: 'CONTINUA' })
+  @IsString()
+  @IsOptional()
+  modeloAdmision?: string;
+
+  @ApiPropertyOptional({ example: 'ABIERTA', enum: ['ABIERTA', 'CERRADA', 'PAUSADA'] })
+  @IsString()
+  @IsOptional()
+  estado?: string;
+}
+

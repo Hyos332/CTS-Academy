@@ -3,14 +3,20 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   LogOut,
-  Users,
-  Building2,
-  GraduationCap,
   ClipboardList,
+  Menu,
 } from 'lucide-react';
 import { RolUsuario } from '@cts/shared-types';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+  onToggleSidebar,
+  isSidebarOpen,
+}) => {
   const { usuario, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,14 +56,25 @@ export const Navbar: React.FC = () => {
     ? `${usuario.nombre?.[0] || ''}${usuario.apellidos?.[0] || ''}`.toUpperCase() || 'U'
     : 'U';
 
-  const esGestorOLider =
-    usuario?.rol === RolUsuario.GESTOR || usuario?.rol === RolUsuario.LIDER_EQUIPO;
-
   return (
     <header className="bg-[#01579B] border-b border-[#004174] sticky top-0 z-50 shadow-md text-white no-print">
       <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Lado Izquierdo: Logotipo y Marca Grupo FUNIBER */}
-        <div className="flex items-center space-x-6">
+        {/* Lado Izquierdo: Botón Hamburguesa, Logotipo y Marca Grupo FUNIBER */}
+        <div className="flex items-center space-x-3">
+          {onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className={`p-2 rounded-lg text-white hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30 transition-colors cursor-pointer ${
+                isSidebarOpen ? 'bg-white/10' : ''
+              }`}
+              title="Alternar barra lateral de navegación"
+              aria-label="Alternar menú lateral"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
+
           <Link
             to="/"
             className="flex items-center space-x-3 group hover:opacity-95 transition-opacity"
@@ -80,47 +97,7 @@ export const Navbar: React.FC = () => {
             </div>
           </Link>
 
-          {/* Navegación Central Superior (Tabs Oficiales FUNIBER SD) */}
-          {esGestorOLider && (
-            <nav className="hidden md:flex items-center space-x-1 pl-4 border-l border-white/20 h-8">
-              <button
-                onClick={() => navigate('/admisiones/panel')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  location.pathname.startsWith('/admisiones')
-                    ? 'bg-white/20 text-white shadow-xs'
-                    : 'text-blue-100 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>Admisiones</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/lider/panel')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  location.pathname.startsWith('/lider')
-                    ? 'bg-white/20 text-white shadow-xs'
-                    : 'text-blue-100 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Squads CTS</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/formacion/panel')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  location.pathname.startsWith('/formacion')
-                    ? 'bg-white/20 text-white shadow-xs'
-                    : 'text-blue-100 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <GraduationCap className="w-3.5 h-3.5" />
-                <span>Formación PROFER</span>
-              </button>
-            </nav>
-          )}
-
+          {/* Candidato: acceso a sus baterías */}
           {usuario?.rol === RolUsuario.CANDIDATO && (
             <nav className="hidden md:flex items-center space-x-1 pl-4 border-l border-white/20 h-8">
               <button
@@ -163,7 +140,7 @@ export const Navbar: React.FC = () => {
             <button
               onClick={logout}
               title="Cerrar sesión segura"
-              className="p-2 text-blue-100 hover:text-white hover:bg-white/15 rounded-lg transition-colors border border-transparent hover:border-white/20"
+              className="p-2 text-blue-100 hover:text-white hover:bg-white/15 rounded-lg transition-colors border border-transparent hover:border-white/20 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
