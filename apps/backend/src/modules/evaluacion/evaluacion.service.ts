@@ -18,6 +18,8 @@ import {
   RolUsuario,
   DecisionAdmision,
 } from '@cts/shared-types';
+import { generarInforme16PF } from './cattell-16pf.constants';
+import { generarMatrizAptitudes } from './matriz-aptitud.constants';
 
 @Injectable()
 export class EvaluacionService {
@@ -320,7 +322,31 @@ export class EvaluacionService {
     const perfilExistente = (candidato.perfil_competencias as any) || {};
     const notaTecnicaFinal = nota !== null ? Number(nota.toFixed(1)) : (perfilExistente.tecnico?.nota ?? 7.5);
 
+    const usuarioCand = await this.prisma.usuario.findUnique({ where: { id: candidato.usuario_id } });
+    const nombreCand = usuarioCand ? `${usuarioCand.nombre} ${usuarioCand.apellidos}` : 'Candidato';
+    const emailCand = usuarioCand?.email || 'candidato@alumnos.uneatlantico.es';
+
+    let informe16PF = perfilExistente.informe16PF;
+    let matrizAptitudes = perfilExistente.matrizAptitudes;
+
+    if (test.tipo_bateria === 'ACTITUD' || !informe16PF) {
+      informe16PF = generarInforme16PF(
+        nombreCand,
+        21,
+        '2026 - 2027',
+        new Date().toLocaleDateString('en-US'),
+        test.respuestas,
+      );
+    }
+
+    if (test.tipo_bateria === 'APTITUD' || !matrizAptitudes) {
+      matrizAptitudes = generarMatrizAptitudes(emailCand, test.respuestas);
+    }
+
     const perfilCompetencias = {
+      ...perfilExistente,
+      informe16PF,
+      matrizAptitudes,
       espectro: {
         actitud: {
           estiloTrabajo: {
@@ -584,8 +610,37 @@ export class EvaluacionService {
 
     const recomendacionSquad = await this.calcularRecomendacionSquad(candidato);
 
+    // Asegurar que informe16PF y matrizAptitudes estén disponibles para visualización
+    const nombreCand = candidato.usuario
+      ? `${candidato.usuario.nombre} ${candidato.usuario.apellidos}`
+      : 'Candidato';
+    const emailCand = candidato.usuario?.email || 'candidato@alumnos.uneatlantico.es';
+    const perfilExistente = (candidato.perfil_competencias as any) || {};
+
+    const testActitud = candidato.tests.find((t) => t.tipo_bateria === 'ACTITUD');
+    const testAptitud = candidato.tests.find((t) => t.tipo_bateria === 'APTITUD');
+
+    const informe16PF =
+      perfilExistente.informe16PF ||
+      generarInforme16PF(
+        nombreCand,
+        21,
+        '2026 - 2027',
+        new Date(candidato.creado_en).toLocaleDateString('en-US'),
+        testActitud?.respuestas,
+      );
+
+    const matrizAptitudes =
+      perfilExistente.matrizAptitudes ||
+      generarMatrizAptitudes(emailCand, testAptitud?.respuestas);
+
     return {
       ...candidato,
+      perfil_competencias: {
+        ...perfilExistente,
+        informe16PF,
+        matrizAptitudes,
+      },
       recomendacionSquad,
     };
   }
@@ -817,7 +872,125 @@ export class EvaluacionService {
       };
     });
 
+    if (dto.enviarInvitacionInmediata) {
+      try {
+        await this.enviarInvitacionCandidato(nuevoCandidato.id);
+      } catch (err: any) {
+        this.logger.warn(`No se pudo enviar la invitación inmediata: ${err?.message}`);
+      }
+    }
+
     return nuevoCandidato;
+  }
+
+  async obtenerPlantillaInvitacion(candidatoId: string) {
+    const candidato = await this.prisma.candidato.findUnique({
+      where: { id: candidatoId },
+      include: {
+        usuario: true,
+        convocatoria: true,
+      },
+    });
+
+    if (!candidato) {
+      throw new NotFoundException(`Candidato con ID ${candidatoId} no encontrado.`);
+    }
+
+    const contrasenaDefault = 'CtsAcademy2026!';
+    const urlLogin = 'http://localhost:3000/login';
+    const nombreCompleto = `${candidato.usuario.nombre} ${candidato.usuario.apellidos}`;
+    const email = candidato.usuario.email;
+    const sede = candidato.sede_origen;
+    const perfil = (candidato.perfil_competencias as any) || {};
+    const invitacionEnviada = perfil.invitacion?.enviada || false;
+    const fechaEnvio = perfil.invitacion?.fecha || null;
+
+    const asunto = `CTS Academy - Convocatoria PROFER 2026: Credenciales de Acceso y Baterías de Admisión`;
+
+    const cuerpo = `Estimado/a ${nombreCompleto},
+
+Le damos la más cordial bienvenida al proceso de admisión de CTS Academy para el programa formativo PROFER 2026, gestionado en coordinación con su sede universitaria (${sede}).
+
+A continuación le suministramos sus credenciales oficiales para ingresar a la plataforma técnica de evaluación:
+
+  • Enlace a la Plataforma: ${urlLogin}
+  • Usuario (Email): ${email}
+  • Contraseña Temporal: ${contrasenaDefault}
+
+INSTRUCCIONES PARA EL PROCESO DE EVALUACIÓN:
+1. Inicie sesión en la plataforma utilizando las credenciales indicadas.
+2. Ingrese a la sección "Evaluación y Pruebas de Admisión" desde su menú principal.
+3. Complete las tres baterías de evaluación asignadas:
+   • Test de Actitud: Cuestionario psicométrico Cattell 16PF (102 preguntas conductuales sobre estilo de trabajo y dinámica de squad).
+   • Test de Aptitud: Matriz de competencias técnicas y autoevaluación (43 áreas de conocimiento: SysAdmin, Bases de Datos, Backend, Frontend, OpenSource, Frameworks y Negocio).
+   • Test Técnico: Evaluación práctica sobre algoritmia, programación y arquitectura de software.
+
+IMPORTANTE:
+- Dispone de un límite de tiempo para cada batería una vez iniciada.
+- Tras la finalización de los tests, el equipo de gestión y directores técnicos revisarán sus resultados y coordinarán su entrevista personal mediante Google Meet.
+
+Si presenta alguna dificultad técnica, responda directamente a este correo o contacte a admisiones@ctdesarrollo.org.
+
+Atentamente,
+Comité de Admisiones PROFER • CTS Academy
+Centro de Tecnología de Software • Universidad Europea del Atlántico`;
+
+    return {
+      candidatoId,
+      nombreCompleto,
+      email,
+      sede,
+      contrasenaDefault,
+      urlLogin,
+      asunto,
+      cuerpo,
+      invitacionEnviada,
+      fechaEnvio,
+    };
+  }
+
+  async enviarInvitacionCandidato(candidatoId: string) {
+    const plantilla = await this.obtenerPlantillaInvitacion(candidatoId);
+
+    const candidato = await this.prisma.candidato.findUnique({
+      where: { id: candidatoId },
+    });
+
+    if (!candidato) {
+      throw new NotFoundException(`Candidato ${candidatoId} no encontrado.`);
+    }
+
+    const perfilActual = (candidato.perfil_competencias as any) || {};
+    const fechaEnvio = new Date().toISOString();
+
+    const perfilActualizado = {
+      ...perfilActual,
+      invitacion: {
+        enviada: true,
+        fecha: fechaEnvio,
+        destinatario: plantilla.email,
+      },
+    };
+
+    await this.prisma.candidato.update({
+      where: { id: candidatoId },
+      data: {
+        perfil_competencias: perfilActualizado,
+      },
+    });
+
+    this.logger.log(`Invitación y credenciales despachadas a candidato ${plantilla.email} (${candidatoId})`);
+
+    return {
+      success: true,
+      mensaje: `Invitación enviada exitosamente a ${plantilla.email}`,
+      fechaEnvio,
+      plantilla: {
+        ...plantilla,
+        invitacionEnviada: true,
+        fechaEnvio,
+      },
+    };
   }
 
   async importarCandidatosSede(dto: ImportarCandidatosSedeDto) {

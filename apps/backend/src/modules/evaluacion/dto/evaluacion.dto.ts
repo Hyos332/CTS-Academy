@@ -32,6 +32,10 @@ export class RegistrarCandidatoDto {
   @IsUUID('4', { message: 'El ID de la convocatoria debe ser un UUID válido' })
   @IsOptional()
   convocatoriaId?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Enviar credenciales e invitación por correo de inmediato' })
+  @IsOptional()
+  enviarInvitacionInmediata?: boolean;
 }
 
 export class ImportarCandidatosSedeDto {

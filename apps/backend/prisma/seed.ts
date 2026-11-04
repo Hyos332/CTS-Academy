@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 import * as fs from 'fs';
 import * as path from 'path';
+import { BILLY_ORDORES_16PF } from '../src/modules/evaluacion/cattell-16pf.constants';
+import { BILLY_ORDORES_MATRIZ_APTITUD } from '../src/modules/evaluacion/matriz-aptitud.constants';
 
 const prisma = new PrismaClient();
 
@@ -72,6 +74,19 @@ async function main() {
       password_hash: defaultPasswordHash,
       nombre: 'Carlos',
       apellidos: 'Méndez Postulante',
+      rol: 'CANDIDATO',
+      activo: true,
+    },
+  });
+
+  const billyUser = await prisma.usuario.upsert({
+    where: { email: 'billy.ordores@alumnos.uneatlantico.es' },
+    update: {},
+    create: {
+      email: 'billy.ordores@alumnos.uneatlantico.es',
+      password_hash: defaultPasswordHash,
+      nombre: 'Billy',
+      apellidos: 'Ordores',
       rol: 'CANDIDATO',
       activo: true,
     },
@@ -444,6 +459,168 @@ async function main() {
       tipo_bateria: 'APTITUD',
       estado: 'NO_INICIADO',
       tiempo_limite_segundos: 2700,
+    },
+  });
+
+  // Candidato Billy Ordores (Fiel reflejo de los PDFs oficiales: Test Actitud y Test Aptitud)
+  console.log('📄 Registrando candidato Billy Ordores con resultados de informes oficiales...');
+  const billyCandidato = await prisma.candidato.upsert({
+    where: { usuario_id: billyUser.id },
+    update: {},
+    create: {
+      usuario_id: billyUser.id,
+      convocatoria_id: convocatoria.id,
+      sede_origen: 'SDR_ESP',
+      telefono: '+34655443322',
+      estado_postulacion: 'TESTS_COMPLETADOS',
+      decision_admision: 'PENDIENTE',
+      perfil_competencias: {
+        informe16PF: {
+          nombreCandidato: 'Billy ordores',
+          edad: 19,
+          cursoAcademico: '2021 - 2022',
+          fechaLlegada: '9/28/2019',
+          factores: BILLY_ORDORES_16PF,
+          distorsion: {
+            decatipo: 6,
+            etiqueta: 'Distorsión',
+            interpretacion:
+              'Índice de consistencia y sinceridad en las respuestas del postulante (6/10). No se aprecian sesgos significativos ni distorsión deliberada en las respuestas de la evaluación.',
+          },
+        },
+        matrizAptitudes: {
+          nombreCandidato: 'billy.ordores@alumnos.uneatlantico.es',
+          escala: '0: Conocimiento Nulo. 5: Conocimiento Muy Alto',
+          promedioNivelActual: 2.8,
+          categorias: BILLY_ORDORES_MATRIZ_APTITUD,
+          areasFortaleza: [
+            '[GIT] (5/5)',
+            '[Relacionales] (5/5)',
+            '[No Relacionales] (5/5)',
+            '[JavaScript] (5/5)',
+            '[Python] (5/5)',
+            '[POO] (5/5)',
+          ],
+          areasMejora: [
+            '[Docker] (1/5)',
+            '[Kubernets] (1/5)',
+            '[ORM] (1/5)',
+            '[ACID] (1/5)',
+            '[PHP] (1/5)',
+            '[Figma] (1/5)',
+          ],
+        },
+        espectro: {
+          actitud: {
+            estiloTrabajo: {
+              poloIzquierdo: 'Autonomía e Iniciativa Individual',
+              poloDerecho: 'Colaboración en Squad & Sincronía',
+              posicionPorcentaje: 75,
+              etiqueta: 'Predominio Autónomo y Focalizado',
+              descripcion:
+                'Muestra preferencia por concentrarse en objetivos técnicos bien acotados con solvencia individual.',
+            },
+            enfoqueResolucion: {
+              poloIzquierdo: 'Pragmatismo Ágil & Entregas Rápidas',
+              poloDerecho: 'Rigor Arquitectónico & Perfeccionismo',
+              posicionPorcentaje: 80,
+              etiqueta: 'Rigor y Pensamiento Lógico',
+              descripcion:
+                'Compromiso elevado con la consistencia del código y los principios de diseño de software.',
+            },
+            adaptabilidad: {
+              poloIzquierdo: 'Procesos Predecibles & Estabilidad',
+              poloDerecho: 'Flexibilidad & Resiliencia al Cambio',
+              posicionPorcentaje: 70,
+              etiqueta: 'Constancia y Estabilidad',
+              descripcion:
+                'Gran capacidad de concentración y apego a normas de calidad en tareas estructuradas.',
+            },
+          },
+          aptitud: {
+            razonamiento: {
+              poloIzquierdo: 'Empírico / Ensayo y Error',
+              poloDerecho: 'Lógico-Formal / Deductivo',
+              posicionPorcentaje: 88,
+              etiqueta: 'Actividad Mental Rápida (Factor B: 6)',
+              descripcion:
+                'Capacidad sobresaliente para percibir y comprender abstracciones lógicas con rapidez.',
+            },
+            abstraccion: {
+              poloIzquierdo: 'Implementación Concreta Inmediata',
+              poloDerecho: 'Modelado Conceptual & Arquitectura',
+              posicionPorcentaje: 85,
+              etiqueta: 'Alta Abstracción en Datos y Algoritmia',
+              descripcion:
+                'Dominio de estructuras complejas relacionales, no relacionales y POO avanzada.',
+            },
+            atencionDetalle: {
+              poloIzquierdo: 'Visión Macro Global',
+              poloDerecho: 'Foco Minucioso en Casos Borde',
+              posicionPorcentaje: 78,
+              etiqueta: 'Foco Convencional y Preciso',
+              descripcion:
+                'Práctico y orientado a realizar las implementaciones con corrección formal.',
+            },
+          },
+        },
+        tecnico: {
+          nota: 8.2,
+          escala: '0 a 10',
+          superado: true,
+        },
+        dimensiones: {
+          actitud: { puntaje: 82 },
+          aptitud: { puntaje: 85 },
+          tecnico: { puntaje: 82 },
+        },
+        indiceAfinidadGlobal: 83,
+        invitacion: {
+          enviada: true,
+          fecha: '2026-02-05T10:15:00.000Z',
+          destinatario: 'billy.ordores@alumnos.uneatlantico.es',
+        },
+      } as any,
+    },
+  });
+
+  // Tests de Billy
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000007' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000007',
+      candidato_id: billyCandidato.id,
+      tipo_bateria: 'ACTITUD',
+      estado: 'COMPLETADO',
+      tiempo_limite_segundos: 1800,
+      calificacion_obtenida: null,
+    },
+  });
+
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000008' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000008',
+      candidato_id: billyCandidato.id,
+      tipo_bateria: 'APTITUD',
+      estado: 'COMPLETADO',
+      tiempo_limite_segundos: 2700,
+      calificacion_obtenida: null,
+    },
+  });
+
+  await prisma.test.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000009' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000009',
+      candidato_id: billyCandidato.id,
+      tipo_bateria: 'TECNICO',
+      estado: 'COMPLETADO',
+      tiempo_limite_segundos: 3600,
+      calificacion_obtenida: 8.2,
     },
   });
 

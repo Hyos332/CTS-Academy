@@ -114,6 +114,31 @@ export class EvaluacionController {
     return this.evaluacionService.abrirPerfilCandidato(candidatoId);
   }
 
+  @Get('candidatos/:id/invitacion')
+  @Roles(RolUsuario.GESTOR, RolUsuario.LIDER_EQUIPO)
+  @ApiParam({ name: 'id', description: 'UUID del candidato' })
+  @ApiOperation({
+    summary: 'Obtener plantilla de credenciales e invitación por correo',
+    description: 'Devuelve la plantilla con credenciales de acceso y enlace a la plataforma para el candidato.',
+  })
+  @ApiResponse({ status: 200, description: 'Plantilla de invitación' })
+  async obtenerPlantillaInvitacion(@Param('id') candidatoId: string) {
+    return this.evaluacionService.obtenerPlantillaInvitacion(candidatoId);
+  }
+
+  @Post('candidatos/:id/invitacion')
+  @Roles(RolUsuario.GESTOR, RolUsuario.LIDER_EQUIPO)
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'UUID del candidato' })
+  @ApiOperation({
+    summary: 'Enviar invitación formal y credenciales al candidato',
+    description: 'Registra el envío de la invitación con credenciales temporales y enlace al portal.',
+  })
+  @ApiResponse({ status: 200, description: 'Invitación despachada' })
+  async enviarInvitacionCandidato(@Param('id') candidatoId: string) {
+    return this.evaluacionService.enviarInvitacionCandidato(candidatoId);
+  }
+
   @Post('candidatos/:id/entrevista')
   @Roles(RolUsuario.GESTOR, RolUsuario.LIDER_EQUIPO)
   @HttpCode(HttpStatus.CREATED)

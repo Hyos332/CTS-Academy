@@ -19,7 +19,14 @@ import {
   Copy,
   ExternalLink,
   Award,
+  Mail,
+  LayoutDashboard,
+  HeartPulse,
+  FileSpreadsheet,
 } from 'lucide-react';
+import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
+import { Informe16PFView } from '../../components/admisiones/Informe16PFView';
+import { MatrizAptitudesView } from '../../components/admisiones/MatrizAptitudesView';
 
 export const CandidatoPerfilPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +44,8 @@ export const CandidatoPerfilPage: React.FC = () => {
   const [modalEntrevista, setModalEntrevista] = useState(false);
   const [modalAdmitir, setModalAdmitir] = useState(false);
   const [modalRechazar, setModalRechazar] = useState(false);
+  const [modalInvitacion, setModalInvitacion] = useState(false);
+  const [tabActiva, setTabActiva] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz'>('resumen');
   const [confirmarIrreversibleAdmitir, setConfirmarIrreversibleAdmitir] = useState(false);
   const [confirmarIrreversibleRechazar, setConfirmarIrreversibleRechazar] = useState(false);
 
@@ -279,40 +288,120 @@ export const CandidatoPerfilPage: React.FC = () => {
           </div>
 
           {/* Botones de Acción Editorial / Decisión */}
-          {!yaAdmitido && !yaRechazado && (
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => {
-                  generarEnlaceMeet();
-                  setModalEntrevista(true);
-                }}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Agendar Google Meet</span>
-              </button>
-              <button
-                onClick={() => {
-                  if (sugerido?.id) {
-                    setEquipoSeleccionadoId(sugerido.id);
-                  }
-                  setModalAdmitir(true);
-                }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Admitir en Programa</span>
-              </button>
-              <button
-                onClick={() => setModalRechazar(true)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
-              >
-                <UserX className="w-3.5 h-3.5" />
-                <span>Rechazar</span>
-              </button>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setModalInvitacion(true)}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+            >
+              <Mail className="w-3.5 h-3.5 text-indigo-300" />
+              <span>Credenciales e Invitación</span>
+            </button>
+
+            {!yaAdmitido && !yaRechazado && (
+              <>
+                <button
+                  onClick={() => {
+                    generarEnlaceMeet();
+                    setModalEntrevista(true);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Agendar Google Meet</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (sugerido?.id) {
+                      setEquipoSeleccionadoId(sugerido.id);
+                    }
+                    setModalAdmitir(true);
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>Admitir en Programa</span>
+                </button>
+                <button
+                  onClick={() => setModalRechazar(true)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
+                >
+                  <UserX className="w-3.5 h-3.5" />
+                  <span>Rechazar</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Selector de Pestañas de Evaluación e Informes Oficiales */}
+        <div className="flex border-b border-slate-200 space-x-3 overflow-x-auto pb-px">
+          <button
+            onClick={() => setTabActiva('resumen')}
+            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+              tabActiva === 'resumen'
+                ? 'border-brand-600 text-brand-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span>Resumen & Squad Recomendado</span>
+          </button>
+
+          <button
+            onClick={() => setTabActiva('actitud16pf')}
+            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+              tabActiva === 'actitud16pf'
+                ? 'border-rose-600 text-rose-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <HeartPulse className="w-4 h-4" />
+            <span>Informe Test Actitud (16PF Oficial)</span>
+          </button>
+
+          <button
+            onClick={() => setTabActiva('aptitudMatriz')}
+            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+              tabActiva === 'aptitudMatriz'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Informe Test Aptitud (Matriz Habilidades)</span>
+          </button>
+        </div>
+
+        {/* PESTAÑA: TEST ACTITUD 16PF OFICIAL */}
+        {tabActiva === 'actitud16pf' && (
+          <Informe16PFView
+            informe={
+              perfilCompetencias.informe16PF || {
+                nombreCandidato: `${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`,
+                edad: 19,
+                cursoAcademico: '2026 - 2027',
+                fechaLlegada: new Date(candidato.creado_en).toLocaleDateString(),
+                factores: [],
+              }
+            }
+          />
+        )}
+
+        {/* PESTAÑA: TEST APTITUD MATRIZ HABILIDADES */}
+        {tabActiva === 'aptitudMatriz' && (
+          <MatrizAptitudesView
+            matriz={
+              perfilCompetencias.matrizAptitudes || {
+                nombreCandidato: candidato.usuario?.email,
+                categorias: [],
+              }
+            }
+          />
+        )}
+
+        {/* PESTAÑA: RESUMEN Y SQUAD */}
+        {tabActiva === 'resumen' && (
+          <>
 
         {/* RECOMENDACIÓN DE SQUAD POR MOTOR DE ADMISIONES (Requirement 6) */}
         {sugerido && (
@@ -859,6 +948,8 @@ export const CandidatoPerfilPage: React.FC = () => {
             </div>
           </div>
         </div>
+        </>
+        )}
       </main>
 
       {/* Modal: Agendar Google Meet (Requirement 5) */}
@@ -1150,6 +1241,15 @@ export const CandidatoPerfilPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal: Credenciales e Invitación Oficial (Requirement 1) */}
+      <InvitacionCandidatoModal
+        candidatoId={candidato.id}
+        candidatoNombre={`${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`}
+        candidatoEmail={candidato.usuario?.email || ''}
+        isOpen={modalInvitacion}
+        onClose={() => setModalInvitacion(false)}
+      />
     </div>
   );
 };

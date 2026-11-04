@@ -176,31 +176,36 @@ export class EquiposService {
         admitidos: estadoDistribucion[EstadoPostulacion.ADMITIDO] || 0,
         rechazados: estadoDistribucion[EstadoPostulacion.RECHAZADO] || 0,
       },
-      candidatos: candidatos.map((c) => ({
-        id: c.id,
-        usuarioId: c.usuario_id,
-        nombreCompleto: `${c.usuario.nombre} ${c.usuario.apellidos}`,
-        email: c.usuario.email,
-        sedeOrigen: c.sede_origen,
-        telefono: c.telefono,
-        estadoPostulacion: c.estado_postulacion,
-        decisionAdmision: c.decision_admision,
-        perfilCompetencias: c.perfil_competencias,
-        tests: c.tests.map((t) => ({
-          id: t.id,
-          tipoBateria: t.tipo_bateria,
-          estado: t.estado,
-          calificacion: t.calificacion_obtenida ? Number(t.calificacion_obtenida) : null,
-        })),
-        entrevista: c.entrevista
-          ? {
-              id: c.entrevista.id,
-              fechaHoraProgramada: c.entrevista.fecha_hora_programada,
-              estado: c.entrevista.estado,
-              enlaceGoogleMeet: c.entrevista.enlace_google_meet,
-            }
-          : null,
-      })),
+      candidatos: candidatos.map((c) => {
+        const perfil = (c.perfil_competencias as any) || {};
+        return {
+          id: c.id,
+          usuarioId: c.usuario_id,
+          nombreCompleto: `${c.usuario.nombre} ${c.usuario.apellidos}`,
+          email: c.usuario.email,
+          sedeOrigen: c.sede_origen,
+          telefono: c.telefono,
+          estadoPostulacion: c.estado_postulacion,
+          decisionAdmision: c.decision_admision,
+          perfilCompetencias: c.perfil_competencias,
+          invitacionEnviada: Boolean(perfil.invitacion?.enviada),
+          fechaInvitacion: perfil.invitacion?.fecha || null,
+          tests: c.tests.map((t) => ({
+            id: t.id,
+            tipoBateria: t.tipo_bateria,
+            estado: t.estado,
+            calificacion: t.calificacion_obtenida ? Number(t.calificacion_obtenida) : null,
+          })),
+          entrevista: c.entrevista
+            ? {
+                id: c.entrevista.id,
+                fechaHoraProgramada: c.entrevista.fecha_hora_programada,
+                estado: c.entrevista.estado,
+                enlaceGoogleMeet: c.entrevista.enlace_google_meet,
+              }
+            : null,
+        };
+      }),
       equipos: equipos.map((eq) => ({
         id: eq.id,
         codigo: eq.codigo,

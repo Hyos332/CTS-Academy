@@ -16,7 +16,10 @@ import {
   ArrowRightLeft,
   UserCheck,
   Clock,
+  Mail,
+  CheckCircle2,
 } from 'lucide-react';
+import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
 
 export const AdmisionesPanelPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +33,13 @@ export const AdmisionesPanelPage: React.FC = () => {
   const [nuevoEmail, setNuevoEmail] = useState('');
   const [nuevaSede, setNuevaSede] = useState('SDR_ESP');
   const [nuevoTelefono, setNuevoTelefono] = useState('');
+  const [enviarInvitacionInmediata, setEnviarInvitacionInmediata] = useState(true);
+
+  const [candidatoParaInvitacion, setCandidatoParaInvitacion] = useState<{
+    id: string;
+    nombre: string;
+    email: string;
+  } | null>(null);
 
   // Estados para ver miembros y movilidad entre squads (Requirements 3 y 4)
   const [squadsExpandidos, setSquadsExpandidos] = useState<Record<string, boolean>>({});
@@ -59,6 +69,7 @@ export const AdmisionesPanelPage: React.FC = () => {
         sedeOrigen: nuevaSede,
         telefono: nuevoTelefono || undefined,
         convocatoriaId,
+        enviarInvitacionInmediata,
       });
     },
     onSuccess: () => {
@@ -68,6 +79,7 @@ export const AdmisionesPanelPage: React.FC = () => {
       setNuevoApellidos('');
       setNuevoEmail('');
       setNuevoTelefono('');
+      setEnviarInvitacionInmediata(true);
     },
   });
 
@@ -293,6 +305,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                     <th className="px-6 py-3.5">Candidato</th>
                     <th className="px-6 py-3.5">Sede</th>
                     <th className="px-6 py-3.5">Estado Postulación</th>
+                    <th className="px-6 py-3.5">Invitación y Credenciales</th>
                     <th className="px-6 py-3.5">Batería Técnica</th>
                     <th className="px-6 py-3.5">Entrevista Meet</th>
                     <th className="px-6 py-3.5 text-right">Acción</th>
@@ -301,7 +314,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                 <tbody className="divide-y divide-slate-100">
                   {candidatos?.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-xs text-slate-400 italic">
+                      <td colSpan={7} className="px-6 py-8 text-center text-xs text-slate-400 italic">
                         No hay candidatos registrados para la convocatoria activa.
                       </td>
                     </tr>
@@ -309,6 +322,9 @@ export const AdmisionesPanelPage: React.FC = () => {
                     candidatos?.map((cand: any) => {
                       const testTecnico = cand.tests?.find((t: any) => t.tipoBateria === 'TECNICO') || cand.tests?.[0];
                       const tieneMeet = Boolean(cand.entrevista);
+                      const invitacionEnviada = Boolean(
+                        cand.invitacionEnviada || cand.perfilCompetencias?.invitacion?.enviada,
+                      );
 
                       return (
                         <tr key={cand.id} className="hover:bg-slate-50/80 transition-colors">
@@ -336,6 +352,42 @@ export const AdmisionesPanelPage: React.FC = () => {
                               {cand.estadoPostulacion}
                             </span>
                           </td>
+
+                          {/* Invitación y Credenciales */}
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() =>
+                                setCandidatoParaInvitacion({
+                                  id: cand.id,
+                                  nombre: cand.nombreCompleto,
+                                  email: cand.email,
+                                })
+                              }
+                              className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                invitacionEnviada
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                              }`}
+                              title={
+                                invitacionEnviada
+                                  ? 'Invitación enviada - Haz clic para ver credenciales o reenviar'
+                                  : 'Haz clic para ver credenciales y enviar correo'
+                              }
+                            >
+                              {invitacionEnviada ? (
+                                <>
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>Enviada</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Mail className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>Enviar Credenciales</span>
+                                </>
+                              )}
+                            </button>
+                          </td>
+
                           <td className="px-6 py-4">
                             {testTecnico ? (
                               <div className="text-xs">
@@ -620,6 +672,22 @@ export const AdmisionesPanelPage: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                {/* Opción de envío inmediato de credenciales */}
+                <div className="p-3 bg-indigo-50/70 border border-indigo-200/60 rounded-xl space-y-1.5">
+                  <label className="flex items-center space-x-2 text-xs font-semibold text-indigo-950 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enviarInvitacionInmediata}
+                      onChange={(e) => setEnviarInvitacionInmediata(e.target.checked)}
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    />
+                    <span>Enviar credenciales de acceso e invitación por correo de inmediato</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 pl-6">
+                    Se despachará el enlace al portal con la contraseña temporal (CtsAcademy2026!) y las instrucciones para realizar las pruebas.
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
@@ -684,6 +752,17 @@ export const AdmisionesPanelPage: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Modal: Credenciales e Invitación Oficial al Postulante */}
+        {candidatoParaInvitacion && (
+          <InvitacionCandidatoModal
+            candidatoId={candidatoParaInvitacion.id}
+            candidatoNombre={candidatoParaInvitacion.nombre}
+            candidatoEmail={candidatoParaInvitacion.email}
+            isOpen={Boolean(candidatoParaInvitacion)}
+            onClose={() => setCandidatoParaInvitacion(null)}
+          />
         )}
       </main>
     </div>
