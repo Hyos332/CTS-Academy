@@ -1,0 +1,1003 @@
+[
+  {
+    "codigo": "GB001",
+    "categoria": "GENERAL",
+    "enunciado": "¿En que consiste la programación orientada a objetos?",
+    "respuestaCandidato": "Definir clases e interfaces con los atributos y comportamientos que van a tener los objetos instanciados.",
+    "estado": "INCORRECTA"
+  },
+  {
+    "codigo": "G01Q12",
+    "categoria": "GENERAL",
+    "enunciado": "¿Cuál es la diferencia entre una función y una función asíncrona?",
+    "respuestaCandidato": "La función asíncrona permite ejecutar otras sentencias de código mientras espera una respuesta.",
+    "estado": "CORRECTA"
+  },
+  {
+    "codigo": "G01Q103",
+    "categoria": "GENERAL",
+    "enunciado": "¿Qué sistemas operativos tenían las máquinas que administrabas antes? Respuestas de",
+    "respuestaCandidato": "ejemplo: - Linux: (Kali, Ubuntu, alpine, centos)- Windows: (windows 10, windows 11)",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q03",
+    "categoria": "GENERAL",
+    "enunciado": "¿En que consiste la herencia?",
+    "respuestaCandidato": "Consiste en que una clase hereda las características y comportamiento de otra.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q36",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una expresión regular en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q06",
+    "categoria": "GENERAL",
+    "enunciado": "¿En que consiste el polimorfismo?",
+    "respuestaCandidato": "C. Es una secuencia de caracteres que se usa para buscar o reemplazar patrones en una cadena",
+    "estado": "CORRECTA"
+  },
+  {
+    "codigo": "G02Q04",
+    "categoria": "GENERAL",
+    "enunciado": "¿Cuál es la finalidad de crear una interfaz?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q105",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué experiencia tienes con el hardware?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q107",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué tan familiarizado está usted con comandos de unix?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G04Q27",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una pseudo clase en CSS?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G04Q28",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cómo se pueden agregar estilos a un elemento en HTML?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G01Q29",
+    "categoria": "GENERAL",
+    "enunciado": "¿Qué significa el siguiente código JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G04Q30",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una etiqueta meta en HTML?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q34",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una propiedad en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q37",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué significa el siguiente código CSS?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q38",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cuántas etiquetas h1 usaría por vista dentro de una página web?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q47",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué significa el siguiente código CSS?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q48",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una propiedad de estilo en CSS?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q57",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cuál de las siguientes etiquetas de HTML5 no es un elemento de bloque?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q58",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente código: ¿Cuál de las siguientes opciones es la correcta?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q32",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una API en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G05Q31",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una función anónima en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q35",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una promesa en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q33",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué es una función de flecha en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q40",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Dónde se coloca la etiqueta title en una página HTML? a) Al inicio del documento b) Dentro de",
+    "respuestaCandidato": "la etiqueta head c) Al inicio del body d) En cualquier parte del documento siempre que esté dentro de la",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q39",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cuál de las siguienes etiquetas no es una etiqueta HTML? a) &lt; title &gt;\\&lt; /title &gt;b) &lt;",
+    "respuestaCandidato": "text &gt;\\&lt; /text &gt;c) &lt; span &gt;\\&lt; /span &gt;d) &lt; sub &gt;/&lt; /sub &gt;",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q41",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cuál es la forma correcta de insertar una imagen en un documento HTML? a) &lt; image src=\"",
+    "respuestaCandidato": "image.png\"/ &gt; b) &lt; image link=\"image.png\"/ &gt; c) &lt; img src=\"image.png\"/ &gt; d) &lt; img link=\"",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q44",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cuál de las siguientes propiedades CSS se utiliza para modificar el color del texto?",
+    "respuestaCandidato": "EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q45",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente fragmento de HTML: &lt; code &gt;&lt; div class=\"text\" &gt;Lorem ipsum&lt; /div",
+    "respuestaCandidato": "&gt;&lt; /code &gt; ¿Cuál de las siguientes opciones cambia el color del texto a azul?: a) &lt; code &gt;",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q46",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente fragmento de HTML: &lt; code &gt;&lt; div class=\"text\" &gt;Texto de ejemplo&lt;",
+    "respuestaCandidato": "/div &gt;&lt; /code &gt; ¿Cuál de las siguientes opciones cambiaría el texto a \"Sample text\"?: a) &lt; code",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q59",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente código: ¿Cómo cambiaría el texto \"Prueba\" por \"Hola mundo\" en el elemento",
+    "respuestaCandidato": "\"h1\"? A. document.querySelector(\"h1\").innerHTML = \"Hola mundo\";B. document.querySelector(\"h1\").",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q49",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente código, ¿qué hace?",
+    "respuestaCandidato": "EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q62",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente fragmento de HTML: &lt; code &gt;&lt; div class=\"container\" &gt;\\&lt; /div &gt;",
+    "respuestaCandidato": "&lt; /code &gt; ¿Cuál de las siguientes opciones insertaría un nodo hijo &lt; p &gt; al div?: a) &lt; code &gt;",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q67",
+    "categoria": "FRONT-END",
+    "enunciado": "Para cual de estos casos es recomendable usar Redux o Vuex en una aplicación de React/Vue:",
+    "respuestaCandidato": "React/Vue: [Comentario]",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q68",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente código, se requiere utilizar css para: - Centrar (horizontalmente) el texto en la",
+    "respuestaCandidato": "etiqueta- Cambiar el color del texto de la etiqueta &lt; p &gt; a azul. CODIGO",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q69",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente código html, se requiere utilizar css para: - Crear un grid de 3 columnas para",
+    "respuestaCandidato": "las cards- Dejar un espacio de 20 pixeles entre cada card (vertical y horizontalmente) CODIGO",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q73",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente código html, css, se requiere: - Crear una &lt; table &gt; que contenga un",
+    "respuestaCandidato": "header con las columnas: \"Name\", \"Email\" y \"Phone Number\"- Crear varias filas con valores de ejemplo",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q74",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente código html, css, se requiere: - Crear un elemento div que contenga un textoUtilizando css, hacer que cuando el usuario ponga su cursor encima del texto este cambie de color, y al",
+    "respuestaCandidato": "quitarlo este regrese a su color original. CODIGO",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G08Q42",
+    "categoria": "BACK-END",
+    "enunciado": "¿Cuál es la forma correcta de redirigir a otra página desde un enlace y que esta se abra en otra",
+    "respuestaCandidato": "pestaña del navegador? a) &lt; a href=\"/home\" target=\"_blank\" &gt;Home\\&lt; /a &gt; b) &lt; a href=\"/home\"",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q43",
+    "categoria": "BACK-END",
+    "enunciado": "¿Dónde se recomienda colocar las etiquetas &lt; script &gt; dentro de un documento HTML? a)",
+    "respuestaCandidato": "Al inicio del documento b) Dentro de la etiqueta &lt; head &gt; c) Antes del cierre de la etiqueta &lt; body",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q50",
+    "categoria": "BACK-END",
+    "enunciado": "¿Cuál de las siguientes opciones describe correctamente el propósito de la función setState en",
+    "respuestaCandidato": "React?",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q51",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué hace la siguiente línea de código en React?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q52",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué hace la siguiente línea de código en Vue?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q53",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué hace el siguiente código en React?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q54",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué hace el siguiente código en React?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q55",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente código:",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q56",
+    "categoria": "BACK-END",
+    "enunciado": "¿De las siguientes opciones, cuál es la que NO es un formato válido para comunicarse con una",
+    "respuestaCandidato": "API?",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q63",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente fragmento de código de React: &lt; code &gt; useEffect( () =&gt; { console.log",
+    "respuestaCandidato": "(\"Hola\") },[ ])&lt; /code &gt; ¿Bajo que condición/es se ejecutará la función dentro del hook?:",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q64",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente fragmento de código de React: &lt; code &gt; const [ count, setCount ] =",
+    "respuestaCandidato": "useState(0)&lt; /code &gt; ¿Cuál sería la forma correcta de incrementar el valor de count en 1 al presionar",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q65",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente fragmento de código de React: &lt; code &gt; const array = [\"Naranja\", \"Piña\",",
+    "respuestaCandidato": "\"Melón\", \"Sandía\"]&lt; /code &gt; ¿Cuál sería la forma correcta de generar un elemento &lt; p &gt; por cada",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q66",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente fragmento de código de React: &lt; code &gt; const [ count , setCount ] =",
+    "respuestaCandidato": "useState ( 0 ) useEffect ( ( ) =&gt; { console.log ( ` El valor actual es $ { count } ` ) } , [ count ] )&lt; /code",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q70",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente código html, css y js, se requiere: - Crear un &lt; textarea &gt; y un &lt; button",
+    "respuestaCandidato": "&gt;- Utilizando js, hacer que al clickear el botón, el texto del &lt; textarea &gt; se muestre invertido en la",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q72",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente código html, css y js, se requiere: - Crear un &lt; form &gt; que contenga un &lt;",
+    "respuestaCandidato": "input &gt; y un &lt; button &gt; de tipo submit- Utilizando js, hacer que al clickear el botón, el texto del &lt;",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q75",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente código html, css y js, se requiere: - Crear una lista desordenada que contenga",
+    "respuestaCandidato": "elementos de tipo checkbox acompañados de algún texto.- Utilizando js, hacer que al clickear alguno de",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q76",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente código html y js, se requiere: - Crear un elemento tipo &lt; select &gt; que tenga",
+    "respuestaCandidato": "algunas opciones.- Utilizando js, hacer que al usuario seleccione alguna de estas opciones, esta aparezca",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G07Q77",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente código html, css y js, se requiere: - Crear un elemento tipo &lt; form &gt; que",
+    "respuestaCandidato": "tenga un input de texto, un checkbox, un radio y un botón de tipo submit.- Utilizando js, hacer que cuando",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q98",
+    "categoria": "BACK-END",
+    "enunciado": "Dado el siguiente código html y css, se requiere: - Completar el código para que el navbar se vea",
+    "respuestaCandidato": "igual al proporcionado en la captura. IMAGEN y CODIGO",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G01Q15",
+    "categoria": "GENERAL",
+    "enunciado": "¿En que consiste la arquitectura cliente-servidor?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q14",
+    "categoria": "GENERAL",
+    "enunciado": "¿Cuál de los siguientes no es un método HTTP?",
+    "respuestaCandidato": "Q00. ¿En que consiste la encapsulación?",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q13",
+    "categoria": "GENERAL",
+    "enunciado": "¿Cuál de las siguientes operaciones no puede realizarse de manera síncrona?",
+    "respuestaCandidato": "[Comentario]",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q94",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cómo se puede declarar una variable en JavaScript que solo pueda ser modificada dentro de",
+    "respuestaCandidato": "una función?",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q91",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Qué devuelve esta función en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G08Q96",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es el polimorfismo?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q89",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es una relación Many-to-Many?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q11",
+    "categoria": "GENERAL",
+    "enunciado": "Dado el siguiente fragmento de código: &lt; code &gt; const numbers = [1, 2, 3, 4, 5, 6] console.",
+    "respuestaCandidato": "log(numbers.forEach(element =&gt; element + element))&lt; /code &gt; ¿Cuál es el output que se muestra",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q16",
+    "categoria": "GENERAL",
+    "enunciado": "¿Cuál de los siguientes no es un formato válido para comunicación de una API REST?",
+    "respuestaCandidato": "[Comentario]",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q07",
+    "categoria": "FRONT-END",
+    "enunciado": "Dado el siguiente fragmento de código: &lt; code &gt; const numbers = [1, 2, 3, 4, 5, 6] console.",
+    "respuestaCandidato": "log(numbers.map(element =&gt; element*2))&lt; /code &gt; ¿Cuál es el output que se muestra por",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q08",
+    "categoria": "GENERAL",
+    "enunciado": "Dado el siguiente fragmento de código: &lt; code &gt; const numbers = [1, 2, 3, 4, 5, 6] console.",
+    "respuestaCandidato": "log(numbers.filter(element =&gt; element !== 2))&lt; /code &gt; ¿Cuál es el output que se muestra por",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q10",
+    "categoria": "GENERAL",
+    "enunciado": "Dado el siguiente fragmento de código: &lt; code &gt; const numbers = [1, 2, 3, 4, 5, 6] console.",
+    "respuestaCandidato": "log(numbers.find(element =&gt; element))&lt; /code &gt; ¿Cuál es el output que se muestra por consola?",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q09",
+    "categoria": "GENERAL",
+    "enunciado": "Dado el siguiente fragmento de código: &lt; code &gt; const numbers = [1, 2, 3, 4, 5, 6] console.",
+    "respuestaCandidato": "log(numbers.reduce((elemento, acumulado) =&gt; elemento + acumulado))&lt; /code &gt; ¿Cuál es el",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G08Q60",
+    "categoria": "BACK-END",
+    "enunciado": "¿En que consiste el patrón de diseño MVC?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G08Q61",
+    "categoria": "BACK-END",
+    "enunciado": "¿Cuál es el objetivo principal del patrón de diseño MVC?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q71",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es una API RESTful?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q78",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es una API GraphQL?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q79",
+    "categoria": "BACK-END",
+    "enunciado": "¿Cuál es la diferencia entre una API RESTful y una API GraphQL?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q80",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es una arquitectura basada en microservicios?",
+    "respuestaCandidato": "EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q81",
+    "categoria": "BACK-END",
+    "enunciado": "¿Para qué se usa la arquitectura basada en microservicios?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q82",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es un contenedor?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q85",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es una arquitectura basada en objetos?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q92",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cómo se puede importar un módulo en Node.js desde otro archivo en la misma carpeta?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q86",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué es una arquitectura de cliente-servidor?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G06Q93",
+    "categoria": "FRONT-END",
+    "enunciado": "¿Cómo se puede enviar una solicitud HTTP POST con datos de formulario en JavaScript?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G09Q97",
+    "categoria": "BACK-END",
+    "enunciado": "¿Qué ventajas tiene usar una función asíncrona en lugar de una función normal?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q17",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro una string y devuelva el inverso de dicha string",
+    "respuestaCandidato": "G03Q17[filecount]. filecount - Escribir una función que tome por parámetro una string y devuelva el inverso",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G02Q05",
+    "categoria": "GENERAL",
+    "enunciado": "Escribir una función que tome por parámetro un array de números y devuelva aun array",
+    "respuestaCandidato": "eliminando los repetidos",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q20",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro una string y devuelva la misma string pero sin",
+    "respuestaCandidato": "vocales.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q18",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro un array de objetos y una propiedad y devuelva un",
+    "respuestaCandidato": "nuevo array con los objetos que contengan dicha propiedad.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q19",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro un array de números y devuelva la suma total de",
+    "respuestaCandidato": "dichos números.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q24",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro una string y devuelva la misma string pero sin",
+    "respuestaCandidato": "espacios.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q22",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro una string y devuelva el número de vocales que",
+    "respuestaCandidato": "tiene.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q23",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro un array de números y devuelva el valor máximo.",
+    "respuestaCandidato": "G03Q23[filecount]. filecount - Escribir una función que tome por parámetro un array de números y",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q25",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro un array de números y devuelva la mediana de",
+    "respuestaCandidato": "estos números (valor en el medio del array cuando este está ordenado).",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q26",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro un array de números y devuelva aun array",
+    "respuestaCandidato": "eliminando los repetidos.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q83",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es una arquitectura en capas?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q84",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es una arquitectura basada en eventos?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q87",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es una base de datos NoSQL?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q88",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de los siguientes es una característica de una ORM?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q90",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es una transacción?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G03Q21",
+    "categoria": "FRONT-END",
+    "enunciado": "Escribir una función que tome por parámetro un array de números y devuelva el promedio de",
+    "respuestaCandidato": "dichos valores.",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q95",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuales son las ventajas de usar un proxy reverso?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q99",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué conoce usted de la estructura de carpetas en las distribuciones de linux y que se almacena",
+    "respuestaCandidato": "normalmente en los ficheros /bin, /root, /etc y /var?",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q100",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es un Sysadmin o System administrator?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q101",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuales son algunas de las principales tareas de un Sysadmin?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q102",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué habilidades son las más importantes para un Sysadmin?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q106",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál la diferencia entre firewall y antivirus?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q110",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es http?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q121",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de las siguientes sentencias es correcta para comprobar el estado de un servicio en",
+    "respuestaCandidato": "Linux?",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q122",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué comando se usa para mostrar los puertos abiertos en un servidor Linux?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q123",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué comando se usa para actualizar los paquetes en un servidor Linux?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q124",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de las siguientes sentencias es correcta para crear un usuario en Linux?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q127",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de las siguientes sentencias es correcta para instalar un paquete en Linux? A. apt",
+    "respuestaCandidato": "installB. apt-get add &lt; package name &gt;C. apt-get install &lt; package name &gt;D. apt-get get &lt;",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q132",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de las siguientes sentencias es correcta para cambiar la contraseña de un usuario en",
+    "respuestaCandidato": "Linux? A. passwd -cB. passwd -uC. passwd &lt; username &gt;D. passwd -p",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q141",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Como se puede ver el historial de comandos?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q104",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es el escalado vertical?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q108",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es un servidor reverse-proxy?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q109",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es ssh?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q111",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Para que sirven apache y nginx?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q112",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es Docker?",
+    "respuestaCandidato": "EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q113",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Que significa contenerizar una aplicación?",
+    "respuestaCandidato": "💬 EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q114",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es DHCP?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q118",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Para qué sirve vault?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q125",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué comando se usa para mostrar los procesos en ejecución en un servidor Linux?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q126",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué comando se usa para buscar archivos en un servidor Linux?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q128",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué comando se usa para ver los usuarios conectados a un servidor Linux?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q129",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué comando se usa para ver los recursos de red de un servidor Linux?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G01Q130",
+    "categoria": "GENERAL",
+    "enunciado": "¿Cuál de las siguientes sentencias es correcta para agregar un usuario a un grupo en Linux?",
+    "respuestaCandidato": "EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q131",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué comando se usa para ver los procesos en ejecución de un usuario específico en Linux?",
+    "respuestaCandidato": "A. ps -U &lt; username &gt;B. ps -uC. ps -lD. ps -a",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q134",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de estas opciones es una forma de crear una imagen de docker?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q135",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de estas opciones es una forma de desplegar un contenedor de Docker?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q136",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cómo se puede verificar el estado de los contenedores de Docker?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q137",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de estas opciones es una forma de eliminar un contenedor de Docker?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q138",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Como se puede hacer para que un comando se ejecute en segundo plano?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q115",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Que es un pod en kubernetes y Que hace?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q116",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cual es la manera más segura que se comunique una base de datos con un servicio?",
+    "respuestaCandidato": "EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q117",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué tecnologías de hashicorp conoce? y ¿para que proyectos la ha utilizado?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q119",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué ventajas proporciona implementar un servidor proxy inverso?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q120",
+    "categoria": "SYSADMIN",
+    "enunciado": "Refiriéndonos solo en términos de kubernetes, ¿Qué es un Cluster?",
+    "respuestaCandidato": "EVALUADOR SL",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q133",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Cuál de las siguientes sentencias es correcta para crear un enlace simbólico en Linux?A. ln sB. ln -fC. ln -s &lt; target &gt; &lt; link &gt;D. ln -l &lt; target &gt; &lt; link &gt;",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G11Q139",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Como se puede ver la información de un proceso? A. ps -a &lt; nombre del proceso &gt;B. ps l &lt; nombre del proceso &gt;C. ps -aux &lt; nombre del proceso &gt;D. info &lt; nombre del proceso &gt;",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q142",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Qué es un pipeline?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q140",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Como se puede matar un proceso? A. kill B. kill -9 C. kill -9 -1 D. killall",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G10Q143",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Para que sirven los programas como Caddy, Nginx, Apache, etc...?",
+    "respuestaCandidato": "",
+    "estado": "OMITIDA"
+  },
+  {
+    "codigo": "G12Q144",
+    "categoria": "SYSADMIN",
+    "enunciado": "¿Para que sirve DHCP en una red?",
+    "respuestaCandidato": "firstname. Nombre/s",
+    "estado": "OMITIDA"
+  }
+]

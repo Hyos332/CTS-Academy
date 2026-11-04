@@ -425,8 +425,8 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
         </div>
       )}
 
-      {/* Contenedor Estricto de Impresión (se activa automáticamente con window.print() de cualquier origen) */}
-      <div id="pdf-resumen-impresion" className="hidden print:flex">
+      {/* Contenedor Estricto de Impresión */}
+      <div id="pdf-resumen-impresion" className="hidden print:block documento-imprimible-activo">
         {renderContenidoDocumento()}
       </div>
     </>

@@ -861,6 +861,52 @@ async function main() {
     }
   }
 
+  // 10. Batería Técnica CTS Oficial (143 preguntas de la evaluación CTS)
+  console.log('💻 Sembrando 143 preguntas oficiales de la Prueba Técnica CTS...');
+  const preguntasTecnicasFile = path.join(__dirname, 'data/preguntas_tecnico_cts.json');
+  if (fs.existsSync(preguntasTecnicasFile)) {
+    const rawTecnicas = JSON.parse(fs.readFileSync(preguntasTecnicasFile, 'utf-8'));
+    let agregadas = 0;
+    for (let i = 0; i < rawTecnicas.length; i++) {
+      const q = rawTecnicas[i];
+      const enunciadoConCodigo = `[${q.codigo}] ${q.enunciado}`;
+      const yaExiste = await prisma.pregunta.findFirst({
+        where: {
+          tipo_bateria: 'TECNICO',
+          enunciado: { contains: q.codigo },
+        },
+      });
+
+      if (!yaExiste) {
+        await prisma.pregunta.create({
+          data: {
+            modulo_id: modulo.id,
+            tipo_bateria: 'TECNICO',
+            categoria: q.categoria,
+            orden: i + 1,
+            enunciado: enunciadoConCodigo,
+            tipo_pregunta: 'TEORICA',
+            peso_puntos: 1.0,
+            opciones: {
+              create: [
+                {
+                  texto: q.respuestaCandidato || 'Opción conceptual estándar',
+                  es_correcta: q.estado === 'CORRECTA',
+                },
+                {
+                  texto: 'Alternativa incorrecta o contraejemplo técnico',
+                  es_correcta: false,
+                },
+              ],
+            },
+          },
+        });
+        agregadas++;
+      }
+    }
+    console.log(`✅ ${agregadas} preguntas oficiales de la Prueba Técnica CTS sincronizadas.`);
+  }
+
   console.log('✅ Seed finalizado exitosamente.');
 }
 

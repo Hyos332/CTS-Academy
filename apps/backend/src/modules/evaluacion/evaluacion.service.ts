@@ -20,6 +20,7 @@ import {
 } from '@cts/shared-types';
 import { generarInforme16PF } from './cattell-16pf.constants';
 import { generarMatrizAptitudes } from './matriz-aptitud.constants';
+import { generarInformePruebaTecnica } from './prueba-tecnica-cts.constants';
 
 @Injectable()
 export class EvaluacionService {
@@ -376,6 +377,7 @@ export class EvaluacionService {
 
     let informe16PF = perfilExistente.informe16PF;
     let matrizAptitudes = perfilExistente.matrizAptitudes;
+    let informePruebaTecnica = perfilExistente.informePruebaTecnica;
 
     if (test.tipo_bateria === 'ACTITUD' || !informe16PF) {
       informe16PF = generarInforme16PF(
@@ -391,10 +393,19 @@ export class EvaluacionService {
       matrizAptitudes = generarMatrizAptitudes(emailCand, test.respuestas);
     }
 
+    if (test.tipo_bateria === 'TECNICO' || !informePruebaTecnica) {
+      informePruebaTecnica = generarInformePruebaTecnica(
+        candidato,
+        test.respuestas,
+        notaTecnicaFinal,
+      );
+    }
+
     const perfilCompetencias = {
       ...perfilExistente,
       informe16PF,
       matrizAptitudes,
+      informePruebaTecnica,
       espectro: {
         actitud: {
           estiloTrabajo: {
@@ -667,6 +678,7 @@ export class EvaluacionService {
 
     const testActitud = candidato.tests.find((t) => t.tipo_bateria === 'ACTITUD');
     const testAptitud = candidato.tests.find((t) => t.tipo_bateria === 'APTITUD');
+    const testTecnico = candidato.tests.find((t) => t.tipo_bateria === 'TECNICO');
 
     const informe16PF =
       perfilExistente.informe16PF ||
@@ -682,12 +694,21 @@ export class EvaluacionService {
       perfilExistente.matrizAptitudes ||
       generarMatrizAptitudes(emailCand, testAptitud?.respuestas);
 
+    const informePruebaTecnica =
+      perfilExistente.informePruebaTecnica ||
+      generarInformePruebaTecnica(
+        candidato,
+        testTecnico?.respuestas,
+        testTecnico?.calificacion_obtenida,
+      );
+
     return {
       ...candidato,
       perfil_competencias: {
         ...perfilExistente,
         informe16PF,
         matrizAptitudes,
+        informePruebaTecnica,
       },
       recomendacionSquad,
     };

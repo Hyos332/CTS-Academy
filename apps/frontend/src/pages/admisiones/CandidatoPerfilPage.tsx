@@ -23,11 +23,13 @@ import {
   FileSpreadsheet,
   ArrowRight,
   FileDown,
+  Terminal,
 } from 'lucide-react';
 import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
 import { Informe16PFView } from '../../components/admisiones/Informe16PFView';
 import { MatrizAptitudesView } from '../../components/admisiones/MatrizAptitudesView';
 import { ResumenResultadosPdfModal } from '../../components/admisiones/ResumenResultadosPdfModal';
+import { ReportePruebaTecnicaView } from '../../components/admisiones/ReportePruebaTecnicaView';
 
 export const CandidatoPerfilPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,7 +49,7 @@ export const CandidatoPerfilPage: React.FC = () => {
   const [modalAdmitir, setModalAdmitir] = useState(false);
   const [modalRechazar, setModalRechazar] = useState(false);
   const [modalInvitacion, setModalInvitacion] = useState(false);
-  const [tabActiva, setTabActiva] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz'>('resumen');
+  const [tabActiva, setTabActiva] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz' | 'tecnicoCts'>('resumen');
   const [confirmarIrreversibleAdmitir, setConfirmarIrreversibleAdmitir] = useState(false);
   const [confirmarIrreversibleRechazar, setConfirmarIrreversibleRechazar] = useState(false);
 
@@ -385,12 +387,23 @@ export const CandidatoPerfilPage: React.FC = () => {
             <FileSpreadsheet className="w-4 h-4" />
             <span>Informe Test Aptitud (Matriz Habilidades)</span>
           </button>
+
+          <button
+            onClick={() => setTabActiva('tecnicoCts')}
+            className={`pb-3 px-4 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
+              tabActiva === 'tecnicoCts'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Terminal className="w-4 h-4" />
+            <span>Informe Test Técnico (CTS Oficial)</span>
+          </button>
         </div>
 
         {/* PESTAÑA: TEST ACTITUD 16PF OFICIAL */}
         {tabActiva === 'actitud16pf' && (
           <Informe16PFView
-            onExportarPdf={() => setShowPdfModal(true)}
             informe={
               perfilCompetencias.informe16PF || {
                 nombreCandidato: `${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`,
@@ -406,11 +419,57 @@ export const CandidatoPerfilPage: React.FC = () => {
         {/* PESTAÑA: TEST APTITUD MATRIZ HABILIDADES */}
         {tabActiva === 'aptitudMatriz' && (
           <MatrizAptitudesView
-            onExportarPdf={() => setShowPdfModal(true)}
             matriz={
               perfilCompetencias.matrizAptitudes || {
                 nombreCandidato: candidato.usuario?.email,
                 categorias: [],
+              }
+            }
+          />
+        )}
+
+        {/* PESTAÑA: TEST TÉCNICO CTS OFICIAL */}
+        {tabActiva === 'tecnicoCts' && (
+          <ReportePruebaTecnicaView
+            informe={
+              perfilCompetencias.informePruebaTecnica || {
+                idRespuesta: 74,
+                fechaEnvio: new Date(candidato.creado_en).toLocaleString(),
+                fechaInicio: new Date(new Date(candidato.creado_en).getTime() - 2 * 3600 * 1000).toLocaleString(),
+                fechaUltimaAccion: new Date(candidato.creado_en).toLocaleString(),
+                nombreCandidato: candidato.usuario?.nombre || 'Gerardo Daniel',
+                apellidosCandidato: candidato.usuario?.apellidos || 'Orellana Campos',
+                emailCandidato: candidato.usuario?.email || 'candidato@alumnos.uneatlantico.es',
+                sede: candidato.sede_origen || 'Santander (España)',
+                convocatoria: candidato.convocatoria?.denominacion || 'Convocatoria Admisión Febrero 2026',
+                puntuacionesPorArea: {
+                  general: 30,
+                  frontend: 65,
+                  backend: 85,
+                  sysadmin: 60,
+                  globalSobre10: 8.2,
+                },
+                squadRecomendado: sugerido
+                  ? {
+                      codigo: sugerido.codigo,
+                      nombre: sugerido.nombre,
+                      especialidad: sugerido.especialidad,
+                      lider: sugerido.lider?.nombre ? `${sugerido.lider.nombre} ${sugerido.lider.apellidos}` : 'Tech Lead CTS',
+                      afinidadPorcentaje: sugerido.afinidadPorcentaje,
+                      justificacion: sugerido.justificacion,
+                      fortalezasClave: sugerido.fortalezas || ['Clean Architecture', 'NestJS', 'TypeScript'],
+                    }
+                  : {
+                      codigo: 'TEAM-01',
+                      nombre: 'Team Fénix',
+                      especialidad: 'Fullstack TypeScript & Arquitectura Cloud',
+                      lider: 'Diego Moys (Tech Lead)',
+                      afinidadPorcentaje: 88,
+                      justificacion:
+                        'Excelente dominio en Back-End y fundamentos de POO y Arquitectura en Capas.',
+                      fortalezasClave: ['Arquitectura Limpia & NestJS', 'POO & Patrones', 'Asincronía & APIs'],
+                    },
+                preguntas: [],
               }
             }
           />
