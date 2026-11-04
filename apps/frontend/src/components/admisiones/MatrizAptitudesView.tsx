@@ -24,11 +24,16 @@ interface MatrizAptitudInforme {
 
 interface MatrizAptitudesViewProps {
   matriz: MatrizAptitudInforme;
+  onExportarPdf?: () => void;
 }
 
-export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({ matriz }) => {
+export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({ matriz, onExportarPdf }) => {
   const handlePrint = () => {
-    window.print();
+    if (onExportarPdf) {
+      onExportarPdf();
+    } else {
+      window.print();
+    }
   };
 
   const categorias = matriz.categorias || [];

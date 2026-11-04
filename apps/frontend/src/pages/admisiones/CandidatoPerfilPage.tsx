@@ -22,16 +22,19 @@ import {
   HeartPulse,
   FileSpreadsheet,
   ArrowRight,
+  FileDown,
 } from 'lucide-react';
 import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
 import { Informe16PFView } from '../../components/admisiones/Informe16PFView';
 import { MatrizAptitudesView } from '../../components/admisiones/MatrizAptitudesView';
+import { ResumenResultadosPdfModal } from '../../components/admisiones/ResumenResultadosPdfModal';
 
 export const CandidatoPerfilPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [showPdfModal, setShowPdfModal] = useState(false);
   const [fechaEntrevista, setFechaEntrevista] = useState('');
   const [enlaceMeet, setEnlaceMeet] = useState('');
   const [comentariosEntrevista, setComentariosEntrevista] = useState('');
@@ -294,6 +297,14 @@ export const CandidatoPerfilPage: React.FC = () => {
           {/* Botones de Acción Editorial / Decisión */}
           <div className="flex flex-wrap items-center gap-2">
             <button
+              onClick={() => setShowPdfModal(true)}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5"
+            >
+              <FileDown className="w-4 h-4 text-brand-300" />
+              <span>Descargar Resumen PDF</span>
+            </button>
+
+            <button
               onClick={() => setModalInvitacion(true)}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5"
             >
@@ -379,6 +390,7 @@ export const CandidatoPerfilPage: React.FC = () => {
         {/* PESTAÑA: TEST ACTITUD 16PF OFICIAL */}
         {tabActiva === 'actitud16pf' && (
           <Informe16PFView
+            onExportarPdf={() => setShowPdfModal(true)}
             informe={
               perfilCompetencias.informe16PF || {
                 nombreCandidato: `${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`,
@@ -394,6 +406,7 @@ export const CandidatoPerfilPage: React.FC = () => {
         {/* PESTAÑA: TEST APTITUD MATRIZ HABILIDADES */}
         {tabActiva === 'aptitudMatriz' && (
           <MatrizAptitudesView
+            onExportarPdf={() => setShowPdfModal(true)}
             matriz={
               perfilCompetencias.matrizAptitudes || {
                 nombreCandidato: candidato.usuario?.email,
@@ -1107,6 +1120,13 @@ export const CandidatoPerfilPage: React.FC = () => {
         candidatoEmail={candidato.usuario?.email || ''}
         isOpen={modalInvitacion}
         onClose={() => setModalInvitacion(false)}
+      />
+
+      {/* Modal & Documento de Impresión Horizontal: Resumen Ejecutivo de Resultados */}
+      <ResumenResultadosPdfModal
+        isOpen={showPdfModal}
+        onClose={() => setShowPdfModal(false)}
+        candidato={candidato}
       />
     </div>
   );

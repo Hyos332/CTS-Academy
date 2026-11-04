@@ -25,11 +25,16 @@ interface Informe16PFProps {
       interpretacion: string;
     };
   };
+  onExportarPdf?: () => void;
 }
 
-export const Informe16PFView: React.FC<Informe16PFProps> = ({ informe }) => {
+export const Informe16PFView: React.FC<Informe16PFProps> = ({ informe, onExportarPdf }) => {
   const handlePrint = () => {
-    window.print();
+    if (onExportarPdf) {
+      onExportarPdf();
+    } else {
+      window.print();
+    }
   };
 
   const factores = informe.factores || [];
