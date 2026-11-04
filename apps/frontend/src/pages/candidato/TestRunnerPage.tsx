@@ -37,8 +37,13 @@ export const TestRunnerPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [preguntaActivaIndex, setPreguntaActivaIndex] = useState(0);
-  const [respuestasTeoricas, setRespuestasTeoricas] = useState<Record<string, string>>({});
+  // Respuestas seleccionadas en borrador (pueden modificarse libremente antes de pulsar "Siguiente")
+  const [respuestasSeleccionadas, setRespuestasSeleccionadas] = useState<Record<string, string>>({});
+  // Respuestas confirmadas y bloqueadas de forma permanente
+  const [respuestasBloqueadas, setRespuestasBloqueadas] = useState<Record<string, string>>({});
+  // Retos prácticos
   const [respuestasPracticas, setRespuestasPracticas] = useState<Record<string, string>>({});
+  const [practicasBloqueadas, setPracticasBloqueadas] = useState<Record<string, boolean>>({});
   const [tiempoRestante, setTiempoRestante] = useState<number>(3600);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [testFinalizadoData, setTestFinalizadoData] = useState<any | null>(null);
@@ -75,23 +80,28 @@ export const TestRunnerPage: React.FC = () => {
     expiracionTimestampRef.current = Date.now() + segundosRestantes * 1000;
 
     if (data.respuestasGuardadas && Array.isArray(data.respuestasGuardadas)) {
-      const teoricas: Record<string, string> = {};
-      const practicas: Record<string, string> = {};
+      const bloqueadasTeoricas: Record<string, string> = {};
+      const guardadasPracticas: Record<string, string> = {};
+      const bloqueadasPracticas: Record<string, boolean> = {};
+
       for (const r of data.respuestasGuardadas) {
         if (r.opcionSeleccionadaId) {
-          teoricas[r.preguntaId] = r.opcionSeleccionadaId;
+          bloqueadasTeoricas[r.preguntaId] = r.opcionSeleccionadaId;
         }
         if (r.codigoEntregado) {
-          practicas[r.preguntaId] = r.codigoEntregado;
+          guardadasPracticas[r.preguntaId] = r.codigoEntregado;
+          bloqueadasPracticas[r.preguntaId] = true;
         }
       }
-      setRespuestasTeoricas(teoricas);
-      setRespuestasPracticas(practicas);
+      setRespuestasBloqueadas(bloqueadasTeoricas);
+      setRespuestasSeleccionadas(bloqueadasTeoricas);
+      setRespuestasPracticas(guardadasPracticas);
+      setPracticasBloqueadas(bloqueadasPracticas);
 
-      // Reanudar automáticamente en la primera pregunta no respondida
+      // Reanudar automáticamente en la primera pregunta no respondida/bloqueada
       if (data.preguntas && data.preguntas.length > 0) {
         const primerSinResponderIndex = data.preguntas.findIndex(
-          (p: Pregunta) => !teoricas[p.id] && !practicas[p.id],
+          (p: Pregunta) => !bloqueadasTeoricas[p.id] && !bloqueadasPracticas[p.id],
         );
         if (primerSinResponderIndex !== -1) {
           setPreguntaActivaIndex(primerSinResponderIndex);
@@ -160,22 +170,62 @@ export const TestRunnerPage: React.FC = () => {
   };
 
   const handleSeleccionarOpcion = (preguntaId: string, opcionId: string) => {
-    // Si la pregunta ya está respondida, no permitir modificarla
-    if (respuestasTeoricas[preguntaId]) return;
+    // Si la pregunta ya está confirmada y bloqueada en el servidor, no permitir modificarla
+    if (respuestasBloqueadas[preguntaId]) return;
 
-    setRespuestasTeoricas((prev) => ({ ...prev, [preguntaId]: opcionId }));
-    responderTeoricaMutation.mutate({ preguntaId, opcionId });
+    // Solo seleccionamos localmente en borrador. No bloquea ni envía al backend todavía.
+    setRespuestasSeleccionadas((prev) => ({ ...prev, [preguntaId]: opcionId }));
+  };
 
-    // Auto-avanzar a la siguiente pregunta tras breve feedback visual
-    if (data?.preguntas && preguntaActivaIndex < data.preguntas.length - 1) {
-      setTimeout(() => {
-        setPreguntaActivaIndex((curr) => Math.min(data.preguntas.length - 1, curr + 1));
-      }, 300);
+  const handleAvanzarSiguiente = () => {
+    const pId = preguntaActual.id;
+
+    // Si es teórica, tiene una opción seleccionada y aún NO está bloqueada:
+    if (preguntaActual.tipoPregunta === 'TEORICA') {
+      const opcionSeleccionada = respuestasSeleccionadas[pId];
+      if (opcionSeleccionada && !respuestasBloqueadas[pId]) {
+        // Bloqueamos la selección en frontend
+        setRespuestasBloqueadas((prev) => ({ ...prev, [pId]: opcionSeleccionada }));
+        // Enviamos al backend para persistencia inmutable
+        responderTeoricaMutation.mutate({ preguntaId: pId, opcionId: opcionSeleccionada });
+      }
+    } else if (preguntaActual.tipoPregunta === 'PRACTICA') {
+      const codigo = respuestasPracticas[pId];
+      if (codigo && !practicasBloqueadas[pId]) {
+        setPracticasBloqueadas((prev) => ({ ...prev, [pId]: true }));
+        entregarPracticaMutation.mutate({ preguntaId: pId, codigo });
+      }
     }
+
+    // Avanzar a la siguiente pregunta si no es la última
+    if (preguntaActivaIndex < preguntas.length - 1) {
+      setPreguntaActivaIndex((prev) => prev + 1);
+    }
+  };
+
+  const handleRevisarYEntregar = () => {
+    const pId = preguntaActual.id;
+    // Si la última pregunta tiene opción seleccionada y no estaba bloqueada, persistirla
+    if (preguntaActual.tipoPregunta === 'TEORICA') {
+      const opcionSeleccionada = respuestasSeleccionadas[pId];
+      if (opcionSeleccionada && !respuestasBloqueadas[pId]) {
+        setRespuestasBloqueadas((prev) => ({ ...prev, [pId]: opcionSeleccionada }));
+        responderTeoricaMutation.mutate({ preguntaId: pId, opcionId: opcionSeleccionada });
+      }
+    } else if (preguntaActual.tipoPregunta === 'PRACTICA') {
+      const codigo = respuestasPracticas[pId];
+      if (codigo && !practicasBloqueadas[pId]) {
+        setPracticasBloqueadas((prev) => ({ ...prev, [pId]: true }));
+        entregarPracticaMutation.mutate({ preguntaId: pId, codigo });
+      }
+    }
+
+    setShowConfirmModal(true);
   };
 
   const handleGuardarPractica = (preguntaId: string) => {
     const codigo = respuestasPracticas[preguntaId] || '';
+    setPracticasBloqueadas((prev) => ({ ...prev, [preguntaId]: true }));
     entregarPracticaMutation.mutate({ preguntaId, codigo });
   };
 
@@ -335,20 +385,21 @@ export const TestRunnerPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Contenido Principal */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Contenido Principal a Pantalla Completa Fluida */}
+      <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Navegador de Preguntas (Sidebar) */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 h-fit shadow-sm">
+        <div className="lg:col-span-3 xl:col-span-3 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 h-fit shadow-sm">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
             <span>Preguntas</span>
             <span className="text-brand-400 font-mono text-xs">
-              {Object.keys(respuestasTeoricas).length + Object.keys(respuestasPracticas).length}/{preguntas.length}
+              {Object.keys(respuestasBloqueadas).length + Object.keys(practicasBloqueadas).length}/{preguntas.length}
             </span>
           </h2>
 
           <div className="grid grid-cols-5 sm:grid-cols-6 gap-1.5 max-h-[460px] overflow-y-auto pr-1">
             {preguntas.map((p, idx) => {
-              const estaRespondida = Boolean(respuestasTeoricas[p.id] || respuestasPracticas[p.id]);
+              const estaBloqueada = Boolean(respuestasBloqueadas[p.id] || practicasBloqueadas[p.id]);
+              const tieneBorrador = Boolean(respuestasSeleccionadas[p.id] || respuestasPracticas[p.id]);
               const esActiva = idx === preguntaActivaIndex;
 
               return (
@@ -358,14 +409,22 @@ export const TestRunnerPage: React.FC = () => {
                   className={`h-8 rounded-lg font-mono text-[11px] font-bold transition-all flex items-center justify-center space-x-0.5 border ${
                     esActiva
                       ? 'bg-brand-600 border-brand-500 text-white shadow-md shadow-brand-600/30 ring-2 ring-brand-400/30'
-                      : estaRespondida
+                      : estaBloqueada
                       ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'
+                      : tieneBorrador
+                      ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30'
                       : 'bg-slate-800 border-slate-700/80 text-slate-400 hover:bg-slate-750 hover:text-white'
                   }`}
-                  title={estaRespondida ? `Pregunta ${idx + 1}: Respondida (Bloqueada)` : `Pregunta ${idx + 1}: Sin responder`}
+                  title={
+                    estaBloqueada
+                      ? `Pregunta ${idx + 1}: Confirmada (Bloqueada)`
+                      : tieneBorrador
+                      ? `Pregunta ${idx + 1}: Seleccionada (Pendiente pulsar Siguiente)`
+                      : `Pregunta ${idx + 1}: Sin responder`
+                  }
                 >
                   <span>{idx + 1}</span>
-                  {estaRespondida && <Lock className="w-2.5 h-2.5 ml-0.5 text-emerald-400" />}
+                  {estaBloqueada && <Lock className="w-2.5 h-2.5 ml-0.5 text-emerald-400" />}
                 </button>
               );
             })}
@@ -374,7 +433,11 @@ export const TestRunnerPage: React.FC = () => {
           <div className="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-400 space-y-1.5">
             <div className="flex items-center space-x-2">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/30 border border-emerald-500/50"></div>
-              <span>Respondida (Bloqueada)</span>
+              <span>Confirmada (Bloqueada)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-500/30 border border-amber-500/50"></div>
+              <span>Seleccionada en borrador</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2.5 h-2.5 rounded-full bg-slate-800 border border-slate-700"></div>
@@ -384,7 +447,7 @@ export const TestRunnerPage: React.FC = () => {
         </div>
 
         {/* Área de la Pregunta Activa */}
-        <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+        <div className="lg:col-span-9 xl:col-span-9 bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
           <div>
             {/* Cabecera de la Pregunta */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-6 border-b border-slate-800">
@@ -426,31 +489,43 @@ export const TestRunnerPage: React.FC = () => {
 
             {/* Opciones Teóricas */}
             {preguntaActual.tipoPregunta === 'TEORICA' && preguntaActual.opciones && (() => {
-              const estaRespondida = Boolean(respuestasTeoricas[preguntaActual.id]);
+              const estaBloqueada = Boolean(respuestasBloqueadas[preguntaActual.id]);
+              const opcionSeleccionada = respuestasSeleccionadas[preguntaActual.id];
+
               return (
                 <div className="space-y-3">
-                  {estaRespondida && (
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center space-x-2.5 text-xs text-amber-300 mb-3">
-                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                      <span>Respuesta registrada y bloqueada. No se permite modificar opciones una vez enviadas.</span>
+                  {estaBloqueada ? (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2.5 text-xs text-emerald-300 mb-3">
+                      <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Respuesta confirmada y bloqueada en el servidor.</span>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl flex items-center space-x-2.5 text-xs text-indigo-300 mb-3">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                      <span>
+                        Selecciona tu respuesta libremente. Se confirmará y bloqueará de forma definitiva al pulsar{' '}
+                        <strong>&quot;Siguiente&quot;</strong>.
+                      </span>
                     </div>
                   )}
 
                   {preguntaActual.opciones.map((opcion) => {
-                    const esSeleccionada = respuestasTeoricas[preguntaActual.id] === opcion.id;
+                    const esSeleccionada = opcionSeleccionada === opcion.id;
 
                     return (
                       <div
                         key={opcion.id}
                         onClick={() => {
-                          if (!estaRespondida) {
+                          if (!estaBloqueada) {
                             handleSeleccionarOpcion(preguntaActual.id, opcion.id);
                           }
                         }}
                         className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
                           esSeleccionada
-                            ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-sm ring-1 ring-emerald-500/50'
-                            : estaRespondida
+                            ? estaBloqueada
+                              ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-sm ring-1 ring-emerald-500/50'
+                              : 'bg-brand-600/20 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/50 cursor-pointer'
+                            : estaBloqueada
                             ? 'bg-slate-800/30 border-slate-800 text-slate-500 opacity-40 cursor-not-allowed select-none'
                             : 'bg-slate-800/60 border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:border-slate-600 cursor-pointer'
                         }`}
@@ -460,19 +535,29 @@ export const TestRunnerPage: React.FC = () => {
                             type="radio"
                             name={`pregunta-${preguntaActual.id}`}
                             checked={esSeleccionada}
-                            disabled={estaRespondida}
-                            onChange={() => {}}
-                            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-700 bg-slate-900 cursor-pointer disabled:cursor-not-allowed"
+                            disabled={estaBloqueada}
+                            onChange={() => {
+                              if (!estaBloqueada) {
+                                handleSeleccionarOpcion(preguntaActual.id, opcion.id);
+                              }
+                            }}
+                            className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-700 bg-slate-900 cursor-pointer disabled:cursor-not-allowed"
                           />
-                          <span className={`text-sm leading-relaxed ${esSeleccionada ? 'font-medium text-emerald-200' : ''}`}>
+                          <span className={`text-sm leading-relaxed ${esSeleccionada ? 'font-medium text-white' : ''}`}>
                             {opcion.texto}
                           </span>
                         </div>
 
                         {esSeleccionada && (
-                          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1 shrink-0 ml-3">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            <span>Registrada</span>
+                          <span
+                            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border flex items-center space-x-1 shrink-0 ml-3 ${
+                              estaBloqueada
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                : 'bg-brand-500/20 text-brand-300 border-brand-500/30'
+                            }`}
+                          >
+                            {estaBloqueada ? <Lock className="w-3 h-3 mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
+                            <span>{estaBloqueada ? 'Confirmada' : 'Seleccionada'}</span>
                           </span>
                         )}
                       </div>
@@ -484,12 +569,12 @@ export const TestRunnerPage: React.FC = () => {
 
             {/* Editor de Solución Práctica */}
             {preguntaActual.tipoPregunta === 'PRACTICA' && (() => {
-              const estaEntregada = Boolean(respuestasPracticas[preguntaActual.id]);
+              const estaEntregada = Boolean(practicasBloqueadas[preguntaActual.id]);
               return (
                 <div className="space-y-4">
                   {estaEntregada && (
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center space-x-2.5 text-xs text-amber-300">
-                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2.5 text-xs text-emerald-300">
+                      <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span>Solución práctica entregada y bloqueada para revisión del equipo técnico.</span>
                     </div>
                   )}
@@ -527,7 +612,7 @@ export const TestRunnerPage: React.FC = () => {
                       >
                         <Save className="w-3.5 h-3.5" />
                         <span>
-                          {entregarPracticaMutation.isPending ? 'Guardando...' : 'Guardar y Entregar Solución'}
+                          {entregarPracticaMutation.isPending ? 'Guardando...' : 'Guardar y Bloquear Solución'}
                         </span>
                       </button>
                     </div>
@@ -549,7 +634,7 @@ export const TestRunnerPage: React.FC = () => {
             <button
               onClick={() => setPreguntaActivaIndex((prev) => Math.max(prev - 1, 0))}
               disabled={esPrimera}
-              className="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors flex items-center space-x-1"
+              className="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors flex items-center space-x-1.5"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Anterior</span>
@@ -557,18 +642,22 @@ export const TestRunnerPage: React.FC = () => {
 
             {esUltima ? (
               <button
-                onClick={() => setShowConfirmModal(true)}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-md transition-colors flex items-center space-x-1.5"
+                onClick={handleRevisarYEntregar}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition-colors flex items-center space-x-1.5"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Revisar y Entregar</span>
+                <span>Confirmar y Entregar Examen</span>
               </button>
             ) : (
               <button
-                onClick={() => setPreguntaActivaIndex((prev) => Math.min(prev + 1, preguntas.length - 1))}
-                className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium transition-colors flex items-center space-x-1"
+                onClick={handleAvanzarSiguiente}
+                className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-all flex items-center space-x-1.5 shadow-md shadow-brand-600/30"
               >
-                <span>Siguiente</span>
+                <span>
+                  {respuestasSeleccionadas[preguntaActual.id] && !respuestasBloqueadas[preguntaActual.id]
+                    ? 'Confirmar y Siguiente'
+                    : 'Siguiente'}
+                </span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             )}

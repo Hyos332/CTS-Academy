@@ -1,13 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsDateString, IsOptional, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsDateString, IsOptional, IsUUID, IsInt } from 'class-validator';
 
 export class CrearConvocatoriaDto {
-  @ApiProperty({ example: '12345678-1234-1234-1234-123456789001', description: 'UUID del semestre académico' })
+  @ApiPropertyOptional({ example: '12345678-1234-1234-1234-123456789001', description: 'UUID del semestre académico existente' })
   @IsUUID('4', { message: 'El ID del semestre debe ser un UUID válido' })
-  @IsNotEmpty({ message: 'El semestre es obligatorio' })
-  semestreId: string;
+  @IsOptional()
+  semestreId?: string;
 
-  @ApiProperty({ example: 'Admisiones Semestre I - 2026', description: 'Denominación de la convocatoria' })
+  @ApiProperty({ example: 'Admisiones Semestre II - 2026', description: 'Denominación de la convocatoria' })
   @IsString()
   @IsNotEmpty({ message: 'La denominación de la convocatoria es obligatoria' })
   denominacion: string;
@@ -26,6 +26,27 @@ export class CrearConvocatoriaDto {
   @IsString()
   @IsOptional()
   modeloAdmision?: string;
+
+  // Campos opcionales para crear un nuevo semestre y curso académico en el mismo acto
+  @ApiPropertyOptional({ example: 'SEM-02', description: 'Código del nuevo periodo semestral (ej. SEM-01, SEM-02)' })
+  @IsString()
+  @IsOptional()
+  periodoSemestre?: string;
+
+  @ApiPropertyOptional({ example: 'Curso 2026-2027', description: 'Denominación del curso académico' })
+  @IsString()
+  @IsOptional()
+  cursoDenominacion?: string;
+
+  @ApiPropertyOptional({ example: 2026, description: 'Año de inicio del curso académico' })
+  @IsInt()
+  @IsOptional()
+  anioInicio?: number;
+
+  @ApiPropertyOptional({ example: 2027, description: 'Año de fin del curso académico' })
+  @IsInt()
+  @IsOptional()
+  anioFin?: number;
 }
 
 export class CerrarCorteSemestralDto {

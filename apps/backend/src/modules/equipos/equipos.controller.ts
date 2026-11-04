@@ -66,6 +66,19 @@ export class EquiposController {
     return this.equiposService.cerrarCorteSemestral(convocatoriaId, gestorId, dto);
   }
 
+  @Post('periodos-ingreso/:id/reabrir')
+  @Roles(RolUsuario.GESTOR)
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'UUID de la convocatoria a reabrir' })
+  @ApiOperation({
+    summary: 'Reabrir convocatoria cerrada',
+    description: 'Permite al gestor reanudar la recepción de candidatos en una convocatoria previamente cerrada.',
+  })
+  @ApiResponse({ status: 200, description: 'Convocatoria reabierta exitosamente' })
+  async reabrirConvocatoria(@Param('id') convocatoriaId: string) {
+    return this.equiposService.reabrirConvocatoria(convocatoriaId);
+  }
+
   @Put('alumnos/:id/squad')
   @Roles(RolUsuario.GESTOR)
   @HttpCode(HttpStatus.OK)

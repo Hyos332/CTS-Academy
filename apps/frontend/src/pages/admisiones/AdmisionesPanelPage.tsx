@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   Lock,
   ChevronRight,
+  ChevronLeft,
   Video,
   UserPlus,
   ChevronDown,
@@ -23,9 +24,14 @@ import {
   Calendar,
   Filter,
   UploadCloud,
+  RotateCcw,
+  PlusCircle,
+  AlertCircle,
+  History,
 } from 'lucide-react';
 import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
 import { ImportarSedeModal } from '../../components/admisiones/ImportarSedeModal';
+import { AperturarConvocatoriaModal } from '../../components/admisiones/AperturarConvocatoriaModal';
 
 export const AdmisionesPanelPage: React.FC = () => {
   const navigate = useNavigate();
@@ -42,8 +48,15 @@ export const AdmisionesPanelPage: React.FC = () => {
   const [filtroSedeCandidato, setFiltroSedeCandidato] = useState('TODAS');
   const [busquedaAlumno, setBusquedaAlumno] = useState('');
 
+  // Paginación de listados
+  const [paginaCandidatos, setPaginaCandidatos] = useState(1);
+  const [candidatosPorPagina, setCandidatosPorPagina] = useState(10);
+  const [paginaAlumnos, setPaginaAlumnos] = useState(1);
+  const [alumnosPorPagina, setAlumnosPorPagina] = useState(10);
+
   // Modales
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showAperturarModal, setShowAperturarModal] = useState(false);
   const [motivoCierre, setMotivoCierre] = useState('');
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -116,6 +129,15 @@ export const AdmisionesPanelPage: React.FC = () => {
     },
   });
 
+  const reabrirConvocatoriaMutation = useMutation({
+    mutationFn: async (convocatoriaId: string) => {
+      return apiClient.post(`/equipos/periodos-ingreso/${convocatoriaId}/reabrir`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admisiones-panel'] });
+    },
+  });
+
   // Mutación: Transferir o reasignar alumno entre squads (Requirement 4)
   const transferirAlumnoMutation = useMutation({
     mutationFn: async () => {
@@ -150,14 +172,25 @@ export const AdmisionesPanelPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-12 text-center text-red-600">
+        <main className="w-full px-4 py-12 text-center text-red-600">
           Error al cargar las métricas de admisiones.
         </main>
       </div>
     );
   }
 
-  const { convocatoriaActiva, metricasPostulacion, equipos, candidatos, alumnosSinEquipo } = data;
+  const {
+    convocatoriaActiva,
+    ultimaConvocatoria,
+    semestresDisponibles = [],
+    historicoConvocatorias = [],
+    metricasPostulacion = {},
+    equipos = [],
+    candidatos = [],
+    alumnosSinEquipo = [],
+  } = data;
+
+  const convocatoriaMostrar = convocatoriaActiva || ultimaConvocatoria;
 
   // Lista consolidada de todos los alumnos asignados en los squads
   const todosLosAlumnos = (equipos || []).flatMap((eq: any) =>
@@ -185,6 +218,13 @@ export const AdmisionesPanelPage: React.FC = () => {
     return coincideTexto && coincideEstado && coincideSede;
   });
 
+  const totalCandidatosFiltrados = candidatosFiltrados.length;
+  const totalPaginasCandidatos = Math.max(1, Math.ceil(totalCandidatosFiltrados / candidatosPorPagina));
+  const candidatosPaginados = candidatosFiltrados.slice(
+    (paginaCandidatos - 1) * candidatosPorPagina,
+    paginaCandidatos * candidatosPorPagina,
+  );
+
   // Filtrado de alumnos
   const alumnosFiltrados = todosLosAlumnos.filter((al: any) => {
     return (
@@ -195,27 +235,44 @@ export const AdmisionesPanelPage: React.FC = () => {
     );
   });
 
+  const totalAlumnosFiltrados = alumnosFiltrados.length;
+  const totalPaginasAlumnos = Math.max(1, Math.ceil(totalAlumnosFiltrados / alumnosPorPagina));
+  const alumnosPaginados = alumnosFiltrados.slice(
+    (paginaAlumnos - 1) * alumnosPorPagina,
+    paginaAlumnos * alumnosPorPagina,
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
 
-      <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
+      <div className="flex-1 flex flex-col lg:flex-row w-full px-3 sm:px-6 lg:px-8 py-6 gap-6">
         {/* ========================================================= */}
         {/* SIDEBAR DE NAVEGACIÓN Y CAMBIO DE VENTANAS                */}
         {/* ========================================================= */}
-        <aside className="w-full lg:w-64 xl:w-72 shrink-0 space-y-4">
+        <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4">
           {/* Tarjeta de Contexto de la Convocatoria */}
           <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-              Convocatoria Activa
-            </span>
+            <div className="flex items-center justify-between">
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                  convocatoriaActiva
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                    : 'text-rose-700 bg-rose-50 border-rose-200'
+                }`}
+              >
+                {convocatoriaActiva ? 'Convocatoria Abierta' : 'Convocatoria Cerrada'}
+              </span>
+            </div>
             <h2 className="text-sm font-black text-slate-900 mt-2 truncate">
-              {convocatoriaActiva?.denominacion || 'Convocatoria Semestral'}
+              {convocatoriaMostrar?.denominacion || 'Sin Convocatoria Activa'}
             </h2>
             <div className="flex items-center space-x-2 text-xs text-slate-500 mt-1">
-              <span>Semestre: <strong>{convocatoriaActiva?.semestre || '2026-I'}</strong></span>
+              <span>Semestre: <strong>{convocatoriaMostrar?.semestre || 'No asignado'}</strong></span>
               <span>•</span>
-              <span className="text-emerald-600 font-semibold">{convocatoriaActiva?.estado || 'ABIERTO'}</span>
+              <span className={convocatoriaActiva ? 'text-emerald-600 font-semibold' : 'text-slate-500 font-semibold'}>
+                {convocatoriaActiva ? 'ACTIVA' : 'CERRADA'}
+              </span>
             </div>
           </div>
 
@@ -315,13 +372,21 @@ export const AdmisionesPanelPage: React.FC = () => {
                     : 'bg-slate-100 text-slate-600'
                 }`}
               >
-                {convocatoriaActiva?.semestre || '2026-I'}
+                {convocatoriaMostrar?.semestre || 'Periodo'}
               </span>
             </button>
           </nav>
 
           {/* Botones de Acción Rápida en Sidebar */}
           <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-2.5">
+            <button
+              onClick={() => setShowAperturarModal(true)}
+              className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Aperturar Convocatoria</span>
+            </button>
+
             <button
               onClick={() => setShowRegisterModal(true)}
               className="w-full py-2.5 px-3 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center space-x-1.5"
@@ -345,6 +410,17 @@ export const AdmisionesPanelPage: React.FC = () => {
               >
                 <Lock className="w-3.5 h-3.5 text-red-500" />
                 <span>Cerrar Corte Semestral</span>
+              </button>
+            )}
+
+            {!convocatoriaActiva && ultimaConvocatoria && (
+              <button
+                onClick={() => reabrirConvocatoriaMutation.mutate(ultimaConvocatoria.id)}
+                disabled={reabrirConvocatoriaMutation.isPending}
+                className="w-full py-2 px-3 border border-amber-300 text-amber-800 hover:bg-amber-50 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center space-x-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                <span>Reabrir Convocatoria</span>
               </button>
             )}
           </div>
@@ -423,7 +499,10 @@ export const AdmisionesPanelPage: React.FC = () => {
                   <input
                     type="text"
                     value={busquedaCandidato}
-                    onChange={(e) => setBusquedaCandidato(e.target.value)}
+                    onChange={(e) => {
+                      setBusquedaCandidato(e.target.value);
+                      setPaginaCandidatos(1);
+                    }}
                     placeholder="Buscar por nombre, apellidos o correo..."
                     className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50"
                   />
@@ -434,7 +513,10 @@ export const AdmisionesPanelPage: React.FC = () => {
                     <Filter className="w-3.5 h-3.5 text-slate-400" />
                     <select
                       value={filtroEstadoCandidato}
-                      onChange={(e) => setFiltroEstadoCandidato(e.target.value)}
+                      onChange={(e) => {
+                        setFiltroEstadoCandidato(e.target.value);
+                        setPaginaCandidatos(1);
+                      }}
                       className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
                       <option value="TODOS">Todos los Estados</option>
@@ -448,7 +530,10 @@ export const AdmisionesPanelPage: React.FC = () => {
 
                   <select
                     value={filtroSedeCandidato}
-                    onChange={(e) => setFiltroSedeCandidato(e.target.value)}
+                    onChange={(e) => {
+                      setFiltroSedeCandidato(e.target.value);
+                      setPaginaCandidatos(1);
+                    }}
                     className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   >
                     <option value="TODAS">Todas las Sedes</option>
@@ -484,7 +569,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        candidatosFiltrados.map((cand: any) => {
+                        candidatosPaginados.map((cand: any) => {
                           const testTecnico =
                             cand.tests?.find((t: any) => t.tipoBateria === 'TECNICO') || cand.tests?.[0];
                           const tieneMeet = Boolean(cand.entrevista);
@@ -602,6 +687,66 @@ export const AdmisionesPanelPage: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Controles de Paginación de Aspirantes */}
+                {totalCandidatosFiltrados > 0 && (
+                  <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+                    <div className="flex items-center space-x-2">
+                      <span>Mostrando</span>
+                      <strong className="text-slate-900">
+                        {(paginaCandidatos - 1) * candidatosPorPagina + 1}
+                      </strong>
+                      <span>a</span>
+                      <strong className="text-slate-900">
+                        {Math.min(paginaCandidatos * candidatosPorPagina, totalCandidatosFiltrados)}
+                      </strong>
+                      <span>de</span>
+                      <strong className="text-slate-900">{totalCandidatosFiltrados}</strong>
+                      <span>aspirantes</span>
+
+                      <span className="mx-2 text-slate-300">|</span>
+
+                      <span className="text-slate-500">Filas:</span>
+                      <select
+                        value={candidatosPorPagina}
+                        onChange={(e) => {
+                          setCandidatosPorPagina(Number(e.target.value));
+                          setPaginaCandidatos(1);
+                        }}
+                        className="border border-slate-200 rounded-lg px-2 py-1 bg-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => setPaginaCandidatos((p) => Math.max(1, p - 1))}
+                        disabled={paginaCandidatos === 1}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <span>Anterior</span>
+                      </button>
+
+                      <div className="px-2 font-medium text-slate-600">
+                        Página <span className="font-bold text-slate-900">{paginaCandidatos}</span> de{' '}
+                        <span className="font-bold text-slate-900">{totalPaginasCandidatos}</span>
+                      </div>
+
+                      <button
+                        onClick={() => setPaginaCandidatos((p) => Math.min(totalPaginasCandidatos, p + 1))}
+                        disabled={paginaCandidatos >= totalPaginasCandidatos}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
+                      >
+                        <span>Siguiente</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -806,7 +951,10 @@ export const AdmisionesPanelPage: React.FC = () => {
                   <input
                     type="text"
                     value={busquedaAlumno}
-                    onChange={(e) => setBusquedaAlumno(e.target.value)}
+                    onChange={(e) => {
+                      setBusquedaAlumno(e.target.value);
+                      setPaginaAlumnos(1);
+                    }}
                     placeholder="Buscar alumno por nombre, correo o squad..."
                     className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50"
                   />
@@ -836,7 +984,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        alumnosFiltrados.map((al: any) => (
+                        alumnosPaginados.map((al: any) => (
                           <tr key={al.id} className="hover:bg-slate-50/80 transition-colors">
                             <td className="px-5 py-3.5 font-bold text-slate-900 text-xs sm:text-sm">
                               {al.nombreCompleto}
@@ -875,6 +1023,66 @@ export const AdmisionesPanelPage: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Controles de Paginación de Alumnos */}
+                {totalAlumnosFiltrados > 0 && (
+                  <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+                    <div className="flex items-center space-x-2">
+                      <span>Mostrando</span>
+                      <strong className="text-slate-900">
+                        {(paginaAlumnos - 1) * alumnosPorPagina + 1}
+                      </strong>
+                      <span>a</span>
+                      <strong className="text-slate-900">
+                        {Math.min(paginaAlumnos * alumnosPorPagina, totalAlumnosFiltrados)}
+                      </strong>
+                      <span>de</span>
+                      <strong className="text-slate-900">{totalAlumnosFiltrados}</strong>
+                      <span>alumnos</span>
+
+                      <span className="mx-2 text-slate-300">|</span>
+
+                      <span className="text-slate-500">Filas:</span>
+                      <select
+                        value={alumnosPorPagina}
+                        onChange={(e) => {
+                          setAlumnosPorPagina(Number(e.target.value));
+                          setPaginaAlumnos(1);
+                        }}
+                        className="border border-slate-200 rounded-lg px-2 py-1 bg-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => setPaginaAlumnos((p) => Math.max(1, p - 1))}
+                        disabled={paginaAlumnos === 1}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <span>Anterior</span>
+                      </button>
+
+                      <div className="px-2 font-medium text-slate-600">
+                        Página <span className="font-bold text-slate-900">{paginaAlumnos}</span> de{' '}
+                        <span className="font-bold text-slate-900">{totalPaginasAlumnos}</span>
+                      </div>
+
+                      <button
+                        onClick={() => setPaginaAlumnos((p) => Math.min(totalPaginasAlumnos, p + 1))}
+                        disabled={paginaAlumnos >= totalPaginasAlumnos}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
+                      >
+                        <span>Siguiente</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -891,10 +1099,67 @@ export const AdmisionesPanelPage: React.FC = () => {
                     <span>Convocatoria Semestral & Control de Periodo</span>
                   </h1>
                   <p className="text-xs text-slate-500">
-                    Parámetros del ciclo de admisión, absorción institucional y cierre de corte.
+                    Parámetros del ciclo de admisión, creación de semestres, absorción institucional y cierre de corte.
                   </p>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowAperturarModal(true)}
+                    className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors inline-flex items-center space-x-1.5"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Aperturar Convocatoria / Semestre</span>
+                  </button>
+                  {!convocatoriaActiva && ultimaConvocatoria && (
+                    <button
+                      onClick={() => reabrirConvocatoriaMutation.mutate(ultimaConvocatoria.id)}
+                      disabled={reabrirConvocatoriaMutation.isPending}
+                      className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition-colors inline-flex items-center space-x-1.5 disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>{reabrirConvocatoriaMutation.isPending ? 'Reabriendo...' : 'Reabrir Convocatoria'}</span>
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* Banner de alerta si la convocatoria está cerrada */}
+              {!convocatoriaActiva && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-sm font-bold text-amber-900">
+                        No hay una convocatoria de ingreso abierta actualmente
+                      </h3>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        {ultimaConvocatoria
+                          ? `La última convocatoria registrada (${ultimaConvocatoria.denominacion}) fue cerrada formalmente. Puedes reabrirla para seguir admitiendo postulantes o abrir una nueva para otro semestre.`
+                          : 'Apertura un periodo de ingreso para comenzar a recibir y evaluar candidatos en el programa CTS Academy.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 shrink-0">
+                    {ultimaConvocatoria && (
+                      <button
+                        onClick={() => reabrirConvocatoriaMutation.mutate(ultimaConvocatoria.id)}
+                        disabled={reabrirConvocatoriaMutation.isPending}
+                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center space-x-1 disabled:opacity-50"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Reabrir {ultimaConvocatoria.semestre || 'Convocatoria'}</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowAperturarModal(true)}
+                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center space-x-1"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Abrir Nueva</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Ficha de la Convocatoria */}
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
@@ -904,15 +1169,21 @@ export const AdmisionesPanelPage: React.FC = () => {
                       Periodo Oficial
                     </span>
                     <h2 className="text-2xl font-black text-slate-900 mt-1">
-                      {convocatoriaActiva?.denominacion || 'Convocatoria General'}
+                      {convocatoriaMostrar?.denominacion || 'Convocatoria General'}
                     </h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Modelo: <strong>{convocatoriaActiva?.modeloAdmision || 'ADMISION_CONTINUA'}</strong>
+                      Modelo: <strong>{convocatoriaMostrar?.modeloAdmision || 'ADMISION_CONTINUA'}</strong>
                     </p>
                   </div>
 
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full border border-emerald-200">
-                    {convocatoriaActiva?.estado || 'ABIERTO'}
+                  <span
+                    className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                      convocatoriaActiva
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                        : 'bg-rose-100 text-rose-800 border-rose-200'
+                    }`}
+                  >
+                    {convocatoriaActiva ? 'ABIERTA' : 'CERRADA'}
                   </span>
                 </div>
 
@@ -920,19 +1191,19 @@ export const AdmisionesPanelPage: React.FC = () => {
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-[11px] font-medium text-slate-500 block">Semestre Académico</span>
                     <span className="text-base font-black text-slate-800 mt-1 block">
-                      {convocatoriaActiva?.semestre || '2026-I'}
+                      {convocatoriaMostrar?.semestre || '2026-I'}
                     </span>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-[11px] font-medium text-slate-500 block">Total de Postulantes</span>
                     <span className="text-base font-black text-slate-800 mt-1 block">
-                      {metricasPostulacion.totalCandidatos} aspirantes
+                      {metricasPostulacion.totalCandidatos || 0} aspirantes
                     </span>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-[11px] font-medium text-slate-500 block">Admitidos en el Ciclo</span>
                     <span className="text-base font-black text-emerald-700 mt-1 block">
-                      {metricasPostulacion.admitidos} alumnos
+                      {metricasPostulacion.admitidos || 0} alumnos
                     </span>
                   </div>
                 </div>
@@ -948,6 +1219,86 @@ export const AdmisionesPanelPage: React.FC = () => {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Histórico de Convocatorias y Ciclos */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+                <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
+                  <History className="w-5 h-5 text-slate-600" />
+                  <h3 className="font-bold text-slate-900 text-base">Historial de Convocatorias Registradas</h3>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-600">
+                    <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="px-5 py-3">Convocatoria</th>
+                        <th className="px-4 py-3">Semestre</th>
+                        <th className="px-4 py-3">Fechas</th>
+                        <th className="px-4 py-3">Postulantes</th>
+                        <th className="px-4 py-3">Estado</th>
+                        <th className="px-5 py-3 text-right">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {historicoConvocatorias.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-8 text-center text-xs text-slate-400 italic">
+                            No se registran periodos de ingreso históricos.
+                          </td>
+                        </tr>
+                      ) : (
+                        historicoConvocatorias.map((conv: any) => (
+                          <tr key={conv.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="px-5 py-3.5">
+                              <span className="font-bold text-slate-900 block text-xs">
+                                {conv.denominacion}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {conv.modeloAdmision}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 text-xs font-semibold text-slate-700">
+                              {conv.semestre?.codigo || conv.semestre?.periodoSemestre || '—'}
+                            </td>
+                            <td className="px-4 py-3.5 text-xs text-slate-500">
+                              {new Date(conv.fechaInicio).toLocaleDateString()} -{' '}
+                              {new Date(conv.fechaFin).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-3.5 text-xs font-mono font-medium text-slate-700">
+                              {conv.candidatos?.length || 0} aspirantes
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span
+                                className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
+                                  conv.estado === 'ABIERTA'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-slate-100 text-slate-600 border-slate-200'
+                                }`}
+                              >
+                                {conv.estado}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3.5 text-right">
+                              {conv.estado === 'CERRADA' ? (
+                                <button
+                                  onClick={() => reabrirConvocatoriaMutation.mutate(conv.id)}
+                                  disabled={reabrirConvocatoriaMutation.isPending}
+                                  className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-lg border border-amber-200 transition-colors inline-flex items-center space-x-1"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  <span>Reabrir</span>
+                                </button>
+                              ) : (
+                                <span className="text-[11px] text-emerald-600 font-semibold">En curso</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -1210,6 +1561,15 @@ export const AdmisionesPanelPage: React.FC = () => {
         <ImportarSedeModal
           isOpen={showImportSedeModal}
           onClose={() => setShowImportSedeModal(false)}
+        />
+      )}
+
+      {/* Modal: Aperturar Nueva Convocatoria / Semestre */}
+      {showAperturarModal && (
+        <AperturarConvocatoriaModal
+          isOpen={showAperturarModal}
+          onClose={() => setShowAperturarModal(false)}
+          semestresDisponibles={semestresDisponibles}
         />
       )}
     </div>

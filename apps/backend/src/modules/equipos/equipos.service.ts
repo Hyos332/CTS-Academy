@@ -98,11 +98,25 @@ export class EquiposService {
       },
     });
 
+    // Última convocatoria registrada (aunque esté cerrada)
+    const ultimaConvocatoria = await this.prisma.convocatoria.findFirst({
+      orderBy: { fecha_apertura: 'desc' },
+      include: {
+        semestre: {
+          include: { curso_academico: true },
+        },
+        informe_corte: true,
+      },
+    });
+
+    // Convocatoria objetivo para métricas y candidatos: la activa si existe, o la última registrada
+    const convocatoriaObjetivo = convocatoriaActiva || ultimaConvocatoria;
+
     // Conteos de postulaciones por estado
     const candidatosPorEstado = await this.prisma.candidato.groupBy({
       by: ['estado_postulacion'],
       _count: { id: true },
-      where: convocatoriaActiva ? { convocatoria_id: convocatoriaActiva.id } : undefined,
+      where: convocatoriaObjetivo ? { convocatoria_id: convocatoriaObjetivo.id } : undefined,
     });
 
     const estadoDistribucion: Record<string, number> = {};
@@ -111,7 +125,25 @@ export class EquiposService {
     }
 
     const totalCandidatos = await this.prisma.candidato.count({
-      where: convocatoriaActiva ? { convocatoria_id: convocatoriaActiva.id } : undefined,
+      where: convocatoriaObjetivo ? { convocatoria_id: convocatoriaObjetivo.id } : undefined,
+    });
+
+    // Semestres disponibles para nuevas convocatorias
+    const semestresDisponibles = await this.prisma.semestre.findMany({
+      orderBy: { fecha_inicio: 'desc' },
+      include: { curso_academico: true },
+    });
+
+    // Histórico de convocatorias
+    const historicoConvocatorias = await this.prisma.convocatoria.findMany({
+      orderBy: { fecha_apertura: 'desc' },
+      take: 10,
+      include: {
+        semestre: {
+          include: { curso_academico: true },
+        },
+        _count: { select: { candidatos: true } },
+      },
     });
 
     // Equipos con detalle completo de líderes y miembros
@@ -138,7 +170,7 @@ export class EquiposService {
 
     // Listado de candidatos postulados a la convocatoria
     const candidatos = await this.prisma.candidato.findMany({
-      where: convocatoriaActiva ? { convocatoria_id: convocatoriaActiva.id } : undefined,
+      where: convocatoriaObjetivo ? { convocatoria_id: convocatoriaObjetivo.id } : undefined,
       orderBy: { creado_en: 'desc' },
       include: {
         usuario: { select: { id: true, email: true, nombre: true, apellidos: true } },
@@ -166,6 +198,34 @@ export class EquiposService {
             semestre: `${convocatoriaActiva.semestre.curso_academico.denominacion} - ${convocatoriaActiva.semestre.periodo}`,
           }
         : null,
+      ultimaConvocatoria: ultimaConvocatoria
+        ? {
+            id: ultimaConvocatoria.id,
+            denominacion: ultimaConvocatoria.denominacion,
+            estado: ultimaConvocatoria.estado,
+            fechaApertura: ultimaConvocatoria.fecha_apertura,
+            fechaCierre: ultimaConvocatoria.fecha_cierre,
+            modeloAdmision: ultimaConvocatoria.modelo_admision,
+            semestre: `${ultimaConvocatoria.semestre.curso_academico.denominacion} - ${ultimaConvocatoria.semestre.periodo}`,
+            tieneInformeCorte: Boolean(ultimaConvocatoria.informe_corte),
+          }
+        : null,
+      semestresDisponibles: semestresDisponibles.map((s) => ({
+        id: s.id,
+        periodo: s.periodo,
+        fechaInicio: s.fecha_inicio,
+        fechaFin: s.fecha_fin,
+        cursoAcademico: s.curso_academico.denominacion,
+      })),
+      historicoConvocatorias: historicoConvocatorias.map((h) => ({
+        id: h.id,
+        denominacion: h.denominacion,
+        estado: h.estado,
+        fechaApertura: h.fecha_apertura,
+        fechaCierre: h.fecha_cierre,
+        semestre: `${h.semestre.curso_academico.denominacion} - ${h.semestre.periodo}`,
+        totalCandidatos: h._count.candidatos,
+      })),
       metricasPostulacion: {
         totalCandidatos,
         distribucionPorEstado: estadoDistribucion,
@@ -284,17 +344,54 @@ export class EquiposService {
       throw new BadRequestException('La fecha de apertura debe ser anterior a la fecha de cierre de la convocatoria.');
     }
 
-    const semestre = await this.prisma.semestre.findUnique({
-      where: { id: dto.semestreId },
-    });
+    let semestreId = dto.semestreId;
 
-    if (!semestre) {
-      throw new NotFoundException(`Semestre académico con ID ${dto.semestreId} no encontrado.`);
+    if (!semestreId) {
+      // Si no se proporcionó semestreId existente, se crea un nuevo semestre (y curso si aplica)
+      const periodo = dto.periodoSemestre?.trim() || 'SEM-01';
+      const cursoDenominacion =
+        dto.cursoDenominacion?.trim() || `Curso ${apertura.getFullYear()}-${apertura.getFullYear() + 1}`;
+      const anioInicio = dto.anioInicio || apertura.getFullYear();
+      const anioFin = dto.anioFin || apertura.getFullYear() + 1;
+
+      let curso = await this.prisma.cursoAcademico.findFirst({
+        where: { denominacion: cursoDenominacion },
+      });
+
+      if (!curso) {
+        curso = await this.prisma.cursoAcademico.create({
+          data: {
+            denominacion: cursoDenominacion,
+            anio_inicio: anioInicio,
+            anio_fin: anioFin,
+            activo: true,
+          },
+        });
+      }
+
+      const nuevoSemestre = await this.prisma.semestre.create({
+        data: {
+          curso_academico_id: curso.id,
+          periodo: periodo,
+          fecha_inicio: apertura,
+          fecha_fin: cierre,
+        },
+      });
+
+      semestreId = nuevoSemestre.id;
+    } else {
+      const semestre = await this.prisma.semestre.findUnique({
+        where: { id: semestreId },
+      });
+
+      if (!semestre) {
+        throw new NotFoundException(`Semestre académico con ID ${semestreId} no encontrado.`);
+      }
     }
 
     const convocatoria = await this.prisma.convocatoria.create({
       data: {
-        semestre_id: dto.semestreId,
+        semestre_id: semestreId,
         denominacion: dto.denominacion.trim(),
         estado: 'ABIERTA',
         fecha_apertura: apertura,
@@ -305,6 +402,26 @@ export class EquiposService {
 
     this.logger.log(`Nueva convocatoria de admisión abierta: ${convocatoria.denominacion} (${convocatoria.id})`);
     return convocatoria;
+  }
+
+  async reabrirConvocatoria(convocatoriaId: string) {
+    const convocatoria = await this.prisma.convocatoria.findUnique({
+      where: { id: convocatoriaId },
+    });
+
+    if (!convocatoria) {
+      throw new NotFoundException(`Convocatoria ${convocatoriaId} no encontrada.`);
+    }
+
+    const actualizada = await this.prisma.convocatoria.update({
+      where: { id: convocatoriaId },
+      data: {
+        estado: 'ABIERTA',
+      },
+    });
+
+    this.logger.log(`Convocatoria ${convocatoria.denominacion} reabierta exitosamente.`);
+    return actualizada;
   }
 
   async cerrarCorteSemestral(convocatoriaId: string, gestorId: string, dto: CerrarCorteSemestralDto) {

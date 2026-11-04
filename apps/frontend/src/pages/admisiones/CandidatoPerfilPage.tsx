@@ -251,7 +251,7 @@ export const CandidatoPerfilPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
         {/* Barra superior de navegación y estado */}
         <div className="flex items-center justify-between">
           <button
