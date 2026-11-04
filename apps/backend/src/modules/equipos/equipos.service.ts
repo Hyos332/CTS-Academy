@@ -87,36 +87,25 @@ export class EquiposService {
   }
 
   async obtenerPanelAdmisiones() {
-    // Convocatoria abierta más reciente
-    const convocatoriaActiva = await this.prisma.convocatoria.findFirst({
-      where: { estado: 'ABIERTA' },
-      orderBy: { fecha_apertura: 'desc' },
-      include: {
-        semestre: {
-          include: { curso_academico: true },
-        },
-      },
-    });
-
-    // Última convocatoria registrada (aunque esté cerrada)
-    const ultimaConvocatoria = await this.prisma.convocatoria.findFirst({
+    // Todas las convocatorias existentes registradas ordenadas por fecha_apertura desc
+    const todasLasConvocatorias = await this.prisma.convocatoria.findMany({
       orderBy: { fecha_apertura: 'desc' },
       include: {
         semestre: {
           include: { curso_academico: true },
         },
         informe_corte: true,
+        _count: { select: { candidatos: true } },
       },
     });
 
-    // Convocatoria objetivo para métricas y candidatos: la activa si existe, o la última registrada
-    const convocatoriaObjetivo = convocatoriaActiva || ultimaConvocatoria;
+    const convocatoriaActiva = todasLasConvocatorias.find((c) => c.estado === 'ABIERTA') || null;
+    const ultimaConvocatoria = todasLasConvocatorias[0] || null;
 
-    // Conteos de postulaciones por estado
+    // Conteos globales de postulaciones por estado
     const candidatosPorEstado = await this.prisma.candidato.groupBy({
       by: ['estado_postulacion'],
       _count: { id: true },
-      where: convocatoriaObjetivo ? { convocatoria_id: convocatoriaObjetivo.id } : undefined,
     });
 
     const estadoDistribucion: Record<string, number> = {};
@@ -124,9 +113,7 @@ export class EquiposService {
       estadoDistribucion[item.estado_postulacion] = item._count.id;
     }
 
-    const totalCandidatos = await this.prisma.candidato.count({
-      where: convocatoriaObjetivo ? { convocatoria_id: convocatoriaObjetivo.id } : undefined,
-    });
+    const totalCandidatos = await this.prisma.candidato.count();
 
     // Semestres disponibles para nuevas convocatorias
     const semestresDisponibles = await this.prisma.semestre.findMany({
@@ -134,17 +121,18 @@ export class EquiposService {
       include: { curso_academico: true },
     });
 
-    // Histórico de convocatorias
-    const historicoConvocatorias = await this.prisma.convocatoria.findMany({
-      orderBy: { fecha_apertura: 'desc' },
-      take: 10,
-      include: {
-        semestre: {
-          include: { curso_academico: true },
-        },
-        _count: { select: { candidatos: true } },
-      },
-    });
+    // Formateo consolidado de convocatorias
+    const convocatoriasFormateadas = todasLasConvocatorias.map((h) => ({
+      id: h.id,
+      denominacion: h.denominacion,
+      estado: h.estado,
+      fechaApertura: h.fecha_apertura,
+      fechaCierre: h.fecha_cierre,
+      modeloAdmision: h.modelo_admision,
+      semestre: `${h.semestre.curso_academico.denominacion} - ${h.semestre.periodo}`,
+      totalCandidatos: h._count.candidatos,
+      tieneInformeCorte: Boolean(h.informe_corte),
+    }));
 
     // Equipos con detalle completo de líderes y miembros
     const equipos = await this.prisma.equipo.findMany({
@@ -168,12 +156,24 @@ export class EquiposService {
       },
     });
 
-    // Listado de candidatos postulados a la convocatoria
+    // Listado de TODOS los candidatos de todas las convocatorias (no se eliminan ni filtran en la BD)
     const candidatos = await this.prisma.candidato.findMany({
-      where: convocatoriaObjetivo ? { convocatoria_id: convocatoriaObjetivo.id } : undefined,
       orderBy: { creado_en: 'desc' },
       include: {
         usuario: { select: { id: true, email: true, nombre: true, apellidos: true } },
+        convocatoria: {
+          select: {
+            id: true,
+            denominacion: true,
+            estado: true,
+            semestre: {
+              select: {
+                periodo: true,
+                curso_academico: { select: { denominacion: true } },
+              },
+            },
+          },
+        },
         tests: { select: { id: true, tipo_bateria: true, estado: true, calificacion_obtenida: true } },
         entrevista: {
           select: {
@@ -210,21 +210,14 @@ export class EquiposService {
             tieneInformeCorte: Boolean(ultimaConvocatoria.informe_corte),
           }
         : null,
+      convocatorias: convocatoriasFormateadas,
+      historicoConvocatorias: convocatoriasFormateadas,
       semestresDisponibles: semestresDisponibles.map((s) => ({
         id: s.id,
         periodo: s.periodo,
         fechaInicio: s.fecha_inicio,
         fechaFin: s.fecha_fin,
         cursoAcademico: s.curso_academico.denominacion,
-      })),
-      historicoConvocatorias: historicoConvocatorias.map((h) => ({
-        id: h.id,
-        denominacion: h.denominacion,
-        estado: h.estado,
-        fechaApertura: h.fecha_apertura,
-        fechaCierre: h.fecha_cierre,
-        semestre: `${h.semestre.curso_academico.denominacion} - ${h.semestre.periodo}`,
-        totalCandidatos: h._count.candidatos,
       })),
       metricasPostulacion: {
         totalCandidatos,
@@ -250,6 +243,12 @@ export class EquiposService {
           perfilCompetencias: c.perfil_competencias,
           invitacionEnviada: Boolean(perfil.invitacion?.enviada),
           fechaInvitacion: perfil.invitacion?.fecha || null,
+          convocatoriaId: c.convocatoria_id,
+          convocatoriaNombre: c.convocatoria?.denominacion || 'Convocatoria General',
+          convocatoriaEstado: c.convocatoria?.estado || 'ABIERTA',
+          semestreNombre: c.convocatoria?.semestre
+            ? `${c.convocatoria.semestre.curso_academico.denominacion} - ${c.convocatoria.semestre.periodo}`
+            : '—',
           tests: c.tests.map((t) => ({
             id: t.id,
             tipoBateria: t.tipo_bateria,

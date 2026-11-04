@@ -43,6 +43,7 @@ export const AdmisionesPanelPage: React.FC = () => {
   >('candidatos');
 
   // Filtros de búsqueda
+  const [filtroConvocatoria, setFiltroConvocatoria] = useState<string>('TODAS');
   const [busquedaCandidato, setBusquedaCandidato] = useState('');
   const [filtroEstadoCandidato, setFiltroEstadoCandidato] = useState('TODOS');
   const [filtroSedeCandidato, setFiltroSedeCandidato] = useState('TODAS');
@@ -61,6 +62,7 @@ export const AdmisionesPanelPage: React.FC = () => {
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showImportSedeModal, setShowImportSedeModal] = useState(false);
+  const [convocatoriaDestinoId, setConvocatoriaDestinoId] = useState('');
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevoApellidos, setNuevoApellidos] = useState('');
   const [nuevoEmail, setNuevoEmail] = useState('');
@@ -182,6 +184,7 @@ export const AdmisionesPanelPage: React.FC = () => {
   const {
     convocatoriaActiva,
     ultimaConvocatoria,
+    convocatorias = [],
     semestresDisponibles = [],
     historicoConvocatorias = [],
     metricasPostulacion = {},
@@ -190,7 +193,30 @@ export const AdmisionesPanelPage: React.FC = () => {
     alumnosSinEquipo = [],
   } = data;
 
-  const convocatoriaMostrar = convocatoriaActiva || ultimaConvocatoria;
+  const listaConvocatorias = convocatorias.length > 0 ? convocatorias : historicoConvocatorias;
+
+  // Convocatoria en foco seleccionada (si se eligió una en específico o por defecto la activa/última)
+  const convocatoriaFoco =
+    filtroConvocatoria !== 'TODAS'
+      ? listaConvocatorias.find((c: any) => c.id === filtroConvocatoria) || convocatoriaActiva || ultimaConvocatoria
+      : convocatoriaActiva || ultimaConvocatoria;
+
+  const convocatoriaMostrar = convocatoriaFoco || ultimaConvocatoria;
+
+  // Métricas reactivas calculadas según la convocatoria en foco (o todas si está en 'TODAS')
+  const candidatosEnFoco =
+    filtroConvocatoria !== 'TODAS'
+      ? (candidatos || []).filter((c: any) => c.convocatoriaId === filtroConvocatoria)
+      : (candidatos || []);
+
+  const metricasActivas = {
+    totalCandidatos: candidatosEnFoco.length,
+    enProceso: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'EN_PROCESO').length,
+    testsCompletados: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'TESTS_COMPLETADOS').length,
+    entrevistaAgendada: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ENTREVISTA_AGENDADA').length,
+    admitidos: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ADMITIDO').length,
+    rechazados: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'RECHAZADO').length,
+  };
 
   // Lista consolidada de todos los alumnos asignados en los squads
   const todosLosAlumnos = (equipos || []).flatMap((eq: any) =>
@@ -215,7 +241,10 @@ export const AdmisionesPanelPage: React.FC = () => {
     const coincideSede =
       filtroSedeCandidato === 'TODAS' || cand.sedeOrigen === filtroSedeCandidato;
 
-    return coincideTexto && coincideEstado && coincideSede;
+    const coincideConvocatoria =
+      filtroConvocatoria === 'TODAS' || cand.convocatoriaId === filtroConvocatoria;
+
+    return coincideTexto && coincideEstado && coincideSede && coincideConvocatoria;
   });
 
   const totalCandidatosFiltrados = candidatosFiltrados.length;
@@ -252,26 +281,49 @@ export const AdmisionesPanelPage: React.FC = () => {
         {/* ========================================================= */}
         <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4">
           {/* Tarjeta de Contexto de la Convocatoria */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Periodo en Foco
+              </span>
               <span
                 className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
-                  convocatoriaActiva
+                  convocatoriaMostrar?.estado === 'ABIERTA'
                     ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                    : 'text-rose-700 bg-rose-50 border-rose-200'
+                    : 'text-slate-600 bg-slate-100 border-slate-200'
                 }`}
               >
-                {convocatoriaActiva ? 'Convocatoria Abierta' : 'Convocatoria Cerrada'}
+                {filtroConvocatoria === 'TODAS'
+                  ? 'Todas las Convocatorias'
+                  : convocatoriaMostrar?.estado || 'CERRADA'}
               </span>
             </div>
-            <h2 className="text-sm font-black text-slate-900 mt-2 truncate">
-              {convocatoriaMostrar?.denominacion || 'Sin Convocatoria Activa'}
-            </h2>
-            <div className="flex items-center space-x-2 text-xs text-slate-500 mt-1">
-              <span>Semestre: <strong>{convocatoriaMostrar?.semestre || 'No asignado'}</strong></span>
-              <span>•</span>
-              <span className={convocatoriaActiva ? 'text-emerald-600 font-semibold' : 'text-slate-500 font-semibold'}>
-                {convocatoriaActiva ? 'ACTIVA' : 'CERRADA'}
+
+            <div>
+              <label className="block text-[11px] font-medium text-slate-500 mb-1">
+                Cambiar Periodo / Convocatoria:
+              </label>
+              <select
+                value={filtroConvocatoria}
+                onChange={(e) => {
+                  setFiltroConvocatoria(e.target.value);
+                  setPaginaCandidatos(1);
+                }}
+                className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none cursor-pointer"
+              >
+                <option value="TODAS">🌐 Todas las Convocatorias ({candidatos?.length || 0})</option>
+                {listaConvocatorias.map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.estado === 'ABIERTA' ? '🟢' : '⚪'} {c.denominacion} ({c.totalCandidatos} post.)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+              <span className="truncate">Semestre: <strong className="text-slate-700">{convocatoriaMostrar?.semestre || 'General'}</strong></span>
+              <span className="text-[11px] font-mono font-bold text-brand-600">
+                {metricasActivas.totalCandidatos} post.
               </span>
             </div>
           </div>
@@ -464,31 +516,31 @@ export const AdmisionesPanelPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Embudo de Candidatos (Métricas en 6 Tarjetas) */}
+              {/* Embudo de Candidatos (Métricas reactivas según la convocatoria seleccionada) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
                   <span className="text-[11px] font-medium text-slate-500 block">Postulados</span>
-                  <p className="text-xl font-black text-slate-900 mt-0.5">{metricasPostulacion.totalCandidatos}</p>
+                  <p className="text-xl font-black text-slate-900 mt-0.5">{metricasActivas.totalCandidatos}</p>
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-blue-200/70 shadow-xs bg-blue-50/20">
                   <span className="text-[11px] font-medium text-blue-700 block">En Proceso</span>
-                  <p className="text-xl font-black text-blue-900 mt-0.5">{metricasPostulacion.enProceso}</p>
+                  <p className="text-xl font-black text-blue-900 mt-0.5">{metricasActivas.enProceso}</p>
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-indigo-200/70 shadow-xs bg-indigo-50/20">
                   <span className="text-[11px] font-medium text-indigo-700 block">Tests Listos</span>
-                  <p className="text-xl font-black text-indigo-900 mt-0.5">{metricasPostulacion.testsCompletados}</p>
+                  <p className="text-xl font-black text-indigo-900 mt-0.5">{metricasActivas.testsCompletados}</p>
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-purple-200/70 shadow-xs bg-purple-50/20">
                   <span className="text-[11px] font-medium text-purple-700 block">Entrevistas</span>
-                  <p className="text-xl font-black text-purple-900 mt-0.5">{metricasPostulacion.entrevistaAgendada}</p>
+                  <p className="text-xl font-black text-purple-900 mt-0.5">{metricasActivas.entrevistaAgendada}</p>
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-emerald-200/70 shadow-xs bg-emerald-50/20">
                   <span className="text-[11px] font-medium text-emerald-700 block">Admitidos</span>
-                  <p className="text-xl font-black text-emerald-900 mt-0.5">{metricasPostulacion.admitidos}</p>
+                  <p className="text-xl font-black text-emerald-900 mt-0.5">{metricasActivas.admitidos}</p>
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-red-200/70 shadow-xs bg-red-50/20">
                   <span className="text-[11px] font-medium text-red-700 block">Rechazados</span>
-                  <p className="text-xl font-black text-red-900 mt-0.5">{metricasPostulacion.rechazados}</p>
+                  <p className="text-xl font-black text-red-900 mt-0.5">{metricasActivas.rechazados}</p>
                 </div>
               </div>
 
@@ -508,7 +560,27 @@ export const AdmisionesPanelPage: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Filtro Convocatoria */}
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    <select
+                      value={filtroConvocatoria}
+                      onChange={(e) => {
+                        setFiltroConvocatoria(e.target.value);
+                        setPaginaCandidatos(1);
+                      }}
+                      className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 max-w-[210px] truncate"
+                    >
+                      <option value="TODAS">Todas las Convocatorias ({candidatos?.length || 0})</option>
+                      {listaConvocatorias.map((c: any) => (
+                        <option key={c.id} value={c.id}>
+                          {c.estado === 'ABIERTA' ? '🟢' : '⚪'} {c.denominacion} ({c.totalCandidatos})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="flex items-center space-x-1">
                     <Filter className="w-3.5 h-3.5 text-slate-400" />
                     <select
@@ -553,6 +625,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                     <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                       <tr>
                         <th className="px-5 py-3.5">Candidato</th>
+                        <th className="px-4 py-3.5">Convocatoria</th>
                         <th className="px-4 py-3.5">Sede</th>
                         <th className="px-4 py-3.5">Estado Postulación</th>
                         <th className="px-4 py-3.5">Invitación & Credenciales</th>
@@ -564,7 +637,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                     <tbody className="divide-y divide-slate-100">
                       {candidatosFiltrados.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="px-6 py-12 text-center text-xs text-slate-400 italic">
+                          <td colSpan={8} className="px-6 py-12 text-center text-xs text-slate-400 italic">
                             No se encontraron candidatos con los filtros seleccionados.
                           </td>
                         </tr>
@@ -586,6 +659,28 @@ export const AdmisionesPanelPage: React.FC = () => {
                                 <span className="text-[11px] text-slate-400 block font-mono">
                                   {cand.email}
                                 </span>
+                              </td>
+                              {/* Campo de Convocatoria en la que entró */}
+                              <td className="px-4 py-3.5">
+                                <div className="max-w-[190px]">
+                                  <span className="font-semibold text-slate-900 block text-xs truncate" title={cand.convocatoriaNombre}>
+                                    {cand.convocatoriaNombre}
+                                  </span>
+                                  <div className="flex items-center space-x-1.5 mt-0.5">
+                                    <span className="text-[10px] text-slate-500 font-mono truncate" title={cand.semestreNombre}>
+                                      {cand.semestreNombre}
+                                    </span>
+                                    <span
+                                      className={`px-1.5 py-0.2 rounded text-[9px] font-bold shrink-0 ${
+                                        cand.convocatoriaEstado === 'ABIERTA'
+                                          ? 'bg-emerald-50 text-emerald-700'
+                                          : 'bg-slate-100 text-slate-500'
+                                      }`}
+                                    >
+                                      {cand.convocatoriaEstado === 'ABIERTA' ? 'Activa' : 'Cerrada'}
+                                    </span>
+                                  </div>
+                                </div>
                               </td>
                               <td className="px-4 py-3.5 text-xs font-mono font-medium text-slate-600">
                                 {cand.sedeOrigen}
@@ -1280,18 +1375,31 @@ export const AdmisionesPanelPage: React.FC = () => {
                               </span>
                             </td>
                             <td className="px-5 py-3.5 text-right">
-                              {conv.estado === 'CERRADA' ? (
+                              <div className="flex items-center justify-end space-x-2">
                                 <button
-                                  onClick={() => reabrirConvocatoriaMutation.mutate(conv.id)}
-                                  disabled={reabrirConvocatoriaMutation.isPending}
-                                  className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-lg border border-amber-200 transition-colors inline-flex items-center space-x-1"
+                                  onClick={() => {
+                                    setFiltroConvocatoria(conv.id);
+                                    setSeccionActiva('candidatos');
+                                  }}
+                                  className="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold rounded-lg border border-brand-200 transition-colors inline-flex items-center space-x-1"
+                                  title="Ver y filtrar candidatos de esta convocatoria"
                                 >
-                                  <RotateCcw className="w-3 h-3" />
-                                  <span>Reabrir</span>
+                                  <Users className="w-3 h-3" />
+                                  <span>Ver Candidatos</span>
                                 </button>
-                              ) : (
-                                <span className="text-[11px] text-emerald-600 font-semibold">En curso</span>
-                              )}
+                                {conv.estado === 'CERRADA' ? (
+                                  <button
+                                    onClick={() => reabrirConvocatoriaMutation.mutate(conv.id)}
+                                    disabled={reabrirConvocatoriaMutation.isPending}
+                                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-lg border border-amber-200 transition-colors inline-flex items-center space-x-1"
+                                  >
+                                    <RotateCcw className="w-3 h-3" />
+                                    <span>Reabrir</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-[11px] text-emerald-600 font-semibold px-1">En curso</span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -1458,6 +1566,23 @@ export const AdmisionesPanelPage: React.FC = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Convocatoria de Destino
+                </label>
+                <select
+                  value={convocatoriaDestinoId || (convocatoriaFoco?.id || convocatoriaActiva?.id || '')}
+                  onChange={(e) => setConvocatoriaDestinoId(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                >
+                  {listaConvocatorias.map((c: any) => (
+                    <option key={c.id} value={c.id}>
+                      {c.estado === 'ABIERTA' ? '🟢 [ABIERTA]' : '⚪ [CERRADA]'} {c.denominacion} ({c.semestre})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Opción de envío inmediato de credenciales */}
               <div className="p-3 bg-indigo-50/70 border border-indigo-200/60 rounded-xl space-y-1.5">
                 <label className="flex items-center space-x-2 text-xs font-semibold text-indigo-950 cursor-pointer">
@@ -1483,7 +1608,11 @@ export const AdmisionesPanelPage: React.FC = () => {
                 Cancelar
               </button>
               <button
-                onClick={() => registrarCandidatoMutation.mutate(convocatoriaActiva?.id)}
+                onClick={() =>
+                  registrarCandidatoMutation.mutate(
+                    convocatoriaDestinoId || convocatoriaFoco?.id || convocatoriaActiva?.id,
+                  )
+                }
                 disabled={
                   !nuevoNombre.trim() ||
                   !nuevoApellidos.trim() ||
