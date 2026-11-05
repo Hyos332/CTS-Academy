@@ -77,7 +77,7 @@ export const ReportePruebaTecnicaView: React.FC<ReportePruebaTecnicaViewProps> =
     codigo: 'TEAM-01',
     nombre: 'Fénix',
     especialidad: 'Desarrollo de aplicaciones web internas y proyectos europeos',
-    lider: 'Diego Moys (Tech Lead)',
+    lider: 'Alejandro Ruiz (Tech Lead)',
     afinidadPorcentaje: 88,
     justificacion:
       'Solidez destacada en desarrollo de aplicaciones web, APIs RESTful con PHP/Laravel y frontend con React/Vue. Encaja de forma óptima en el stack de Fénix.',

@@ -22,6 +22,7 @@ import {
   Terminal,
   Sparkles,
   Users,
+  X,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -61,10 +62,10 @@ export const CandidatoPerfilPage: React.FC = () => {
   const [modalAbandonar, setModalAbandonar] = useState(false);
   const [modalInvitacion, setModalInvitacion] = useState(false);
 
-  // Vista activa: 'resumen' (página única sintetizada) o vista detallada de un test
+  // Vista activa: 'resumen' (página única sintetizada) o desglose individual
   const [vistaDetallada, setVistaDetallada] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz' | 'tecnicoCts'>('resumen');
 
-  // Obtener perfil detallado del candidato (con cálculo de recomendación de squad)
+  // Obtener perfil detallado del candidato
   const { data: candidato, isLoading, error } = useQuery({
     queryKey: ['candidato-perfil', id],
     queryFn: async () => {
@@ -73,7 +74,7 @@ export const CandidatoPerfilPage: React.FC = () => {
     },
   });
 
-  // Obtener lista de equipos para el selector de admisión
+  // Obtener lista de equipos
   const { data: equiposData } = useQuery({
     queryKey: ['equipos-list'],
     queryFn: async () => {
@@ -113,7 +114,7 @@ export const CandidatoPerfilPage: React.FC = () => {
     },
   });
 
-  // Mutación: Admitir Alumno Profer (otorga porcentaje de acceso: 100%, 66%, 50%, 0% y asigna squad)
+  // Mutación: Admitir Alumno Profer
   const admitirMutation = useMutation({
     mutationFn: async () => {
       return apiClient.post(`/evaluacion/candidatos/${id}/admitir`, {
@@ -128,7 +129,7 @@ export const CandidatoPerfilPage: React.FC = () => {
     },
   });
 
-  // Mutación: Registrar Abandono de Candidatura (nunca "rechazado")
+  // Mutación: Registrar Abandono de Candidatura
   const abandonarMutation = useMutation({
     mutationFn: async () => {
       return apiClient.post(`/evaluacion/candidatos/${id}/abandonar`, {
@@ -163,7 +164,7 @@ export const CandidatoPerfilPage: React.FC = () => {
     if (!fechaEntrevista) return;
     const fechaObj = new Date(fechaEntrevista);
     const startStr = fechaObj.toISOString().replace(/-|:|\.\d\d\d/g, '');
-    const endObj = new Date(fechaObj.getTime() + 45 * 60000); // 45 min
+    const endObj = new Date(fechaObj.getTime() + 45 * 60000);
     const endStr = endObj.toISOString().replace(/-|:|\.\d\d\d/g, '');
     const title = encodeURIComponent(
       `Entrevista Técnica PROFER - ${candidato?.usuario?.nombre} ${candidato?.usuario?.apellidos}`,
@@ -180,22 +181,25 @@ export const CandidatoPerfilPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-10 h-10 border-3 border-[#01579B] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-[#616161]">Cargando Expediente del Postulante...</span>
+        </div>
       </div>
     );
   }
 
   if (error || !candidato) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans">
         <Navbar />
         <main className="w-full px-4 sm:px-6 lg:px-8 py-12 text-center">
-          <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Candidato no encontrado</h2>
+          <ShieldAlert className="w-12 h-12 text-[#D32F2F] mx-auto mb-3" />
+          <h2 className="text-xl font-bold text-[#212121] mb-2">Candidato no encontrado</h2>
           <button
             onClick={() => navigate('/admisiones/panel')}
-            className="mt-4 px-4 py-2 bg-slate-800 text-white rounded-lg text-sm"
+            className="mt-4 px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
           >
             Volver al Panel de Admisiones
           </button>
@@ -239,10 +243,10 @@ export const CandidatoPerfilPage: React.FC = () => {
   } else if (testsCompletadosCount > 0 || candidato.estado_postulacion === 'EN_PROCESO') {
     etapaActual = 2;
   } else {
-    etapaActual = 2; // Registro ya completado
+    etapaActual = 2;
   }
 
-  // Preparar datos para el radar de aptitud en el resumen
+  // Preparar datos para el radar de aptitud
   const categoriasAptitud = matrizAptitudes?.categorias || [];
   const radarDataAptitud = categoriasAptitud.map((cat: any) => {
     const avg =
@@ -259,18 +263,17 @@ export const CandidatoPerfilPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans text-[#212121]">
       <Navbar />
 
-      {/* ANCHO COMPLETO DE PANTALLA (Punto 6) */}
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-5 flex-1 space-y-6">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
         
         {/* ========================================================= */}
-        {/* CONTENEDOR 1: CABECERA INTEGRADA + FLUJO EN CÍRCULOS     */}
+        {/* ENCABEZADO PRINCIPAL DE EXPEDIENTE + ACCIONES DE DICTAMEN */}
         {/* ========================================================= */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-          {/* Barra superior de navegación y acciones de dictamen */}
-          <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
+          {/* Barra Superior: Retorno y Botones de Decisión */}
+          <div className="px-6 py-3.5 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <button
               onClick={() => {
                 if (vistaDetallada !== 'resumen') {
@@ -279,9 +282,9 @@ export const CandidatoPerfilPage: React.FC = () => {
                   navigate('/admisiones/panel');
                 }
               }}
-              className="inline-flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center space-x-2 text-xs font-semibold text-[#616161] hover:text-[#01579B] transition-colors cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 text-slate-400" />
+              <ArrowLeft className="w-4 h-4 text-[#757575]" />
               <span>
                 {vistaDetallada !== 'resumen'
                   ? '← Volver al Expediente Principal'
@@ -289,18 +292,18 @@ export const CandidatoPerfilPage: React.FC = () => {
               </span>
             </button>
 
-            {/* Chip de Estado + Botones de Decisión al lado */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            {/* Chip de Estado Oficial FUNIBER + Botones de Decisión */}
+            <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider border inline-flex items-center space-x-1.5 ${
+                className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border inline-flex items-center space-x-1.5 ${
                   yaAdmitido
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]'
                     : yaAbandonado
-                    ? 'bg-amber-50 text-amber-800 border-amber-300'
-                    : 'bg-blue-50 text-blue-800 border-blue-300'
+                    ? 'bg-[#FFEBEE] text-[#B71C1C] border-[#FFCDD2]'
+                    : 'bg-[#E6EFF5] text-[#01579B] border-[#CCDDEB]'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${yaAdmitido ? 'bg-emerald-500' : yaAbandonado ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                <span className={`w-2 h-2 rounded-full ${yaAdmitido ? 'bg-[#4CAF50]' : yaAbandonado ? 'bg-[#F44336]' : 'bg-[#01579B]'}`} />
                 <span>
                   {yaAdmitido
                     ? `Admitido • ${porcentajeOtorgado ?? 100}% Acceso`
@@ -319,7 +322,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                       }
                       setModalAdmitir(true);
                     }}
-                    className="px-3.5 py-1.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+                    className="px-3.5 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-1.5 cursor-pointer"
                   >
                     <UserCheck className="w-3.5 h-3.5" />
                     <span>Admitir Alumno</span>
@@ -327,10 +330,10 @@ export const CandidatoPerfilPage: React.FC = () => {
 
                   <button
                     onClick={() => setModalAbandonar(true)}
-                    className="px-3.5 py-1.5 border border-amber-300 bg-amber-50/50 text-amber-800 hover:bg-amber-100 text-xs font-bold rounded-lg transition-colors flex items-center space-x-1.5 cursor-pointer"
-                    title="Marcar si el candidato decide no continuar o no incorporarse"
+                    className="px-3.5 py-1.5 border border-[#FFCDD2] bg-[#FFEBEE] text-[#B71C1C] hover:bg-[#FFCDD2]/60 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 cursor-pointer"
+                    title="Registrar si el candidato desiste de incorporarse al programa"
                   >
-                    <UserX className="w-3.5 h-3.5 text-amber-700" />
+                    <UserX className="w-3.5 h-3.5 text-[#B71C1C]" />
                     <span>Abandonar Candidatura</span>
                   </button>
                 </>
@@ -338,66 +341,65 @@ export const CandidatoPerfilPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Información del Postulante & Botones de Reporte */}
-          <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-200/80">
+          {/* Datos del Candidato & Acciones Secundarias */}
+          <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-[#EEEEEE]">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black text-[#212121] tracking-tight">
                   {candidato.usuario?.nombre} {candidato.usuario?.apellidos}
                 </h1>
                 {porcentajeOtorgado !== undefined && porcentajeOtorgado !== null && (
-                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-100 text-[#01579B] border border-blue-200">
+                  <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB]">
                     {porcentajeOtorgado}% Beca / Acceso Otorgado
                   </span>
                 )}
               </div>
 
-              <p className="text-xs text-slate-500 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="text-xs text-[#757575] mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>
-                  Email: <strong className="text-slate-800 font-mono">{candidato.usuario?.email}</strong>
+                  Email: <strong className="text-[#212121] font-mono">{candidato.usuario?.email}</strong>
                 </span>
                 <span>•</span>
                 <span>
-                  Sede: <strong className="text-slate-800">{candidato.sede_origen}</strong>
+                  Sede: <strong className="text-[#424242] font-mono">{candidato.sede_origen}</strong>
                 </span>
                 <span>•</span>
                 <span>
-                  Teléfono: <strong className="text-slate-800">{candidato.telefono || 'No registrado'}</strong>
+                  Teléfono: <strong className="text-[#424242]">{candidato.telefono || 'No registrado'}</strong>
                 </span>
                 <span>•</span>
                 <span>
-                  Convocatoria: <strong className="text-slate-700">{candidato.convocatoria?.denominacion}</strong>
+                  Convocatoria: <strong className="text-[#01579B]">{candidato.convocatoria?.denominacion}</strong>
                 </span>
               </p>
             </div>
 
-            {/* Acciones principales de expediente */}
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setShowPdfModal(true)}
-                className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-2"
+                className="px-3.5 py-2 border border-[#01579B] text-[#01579B] hover:bg-[#E6EFF5] text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-2 cursor-pointer"
               >
-                <FileDown className="w-4 h-4 text-blue-200" />
-                <span>Descargar Informe de Entrevista (PDF)</span>
+                <FileDown className="w-4 h-4 text-[#01579B]" />
+                <span>Informe de Entrevista (PDF)</span>
               </button>
 
               <button
                 onClick={() => setModalInvitacion(true)}
-                className="px-3.5 py-2 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-xl shadow-2xs transition-colors flex items-center space-x-1.5"
+                className="px-3.5 py-2 border border-[#E0E0E0] bg-white text-[#424242] hover:bg-[#F5F5F5] text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-1.5 cursor-pointer"
               >
-                <Mail className="w-3.5 h-3.5 text-slate-500" />
+                <Mail className="w-3.5 h-3.5 text-[#616161]" />
                 <span>Credenciales e Invitación</span>
               </button>
             </div>
           </div>
 
-          {/* FLUJO CON CÍRCULOS Y UNA LÍNEA (Punto 5) */}
-          <div className="p-6 bg-slate-50/40">
+          {/* Stepper del Proceso (4 Pasos con Círculos y Línea Conectora) */}
+          <div className="p-6 bg-[#FAFAFA]">
             <div className="flex items-center justify-between mb-3 px-2">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#757575]">
                 Flujo del Proceso de Admisión PROFER
               </span>
-              <span className="text-xs font-semibold text-slate-600">
+              <span className="text-xs font-semibold text-[#616161]">
                 {yaAdmitido
                   ? 'Proceso Concluido: Alumno Admitido'
                   : yaAbandonado
@@ -408,9 +410,9 @@ export const CandidatoPerfilPage: React.FC = () => {
 
             <div className="relative py-2 px-4">
               {/* Línea conectora horizontal */}
-              <div className="absolute top-6 left-12 right-12 h-1 bg-slate-200 -translate-y-1/2 z-0 hidden sm:block">
+              <div className="absolute top-6 left-12 right-12 h-1 bg-[#E0E0E0] -translate-y-1/2 z-0 hidden sm:block">
                 <div
-                  className="h-full bg-emerald-500 transition-all duration-300"
+                  className="h-full bg-[#01579B] transition-all duration-300"
                   style={{
                     width:
                       etapaActual === 1
@@ -424,26 +426,27 @@ export const CandidatoPerfilPage: React.FC = () => {
                 />
               </div>
 
-              {/* 4 Círculos con labels */}
+              {/* 4 Círculos Numerados */}
               <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                
                 {/* Paso 1: Registro */}
                 <div className="flex flex-col items-center">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-emerald-600 text-white ring-4 ring-emerald-100 shadow-xs">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs bg-[#01579B] text-white shadow-xs">
                     <CheckCircle2 className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-xs font-bold text-slate-900 mt-2">1. Registro Inicial</span>
-                  <span className="text-[11px] text-slate-500 font-medium">Credenciales enviadas</span>
+                  <span className="text-xs font-bold text-[#212121] mt-2">1. Registro Inicial</span>
+                  <span className="text-[11px] text-[#757575]">Credenciales emitidas</span>
                 </div>
 
                 {/* Paso 2: Tests */}
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs transition-all shadow-xs ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
                       testsCompletadosCount === 3 || etapaActual > 2
-                        ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
+                        ? 'bg-[#01579B] text-white'
                         : etapaActual === 2
-                        ? 'bg-[#01579B] text-white ring-4 ring-blue-100 animate-pulse'
-                        : 'bg-white border-2 border-slate-300 text-slate-400'
+                        ? 'bg-[#01579B] text-white ring-4 ring-[#CCDDEB]'
+                        : 'bg-white border-2 border-[#E0E0E0] text-[#9E9E9E]'
                     }`}
                   >
                     {testsCompletadosCount === 3 || etapaActual > 2 ? (
@@ -452,8 +455,8 @@ export const CandidatoPerfilPage: React.FC = () => {
                       <span>2</span>
                     )}
                   </div>
-                  <span className="text-xs font-bold text-slate-900 mt-2">2. Tests de Admisión</span>
-                  <span className="text-[11px] text-slate-500 font-medium">
+                  <span className="text-xs font-bold text-[#212121] mt-2">2. Tests de Admisión</span>
+                  <span className="text-[11px] text-[#757575]">
                     {testsCompletadosCount === 3 ? '3/3 completados' : `${testsCompletadosCount}/3 completados`}
                   </span>
                 </div>
@@ -461,12 +464,12 @@ export const CandidatoPerfilPage: React.FC = () => {
                 {/* Paso 3: Entrevista */}
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs transition-all shadow-xs ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
                       entrevistaRealizada || etapaActual > 3
-                        ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
+                        ? 'bg-[#01579B] text-white'
                         : etapaActual === 3
-                        ? 'bg-[#01579B] text-white ring-4 ring-blue-100 animate-pulse'
-                        : 'bg-white border-2 border-slate-300 text-slate-400'
+                        ? 'bg-[#01579B] text-white ring-4 ring-[#CCDDEB]'
+                        : 'bg-white border-2 border-[#E0E0E0] text-[#9E9E9E]'
                     }`}
                   >
                     {entrevistaRealizada || etapaActual > 3 ? (
@@ -475,8 +478,8 @@ export const CandidatoPerfilPage: React.FC = () => {
                       <span>3</span>
                     )}
                   </div>
-                  <span className="text-xs font-bold text-slate-900 mt-2">3. Entrevista Técnica</span>
-                  <span className="text-[11px] text-slate-500 font-medium">
+                  <span className="text-xs font-bold text-[#212121] mt-2">3. Entrevista Técnica</span>
+                  <span className="text-[11px] text-[#757575]">
                     {entrevistaRealizada
                       ? 'Conclusiones listas'
                       : candidato.entrevista
@@ -488,14 +491,14 @@ export const CandidatoPerfilPage: React.FC = () => {
                 {/* Paso 4: Dictamen */}
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs transition-all shadow-xs ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
                       yaAdmitido
-                        ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
+                        ? 'bg-[#2E7D32] text-white'
                         : yaAbandonado
-                        ? 'bg-amber-600 text-white ring-4 ring-amber-100'
+                        ? 'bg-[#D32F2F] text-white'
                         : etapaActual === 4
-                        ? 'bg-[#01579B] text-white ring-4 ring-blue-100'
-                        : 'bg-white border-2 border-slate-300 text-slate-400'
+                        ? 'bg-[#01579B] text-white ring-4 ring-[#CCDDEB]'
+                        : 'bg-white border-2 border-[#E0E0E0] text-[#9E9E9E]'
                     }`}
                   >
                     {yaAdmitido ? (
@@ -506,13 +509,13 @@ export const CandidatoPerfilPage: React.FC = () => {
                       <span>4</span>
                     )}
                   </div>
-                  <span className="text-xs font-bold text-slate-900 mt-2">4. Dictamen Final</span>
-                  <span className="text-[11px] text-slate-500 font-medium">
+                  <span className="text-xs font-bold text-[#212121] mt-2">4. Dictamen Final</span>
+                  <span className="text-[11px] text-[#757575]">
                     {yaAdmitido
                       ? `${porcentajeOtorgado ?? 100}% Beca & Squad`
                       : yaAbandonado
                       ? 'Candidatura archivada'
-                      : 'Otorgar % acceso'}
+                      : 'Porcentaje de acceso'}
                   </span>
                 </div>
               </div>
@@ -525,19 +528,19 @@ export const CandidatoPerfilPage: React.FC = () => {
         {/* ========================================================= */}
         {vistaDetallada === 'actitud16pf' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-[#E0E0E0] shadow-xs">
               <button
                 onClick={() => setVistaDetallada('resumen')}
-                className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center space-x-1"
+                className="text-xs font-semibold text-[#01579B] hover:text-[#004174] flex items-center space-x-1 cursor-pointer"
               >
                 <span>← Volver al Expediente Principal</span>
               </button>
-              <span className="text-xs font-extrabold text-slate-700">Informe Psicométrico 16PF Oficial</span>
+              <span className="text-xs font-bold text-[#212121]">Informe Psicométrico 16PF Oficial</span>
             </div>
             {informe16PF ? (
               <Informe16PFView informe={informe16PF} />
             ) : (
-              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-500">
+              <div className="bg-white rounded-lg border border-[#E0E0E0] p-8 text-center text-xs text-[#757575]">
                 El candidato aún no ha completado el cuestionario de actitud 16PF.
               </div>
             )}
@@ -546,19 +549,19 @@ export const CandidatoPerfilPage: React.FC = () => {
 
         {vistaDetallada === 'aptitudMatriz' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-[#E0E0E0] shadow-xs">
               <button
                 onClick={() => setVistaDetallada('resumen')}
-                className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center space-x-1"
+                className="text-xs font-semibold text-[#01579B] hover:text-[#004174] flex items-center space-x-1 cursor-pointer"
               >
                 <span>← Volver al Expediente Principal</span>
               </button>
-              <span className="text-xs font-extrabold text-slate-700">Matriz Oficial de Aptitudes & Diagramas de Radar</span>
+              <span className="text-xs font-bold text-[#212121]">Matriz Oficial de Aptitudes & Diagramas de Radar</span>
             </div>
             {matrizAptitudes ? (
               <MatrizAptitudesView matriz={matrizAptitudes} />
             ) : (
-              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-500">
+              <div className="bg-white rounded-lg border border-[#E0E0E0] p-8 text-center text-xs text-[#757575]">
                 El candidato aún no ha completado la matriz de aptitudes.
               </div>
             )}
@@ -567,19 +570,19 @@ export const CandidatoPerfilPage: React.FC = () => {
 
         {vistaDetallada === 'tecnicoCts' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-[#E0E0E0] shadow-xs">
               <button
                 onClick={() => setVistaDetallada('resumen')}
-                className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center space-x-1"
+                className="text-xs font-semibold text-[#01579B] hover:text-[#004174] flex items-center space-x-1 cursor-pointer"
               >
                 <span>← Volver al Expediente Principal</span>
               </button>
-              <span className="text-xs font-extrabold text-slate-700">Auditoría de Prueba Técnica CTS</span>
+              <span className="text-xs font-bold text-[#212121]">Auditoría de Prueba Técnica CTS</span>
             </div>
             {informeTecnico ? (
               <ReportePruebaTecnicaView informe={informeTecnico} />
             ) : (
-              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-500">
+              <div className="bg-white rounded-lg border border-[#E0E0E0] p-8 text-center text-xs text-[#757575]">
                 El examen técnico oficial aún no ha sido completado por el aspirante.
               </div>
             )}
@@ -587,40 +590,40 @@ export const CandidatoPerfilPage: React.FC = () => {
         )}
 
         {/* ========================================================= */}
-        {/* EXPEDIENTE RESUMIDO PRINCIPAL (Con jerarquía unificada)   */}
+        {/* EXPEDIENTE RESUMIDO PRINCIPAL (Jerarquía Limpia y Sólida)  */}
         {/* ========================================================= */}
         {vistaDetallada === 'resumen' && (
           <div className="space-y-6">
             
             {/* ----------------------------------------------------- */}
-            {/* SECCIÓN 1: DIAGNÓSTICO & CAPTURAS DE BATERÍAS (Punto 1 y 4) */}
+            {/* CARD 1: DIAGNÓSTICO & CAPTURAS DE BATERÍAS            */}
             {/* ----------------------------------------------------- */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200 flex justify-between items-center">
+            <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
+              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex justify-between items-center">
                 <div>
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
-                    <span>Sección 1 • Resultados de las Baterías de Admisión</span>
+                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
+                    <Sparkles className="w-4 h-4 text-[#01579B]" />
+                    <span>Resultados de las Baterías de Admisión</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Capturas visuales fidedignas: Diagramas de radar para Aptitud y Tabla oficial de decatipos para Actitud (sin textos largos).
+                  <p className="text-[11px] text-[#757575] mt-0.5">
+                    Capturas visuales directas: Diagrama de radar para Aptitud y Tabla oficial de decatipos para Actitud.
                   </p>
                 </div>
               </div>
 
               <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* 1.1 Batería de Aptitud: Solo Diagrama de Radar (Punto 1) */}
-                <div className="bg-slate-50/50 rounded-xl border border-slate-200/80 p-4 flex flex-col justify-between">
+                {/* 1.1 Batería de Aptitud: Solo Diagrama de Radar */}
+                <div className="bg-[#FAFAFA] rounded-lg border border-[#E0E0E0] p-4 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-blue-50 text-blue-700 rounded-lg">
+                        <div className="p-2 bg-[#E6EFF5] text-[#01579B] rounded-lg">
                           <Cpu className="w-4 h-4" />
                         </div>
-                        <h4 className="text-xs font-bold text-slate-900">Aptitud: Diagrama de Radar</h4>
+                        <h4 className="text-xs font-bold text-[#212121]">Aptitud: Diagrama de Radar</h4>
                       </div>
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB]">
                         {matrizAptitudes ? `${matrizAptitudes.promedioNivelActual || '2.8'} / 5.0` : 'Pendiente'}
                       </span>
                     </div>
@@ -629,17 +632,17 @@ export const CandidatoPerfilPage: React.FC = () => {
                       <div className="h-56 w-full py-1">
                         <ResponsiveContainer width="100%" height="100%">
                           <RadarChart data={radarDataAptitud}>
-                            <PolarGrid stroke="#E2E8F0" />
-                            <PolarAngleAxis dataKey="dimension" tick={{ fill: '#334155', fontSize: 9, fontWeight: 600 }} />
-                            <PolarRadiusAxis domain={[0, 5]} stroke="#CBD5E1" tickCount={6} />
+                            <PolarGrid stroke="#E0E0E0" />
+                            <PolarAngleAxis dataKey="dimension" tick={{ fill: '#424242', fontSize: 9, fontWeight: 600 }} />
+                            <PolarRadiusAxis domain={[0, 5]} stroke="#BDBDBD" tickCount={6} />
                             <Tooltip formatter={(val: any) => [`${val} / 5.0`, 'Nivel']} />
-                            <Radar name="Aptitud" dataKey="nivel" stroke="#0266CC" fill="#0266CC" fillOpacity={0.4} />
+                            <Radar name="Aptitud" dataKey="nivel" stroke="#01579B" fill="#01579B" fillOpacity={0.35} />
                           </RadarChart>
                         </ResponsiveContainer>
                       </div>
                     ) : (
                       <div className="h-56 flex items-center justify-center text-center p-4">
-                        <p className="text-xs text-slate-400 italic">
+                        <p className="text-xs text-[#757575] italic">
                           El candidato aún no ha completado la matriz de aptitudes.
                         </p>
                       </div>
@@ -648,51 +651,51 @@ export const CandidatoPerfilPage: React.FC = () => {
 
                   <button
                     onClick={() => setVistaDetallada('aptitudMatriz')}
-                    className="mt-3 pt-2.5 border-t border-slate-200/80 w-full flex items-center justify-between text-xs text-blue-700 font-bold hover:text-blue-900 cursor-pointer"
+                    className="mt-3 pt-2.5 border-t border-[#E0E0E0] w-full flex items-center justify-between text-xs text-[#01579B] font-semibold hover:text-[#004174] cursor-pointer"
                   >
                     <span>Ver matriz y radars por categoría</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                {/* 1.2 Batería de Actitud: Solo Tabla de Decatipos (Punto 1: NO explicaciones) */}
-                <div className="bg-slate-50/50 rounded-xl border border-slate-200/80 p-4 flex flex-col justify-between">
+                {/* 1.2 Batería de Actitud: Solo Tabla de Decatipos (Sin explicaciones largas) */}
+                <div className="bg-[#FAFAFA] rounded-lg border border-[#E0E0E0] p-4 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-rose-50 text-rose-700 rounded-lg">
+                        <div className="p-2 bg-[#FFEBEE] text-[#D32F2F] rounded-lg">
                           <HeartPulse className="w-4 h-4" />
                         </div>
-                        <h4 className="text-xs font-bold text-slate-900">Actitud: Tabla Decatipos 16PF</h4>
+                        <h4 className="text-xs font-bold text-[#212121]">Actitud: Tabla Decatipos 16PF</h4>
                       </div>
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9]">
                         {informe16PF ? '16 Factores' : 'Pendiente'}
                       </span>
                     </div>
 
                     {informe16PF ? (
-                      <div className="border border-slate-200 rounded-lg overflow-hidden bg-white max-h-56 overflow-y-auto">
+                      <div className="border border-[#E0E0E0] rounded-lg overflow-hidden bg-white max-h-56 overflow-y-auto">
                         <table className="w-full text-left border-collapse text-[11px]">
                           <thead>
-                            <tr className="bg-slate-100 text-slate-700 font-extrabold border-b border-slate-200 text-[10px] uppercase">
-                              <th className="py-1 px-2">Factor</th>
-                              <th className="py-1 px-1.5 text-center">Decatipo</th>
-                              <th className="py-1 px-2">Rasgo Dominante</th>
+                            <tr className="bg-[#FAFAFA] text-[#616161] font-bold border-b border-[#E0E0E0] text-[10px] uppercase">
+                              <th className="py-1.5 px-2">Factor</th>
+                              <th className="py-1.5 px-1.5 text-center">Decatipo</th>
+                              <th className="py-1.5 px-2">Rasgo Dominante</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100">
+                          <tbody className="divide-y divide-[#EEEEEE]">
                             {(informe16PF.factores || []).slice(0, 7).map((f: any) => {
                               const pc = f.pc ?? f.pd ?? 6;
                               const rasgo = pc >= 6 ? f.altaPuntuacion : f.bajaPuntuacion;
                               return (
-                                <tr key={f.factor} className="hover:bg-slate-50">
-                                  <td className="py-1 px-2 font-mono font-bold text-slate-900">
+                                <tr key={f.factor} className="hover:bg-[#F7F9FC]">
+                                  <td className="py-1.5 px-2 font-mono font-bold text-[#212121]">
                                     Factor {f.factor}
                                   </td>
-                                  <td className="py-1 px-1.5 text-center font-bold text-blue-800 font-mono">
+                                  <td className="py-1.5 px-1.5 text-center font-bold text-[#01579B] font-mono">
                                     {pc} / 10
                                   </td>
-                                  <td className="py-1 px-2 text-slate-700 truncate max-w-[140px] font-medium">
+                                  <td className="py-1.5 px-2 text-[#424242] truncate max-w-[140px] font-medium">
                                     {rasgo}
                                   </td>
                                 </tr>
@@ -703,7 +706,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                       </div>
                     ) : (
                       <div className="h-56 flex items-center justify-center text-center p-4">
-                        <p className="text-xs text-slate-400 italic">
+                        <p className="text-xs text-[#757575] italic">
                           El candidato aún no ha completado el cuestionario de actitud 16PF.
                         </p>
                       </div>
@@ -712,29 +715,29 @@ export const CandidatoPerfilPage: React.FC = () => {
 
                   <button
                     onClick={() => setVistaDetallada('actitud16pf')}
-                    className="mt-3 pt-2.5 border-t border-slate-200/80 w-full flex items-center justify-between text-xs text-rose-700 font-bold hover:text-rose-900 cursor-pointer"
+                    className="mt-3 pt-2.5 border-t border-[#E0E0E0] w-full flex items-center justify-between text-xs text-[#01579B] font-semibold hover:text-[#004174] cursor-pointer"
                   >
                     <span>Ver informe psicométrico 16PF</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                {/* 1.3 Prueba Técnica CTS: Desglose por áreas y calificación */}
-                <div className="bg-slate-50/50 rounded-xl border border-slate-200/80 p-4 flex flex-col justify-between">
+                {/* 1.3 Prueba Técnica CTS */}
+                <div className="bg-[#FAFAFA] rounded-lg border border-[#E0E0E0] p-4 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-purple-50 text-purple-700 rounded-lg">
+                        <div className="p-2 bg-[#E6EFF5] text-[#01579B] rounded-lg">
                           <Terminal className="w-4 h-4" />
                         </div>
-                        <h4 className="text-xs font-bold text-slate-900">Prueba Técnica CTS</h4>
+                        <h4 className="text-xs font-bold text-[#212121]">Prueba Técnica CTS</h4>
                       </div>
-                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
                         testTecnico?.estado === 'COMPLETADO'
                           ? Number(testTecnico?.calificacion_obtenida || 0) >= 5
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-red-100 text-red-800'
-                          : 'bg-amber-100 text-amber-800'
+                            ? 'bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9]'
+                            : 'bg-[#FFEBEE] text-[#B71C1C] border border-[#FFCDD2]'
+                          : 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2]'
                       }`}>
                         {testTecnico?.estado === 'COMPLETADO'
                           ? `${Number(testTecnico.calificacion_obtenida).toFixed(1)} / 10.0`
@@ -744,35 +747,34 @@ export const CandidatoPerfilPage: React.FC = () => {
 
                     {testTecnico?.estado === 'COMPLETADO' ? (
                       <div className="space-y-3 py-2">
-                        <div className="p-3 bg-white rounded-lg border border-slate-200 text-center">
-                          <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">
-                            Calificación Numérica Global
+                        <div className="p-3 bg-white rounded-lg border border-[#E0E0E0] text-center">
+                          <span className="text-[10px] font-bold uppercase text-[#757575] tracking-wider block">
+                            Calificación Global
                           </span>
-                          <span className="text-3xl font-black text-slate-900 block mt-0.5">
+                          <span className="text-3xl font-black text-[#212121] block mt-0.5">
                             {Number(testTecnico.calificacion_obtenida).toFixed(1)}
-                            <span className="text-xs text-slate-400 font-normal ml-1">/ 10</span>
+                            <span className="text-xs text-[#757575] font-normal ml-1">/ 10</span>
                           </span>
                         </div>
 
-                        {/* Desglose por Áreas Técnicas */}
                         <div className="space-y-1.5 text-xs">
                           {informeTecnico?.puntuacionesPorArea && (
                             <>
                               <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-semibold text-slate-700">General:</span>
-                                <span className="font-mono font-bold text-slate-900">
+                                <span className="font-semibold text-[#616161]">Fundamentos Generales:</span>
+                                <span className="font-mono font-bold text-[#212121]">
                                   {informeTecnico.puntuacionesPorArea.general}%
                                 </span>
                               </div>
                               <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-semibold text-slate-700">Frontend:</span>
-                                <span className="font-mono font-bold text-slate-900">
+                                <span className="font-semibold text-[#616161]">Frontend:</span>
+                                <span className="font-mono font-bold text-[#212121]">
                                   {informeTecnico.puntuacionesPorArea.frontend}%
                                 </span>
                               </div>
                               <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-semibold text-slate-700">Backend:</span>
-                                <span className="font-mono font-bold text-slate-900">
+                                <span className="font-semibold text-[#616161]">Backend:</span>
+                                <span className="font-mono font-bold text-[#212121]">
                                   {informeTecnico.puntuacionesPorArea.backend}%
                                 </span>
                               </div>
@@ -782,7 +784,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                       </div>
                     ) : (
                       <div className="h-56 flex items-center justify-center text-center p-4">
-                        <p className="text-xs text-slate-400 italic">
+                        <p className="text-xs text-[#757575] italic">
                           El aspirante aún no ha finalizado la evaluación técnica oficial.
                         </p>
                       </div>
@@ -791,7 +793,7 @@ export const CandidatoPerfilPage: React.FC = () => {
 
                   <button
                     onClick={() => setVistaDetallada('tecnicoCts')}
-                    className="mt-3 pt-2.5 border-t border-slate-200/80 w-full flex items-center justify-between text-xs text-purple-700 font-bold hover:text-purple-900 cursor-pointer"
+                    className="mt-3 pt-2.5 border-t border-[#E0E0E0] w-full flex items-center justify-between text-xs text-[#01579B] font-semibold hover:text-[#004174] cursor-pointer"
                   >
                     <span>Ver auditoría de respuestas técnicas</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -802,22 +804,22 @@ export const CandidatoPerfilPage: React.FC = () => {
             </div>
 
             {/* ----------------------------------------------------- */}
-            {/* SECCIÓN 2: AFINIDAD SQUADS CTS & ASIGNACIÓN (Punto 4) */}
+            {/* CARD 2: AFINIDAD CON SQUADS OFICIALES GRUPO FUNIBER   */}
             {/* ----------------------------------------------------- */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
+              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-blue-600" />
-                    <span>Sección 2 • Afinidad Algorítmica con Squads CTS Oficiales</span>
+                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
+                    <Users className="w-4 h-4 text-[#01579B]" />
+                    <span>Afinidad Algorítmica con Squads CTS Oficiales</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Evaluación y encaje tecnológico en los 4 equipos con sus respectivos líderes técnicos.
+                  <p className="text-[11px] text-[#757575] mt-0.5">
+                    Evaluación tecnológica en los 4 equipos y sus respectivos líderes técnicos.
                   </p>
                 </div>
 
                 {sugerido && (
-                  <span className="text-[11px] font-extrabold px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full">
+                  <span className="text-[11px] font-bold px-3 py-1 bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9] rounded-full">
                     Top Match Recomendado: {sugerido.nombre} ({sugerido.afinidadPorcentaje}%)
                   </span>
                 )}
@@ -825,12 +827,20 @@ export const CandidatoPerfilPage: React.FC = () => {
 
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(recomendacion?.rankingEquipos || [
-                  { id: '1', codigo: 'TEAM-01', nombre: 'Fénix', afinidadPorcentaje: 0, lider: 'Diego Moys' },
-                  { id: '2', codigo: 'TEAM-02', nombre: 'Departamento de Sistemas', afinidadPorcentaje: 0, lider: 'Alejandro Ruiz' },
-                  { id: '3', codigo: 'TEAM-03', nombre: 'Presencia Web', afinidadPorcentaje: 0, lider: 'Lucía Vargas' },
+                  { id: '1', codigo: 'TEAM-03', nombre: 'Presencia Web', afinidadPorcentaje: 0, lider: 'Diego Moys' },
+                  { id: '2', codigo: 'TEAM-01', nombre: 'Fénix', afinidadPorcentaje: 0, lider: 'Alejandro Ruiz' },
+                  { id: '3', codigo: 'TEAM-02', nombre: 'Departamento de Sistemas', afinidadPorcentaje: 0, lider: 'Lucía Vargas' },
                   { id: '4', codigo: 'TEAM-04', nombre: 'Acción Docente', afinidadPorcentaje: 0, lider: 'Marcos Navarro' },
                 ]).map((eq: any) => {
                   const esTop = sugerido && eq.codigo === sugerido.codigo;
+                  
+                  // Ensure correct official technical leader
+                  let leaderName = eq.lider;
+                  if (eq.nombre?.includes('Presencia') || eq.codigo === 'TEAM-03') leaderName = 'Diego Moys';
+                  else if (eq.nombre?.includes('Fénix') || eq.codigo === 'TEAM-01') leaderName = 'Alejandro Ruiz';
+                  else if (eq.nombre?.includes('Sistemas') || eq.codigo === 'TEAM-02') leaderName = 'Lucía Vargas';
+                  else if (eq.nombre?.includes('Docente') || eq.codigo === 'TEAM-04') leaderName = 'Marcos Navarro';
+
                   return (
                     <div
                       key={eq.id}
@@ -840,47 +850,46 @@ export const CandidatoPerfilPage: React.FC = () => {
                           setModalAdmitir(true);
                         }
                       }}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`p-4 rounded-lg border transition-all cursor-pointer flex flex-col justify-between ${
                         esTop
-                          ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-100 shadow-xs'
-                          : 'bg-slate-50/60 border-slate-200 hover:border-slate-300 hover:bg-slate-100/50'
+                          ? 'bg-[#E6EFF5]/60 border-[#01579B] shadow-2xs'
+                          : 'bg-[#FAFAFA] border-[#E0E0E0] hover:border-[#CCDDEB] hover:bg-white'
                       }`}
                     >
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">
+                          <span className="text-[10px] font-mono font-bold text-[#757575] uppercase">
                             {eq.codigo}
                           </span>
                           {esTop && (
-                            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9]">
                               Recomendado
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-extrabold text-xs text-slate-900 truncate" title={eq.nombre}>
+                        <h4 className="font-bold text-xs text-[#212121] truncate" title={eq.nombre}>
                           {eq.nombre}
                         </h4>
 
-                        {/* Líder Técnico dentro de cada equipo */}
-                        <div className="flex items-center space-x-1.5 text-[11px] text-slate-600 mt-1.5">
-                          <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <div className="flex items-center space-x-1.5 text-[11px] text-[#616161] mt-1.5">
+                          <Users className="w-3.5 h-3.5 text-[#757575] shrink-0" />
                           <span className="truncate">
-                            Líder: <strong className="text-slate-800">{eq.lider || 'Coordinador'}</strong>
+                            Líder: <strong className="text-[#212121]">{leaderName}</strong>
                           </span>
                         </div>
                       </div>
 
-                      <div className="mt-3 pt-2.5 border-t border-slate-200/80">
+                      <div className="mt-3 pt-2.5 border-t border-[#E0E0E0]">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] text-slate-500 font-medium">Afinidad</span>
-                          <span className={`text-xs font-black ${esTop ? 'text-blue-700' : 'text-slate-700'}`}>
+                          <span className="text-[10px] text-[#757575] font-medium">Afinidad</span>
+                          <span className={`text-xs font-bold ${esTop ? 'text-[#01579B]' : 'text-[#424242]'}`}>
                             {eq.afinidadPorcentaje || 0}%
                           </span>
                         </div>
-                        <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                        <div className="w-full bg-[#E0E0E0] h-1.5 rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${esTop ? 'bg-blue-600' : 'bg-slate-400'}`}
+                            className={`h-full rounded-full ${esTop ? 'bg-[#01579B]' : 'bg-[#9E9E9E]'}`}
                             style={{ width: `${eq.afinidadPorcentaje || 0}%` }}
                           />
                         </div>
@@ -892,22 +901,22 @@ export const CandidatoPerfilPage: React.FC = () => {
             </div>
 
             {/* ----------------------------------------------------- */}
-            {/* SECCIÓN 3: ENTREVISTA & ANOTACIONES CUALITATIVAS (P3)  */}
+            {/* CARD 3: ENTREVISTA & ANOTACIONES TÉCNICAS (Unificada) */}
             {/* ----------------------------------------------------- */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
+              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                    <Video className="w-4 h-4 text-blue-600" />
-                    <span>Sección 3 • Entrevista de Selección & Deliberación Cualitativa</span>
+                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
+                    <Video className="w-4 h-4 text-[#01579B]" />
+                    <span>Entrevista de Selección & Deliberación Cualitativa</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Coordinación de la sesión Google Meet y registro formal de observaciones según la plantilla oficial.
+                  <p className="text-[11px] text-[#757575] mt-0.5">
+                    Coordinación Google Meet y registro formal de observaciones según la plantilla oficial.
                   </p>
                 </div>
 
                 {candidato.entrevista ? (
-                  <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded bg-[#E8F0FE] text-[#084DC4] border border-[#C4D9FD]">
                     Estado: {candidato.entrevista.estado}
                   </span>
                 ) : (
@@ -916,7 +925,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                       generarEnlaceMeet();
                       setModalEntrevista(true);
                     }}
-                    className="px-3.5 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-bold shadow-xs transition-colors inline-flex items-center space-x-1.5"
+                    className="px-3.5 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
                   >
                     <Calendar className="w-3.5 h-3.5" />
                     <span>Agendar Google Meet</span>
@@ -925,14 +934,14 @@ export const CandidatoPerfilPage: React.FC = () => {
               </div>
 
               <div className="p-6 space-y-6">
-                {/* Bloque Google Meet */}
+                {/* Bloque Google Meet Activo */}
                 {candidato.entrevista && (
-                  <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="space-y-1">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#757575] block">
                         Sesión Programada en Google Calendar
                       </span>
-                      <p className="font-bold text-slate-900 text-xs">
+                      <p className="font-bold text-[#212121] text-xs">
                         {new Date(candidato.entrevista.fecha_hora_programada).toLocaleDateString('es-ES', {
                           weekday: 'long',
                           year: 'numeric',
@@ -942,7 +951,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                           minute: '2-digit',
                         })}
                       </p>
-                      <p className="text-[11px] text-slate-500 font-mono">
+                      <p className="text-[11px] text-[#757575] font-mono">
                         Enlace: {candidato.entrevista.enlace_google_meet}
                       </p>
                     </div>
@@ -950,9 +959,9 @@ export const CandidatoPerfilPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => copiarEnlaceMeet(candidato.entrevista.enlace_google_meet)}
-                        className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs"
+                        className="px-3 py-1.5 bg-white border border-[#E0E0E0] text-[#424242] hover:bg-[#F5F5F5] rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs cursor-pointer"
                       >
-                        <Copy className="w-3.5 h-3.5" />
+                        <Copy className="w-3.5 h-3.5 text-[#616161]" />
                         <span>{copiadoMeet ? '¡Copiado!' : 'Copiar'}</span>
                       </button>
 
@@ -960,7 +969,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                         href={candidato.entrevista.enlace_google_meet}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold inline-flex items-center space-x-1 shadow-xs"
+                        className="px-3 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs cursor-pointer"
                       >
                         <Video className="w-3.5 h-3.5" />
                         <span>Unirse a Meet</span>
@@ -972,7 +981,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                           generarEnlaceMeet();
                           setModalEntrevista(true);
                         }}
-                        className="px-2.5 py-1.5 text-slate-500 hover:text-slate-800 text-xs font-medium"
+                        className="px-2.5 py-1.5 text-[#616161] hover:text-[#212121] text-xs font-semibold cursor-pointer"
                       >
                         Reprogramar
                       </button>
@@ -982,19 +991,19 @@ export const CandidatoPerfilPage: React.FC = () => {
 
                 {/* Formulario y Registro de Anotaciones */}
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-2 text-xs font-bold text-slate-800">
-                    <MessageSquare className="w-4 h-4 text-amber-600" />
+                  <div className="flex items-center space-x-2 text-xs font-bold text-[#212121]">
+                    <MessageSquare className="w-4 h-4 text-[#01579B]" />
                     <span>Registro de Observaciones para la Plantilla Oficial de Entrevista</span>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                  <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-4 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div>
-                        <label className="block text-slate-500 font-semibold mb-1">Dimensión / Item Evaluado:</label>
+                        <label className="block text-[#616161] font-semibold mb-1">Dimensión / Item Evaluado:</label>
                         <select
                           value={itemAnotacion}
                           onChange={(e: any) => setItemAnotacion(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 focus:ring-1 focus:ring-blue-500"
+                          className="w-full bg-white border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs font-medium text-[#212121] focus:ring-1 focus:ring-[#01579B]"
                         >
                           <option value="Actitud">Actitud (Comportamiento, Colaboración, Motivación)</option>
                           <option value="Aptitud">Aptitud (Solvencia Técnica, Análisis Lógico)</option>
@@ -1004,11 +1013,11 @@ export const CandidatoPerfilPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-slate-500 font-semibold mb-1">Calificación Cualitativa:</label>
+                        <label className="block text-[#616161] font-semibold mb-1">Calificación Cualitativa:</label>
                         <select
                           value={calificacionAnotacion}
                           onChange={(e: any) => setCalificacionAnotacion(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 focus:ring-1 focus:ring-blue-500"
+                          className="w-full bg-white border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs font-medium text-[#212121] focus:ring-1 focus:ring-[#01579B]"
                         >
                           <option value="SOBRESALIENTE">Sobresaliente</option>
                           <option value="COMPETENTE">Competente</option>
@@ -1024,7 +1033,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                         value={comentariosEntrevista}
                         onChange={(e) => setComentariosEntrevista(e.target.value)}
                         placeholder="Registrar observaciones cualitativas del aspirante..."
-                        className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className="w-full bg-white border border-[#E0E0E0] rounded-lg p-3 text-xs text-[#212121] focus:ring-1 focus:ring-[#01579B] focus:outline-none"
                       />
                     </div>
 
@@ -1032,33 +1041,42 @@ export const CandidatoPerfilPage: React.FC = () => {
                       <button
                         onClick={() => anotacionesMutation.mutate()}
                         disabled={!comentariosEntrevista.trim() || anotacionesMutation.isPending}
-                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-xs transition-colors"
+                        className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
                       >
-                        {anotacionesMutation.isPending ? 'Guardando...' : 'Registrar Observación'}
+                        {anotacionesMutation.isPending ? 'Guardando...' : 'Guardar Observación'}
                       </button>
                     </div>
                   </div>
 
-                  {/* Historial de anotaciones */}
+                  {/* Listado de Anotaciones Registradas */}
                   {candidato.entrevista?.anotaciones && candidato.entrevista.anotaciones.length > 0 && (
                     <div className="space-y-2 pt-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Observaciones Guardadas en el Expediente
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#757575] block">
+                        Observaciones Registradas por el Comité
                       </span>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {candidato.entrevista.anotaciones.map((anot: any) => (
                           <div
                             key={anot.id}
-                            className="p-3 bg-amber-50/50 border border-amber-200/80 rounded-xl text-xs space-y-1"
+                            className="p-3 bg-white border border-[#E0E0E0] rounded-lg space-y-1.5 shadow-2xs"
                           >
-                            <div className="flex justify-between items-center font-bold text-amber-900">
-                              <span className="text-xs">{anot.competencia_evaluada}</span>
-                              <span className="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded">
+                            <div className="flex items-center justify-between text-xs font-bold text-[#212121]">
+                              <span>{anot.competencia_evaluada}</span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                anot.calificacion_cualitativa === 'SOBRESALIENTE'
+                                  ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]'
+                                  : anot.calificacion_cualitativa === 'COMPETENTE'
+                                  ? 'bg-[#E6EFF5] text-[#01579B] border-[#CCDDEB]'
+                                  : anot.calificacion_cualitativa === 'EN_DESARROLLO'
+                                  ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2]'
+                                  : 'bg-[#FFEBEE] text-[#B71C1C] border-[#FFCDD2]'
+                              }`}>
                                 {anot.calificacion_cualitativa}
                               </span>
                             </div>
-                            <p className="text-slate-700 text-[11px] leading-relaxed">{anot.comentario}</p>
-                            <span className="text-[9px] text-slate-400 block pt-1 font-mono">
+                            <p className="text-[#424242] text-[11px] leading-relaxed">{anot.comentario}</p>
+                            <span className="text-[10px] text-[#757575] block pt-1 font-mono">
                               {new Date(anot.creado_en).toLocaleDateString()}
                             </span>
                           </div>
@@ -1078,30 +1096,31 @@ export const CandidatoPerfilPage: React.FC = () => {
         {/* ========================================================= */}
         {modalAdmitir && (
           <div
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setModalAdmitir(false);
-            }}
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setModalAdmitir(false)}
+            className="fixed inset-0 z-50 bg-[#000000]/40 backdrop-blur-2xs flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-lg max-w-lg w-full p-6 shadow-md border border-[#E0E0E0] space-y-5"
+            >
+              <div className="flex justify-between items-start border-b border-[#EEEEEE] pb-3">
                 <div>
-                  <h3 className="text-base font-black text-slate-900">Dictamen de Admisión PROFER</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <h3 className="text-base font-bold text-[#212121]">Dictamen de Admisión PROFER</h3>
+                  <p className="text-xs text-[#757575] mt-0.5">
                     Asignar porcentaje de acceso/beca y squad para {candidato.usuario?.nombre} {candidato.usuario?.apellidos}.
                   </p>
                 </div>
                 <button
                   onClick={() => setModalAdmitir(false)}
-                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+                  className="p-1.5 text-[#757575] hover:text-[#212121] rounded-lg cursor-pointer"
                 >
-                  <UserX className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Selector de Porcentaje de Acceso */}
               <div className="space-y-2">
-                <label className="block text-xs font-extrabold uppercase text-slate-600 tracking-wider">
+                <label className="block text-xs font-bold uppercase text-[#424242] tracking-wider">
                   1. Porcentaje de Beca / Acceso Otorgado:
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -1110,14 +1129,14 @@ export const CandidatoPerfilPage: React.FC = () => {
                       key={pct}
                       type="button"
                       onClick={() => setPorcentajeAcceso(pct)}
-                      className={`py-2.5 px-2 rounded-xl text-xs font-black border transition-all text-center cursor-pointer ${
+                      className={`py-2.5 px-2 rounded-lg text-xs font-bold border transition-all text-center cursor-pointer ${
                         porcentajeAcceso === pct
-                          ? 'bg-[#01579B] text-white border-[#01579B] shadow-xs'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          ? 'bg-[#01579B] text-white border-[#01579B] shadow-2xs'
+                          : 'bg-[#FAFAFA] text-[#424242] border-[#E0E0E0] hover:bg-[#F5F5F5]'
                       }`}
                     >
-                      <div className="text-base font-extrabold">{pct}%</div>
-                      <div className="text-[9px] uppercase font-semibold opacity-80">
+                      <div className="text-base font-black">{pct}%</div>
+                      <div className="text-[9px] uppercase font-semibold opacity-90">
                         {pct === 100 ? 'Beca Total' : pct === 66 ? 'Preferente' : pct === 50 ? 'Parcial' : 'Estándar'}
                       </div>
                     </button>
@@ -1127,7 +1146,7 @@ export const CandidatoPerfilPage: React.FC = () => {
 
               {/* Selector de Squad */}
               <div className="space-y-2">
-                <label className="block text-xs font-extrabold uppercase text-slate-600 tracking-wider">
+                <label className="block text-xs font-bold uppercase text-[#424242] tracking-wider">
                   2. Asignación de Squad Oficial:
                 </label>
 
@@ -1143,57 +1162,53 @@ export const CandidatoPerfilPage: React.FC = () => {
                           setEquipoSeleccionadoId(eq.id);
                           setAsignacionDiferida(false);
                         }}
-                        className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between ${
+                        className={`p-3 rounded-lg border text-xs cursor-pointer transition-all flex items-center justify-between ${
                           esSeleccionado
-                            ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500'
-                            : 'bg-white border-slate-200 hover:border-slate-300'
+                            ? 'bg-[#E6EFF5] border-[#01579B] ring-1 ring-[#01579B]'
+                            : 'bg-white border-[#E0E0E0] hover:border-[#CCDDEB]'
                         }`}
                       >
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-mono text-[10px] text-slate-400 font-bold">{eq.codigo}</span>
-                            <span className="font-bold text-slate-900">{eq.nombre}</span>
+                            <span className="font-bold text-[#212121]">{eq.nombre}</span>
                             {esSugerido && (
-                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
-                                Match Sugerido
+                              <span className="bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9] text-[9px] font-bold px-1.5 py-0.2 rounded">
+                                Sugerido
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] text-slate-500 block mt-0.5">
-                            Líder: {eq.lider?.nombre || 'Coordinador'} {eq.lider?.apellidos || ''}
-                          </span>
+                          <span className="text-[11px] text-[#757575] block mt-0.5">{eq.especialidad}</span>
                         </div>
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            esSeleccionado ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
-                          }`}
-                        >
-                          {esSeleccionado && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </div>
+                        <input
+                          type="radio"
+                          name="squadSelection"
+                          checked={esSeleccionado}
+                          onChange={() => {}}
+                          className="text-[#01579B] focus:ring-[#01579B]"
+                        />
                       </div>
                     );
                   })}
                 </div>
 
                 <div className="pt-2">
-                  <label className="flex items-center space-x-2 text-xs text-slate-600 cursor-pointer">
+                  <label className="flex items-center space-x-2 text-xs text-[#424242] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={asignacionDiferida}
                       onChange={(e) => setAsignacionDiferida(e.target.checked)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-[#E0E0E0] text-[#01579B] focus:ring-[#01579B]"
                     />
-                    <span>Diferir asignación de equipo (asignar squad definitivo durante la incorporación)</span>
+                    <span>Incorporación diferida (asignar squad más adelante)</span>
                   </label>
                 </div>
               </div>
 
-              {/* Botones de acción */}
-              <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end space-x-2 pt-3 border-t border-[#EEEEEE]">
                 <button
                   type="button"
                   onClick={() => setModalAdmitir(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer"
+                  className="px-4 py-2 border border-[#E0E0E0] text-[#424242] text-xs font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -1201,9 +1216,9 @@ export const CandidatoPerfilPage: React.FC = () => {
                   type="button"
                   onClick={() => admitirMutation.mutate()}
                   disabled={admitirMutation.isPending || (!asignacionDiferida && !equipoSeleccionadoId)}
-                  className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {admitirMutation.isPending ? 'Confirmando...' : `Confirmar Admisión (${porcentajeAcceso}% Acceso)`}
+                  {admitirMutation.isPending ? 'Confirmando...' : 'Confirmar Admisión'}
                 </button>
               </div>
             </div>
@@ -1211,65 +1226,60 @@ export const CandidatoPerfilPage: React.FC = () => {
         )}
 
         {/* ========================================================= */}
-        {/* MODAL: ABANDONAR CANDIDATURA (Cierre al hacer clic fuera) */}
+        {/* MODAL: ABANDONAR CANDIDATURA (Con cierre al clic fuera)   */}
         {/* ========================================================= */}
         {modalAbandonar && (
           <div
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setModalAbandonar(false);
-            }}
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setModalAbandonar(false)}
+            className="fixed inset-0 z-50 bg-[#000000]/40 backdrop-blur-2xs flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex justify-between items-start border-b border-slate-100 pb-3">
-                <div className="flex items-center space-x-2 text-amber-800">
-                  <UserX className="w-5 h-5 text-amber-600" />
-                  <h3 className="text-base font-black text-slate-900">Registrar Abandono de Candidatura</h3>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-lg max-w-md w-full p-6 shadow-md border border-[#E0E0E0] space-y-4"
+            >
+              <div className="flex justify-between items-start border-b border-[#EEEEEE] pb-3">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-[#FFEBEE] text-[#D32F2F] rounded-lg">
+                    <UserX className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#212121]">Abandonar Candidatura</h3>
+                    <p className="text-xs text-[#757575]">Registro de desistimiento del aspirante.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setModalAbandonar(false)}
+                  className="p-1 rounded-lg text-[#757575] hover:text-[#212121] cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs text-[#424242]">
+                <p>
+                  Este proceso registra formalmente que el candidato <strong>no se incorporará</strong> al programa
+                  por decisión propia o incompatibilidad de horarios.
+                </p>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#424242] mb-1">
+                    Motivo o justificación del abandono:
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={motivoAbandono}
+                    onChange={(e) => setMotivoAbandono(e.target.value)}
+                    placeholder="Ej. El candidato manifiesta incompatibilidad de horarios laborales para asistir a los laboratorios..."
+                    className="w-full border border-[#E0E0E0] rounded-lg p-2.5 text-xs text-[#212121] focus:ring-1 focus:ring-[#01579B] focus:outline-none"
+                  />
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Esta acción registra que el aspirante <strong>{candidato.usuario?.nombre} {candidato.usuario?.apellidos}</strong> ha decidido no continuar o no incorporarse al programa PROFER. No se utiliza el término rechazo en su expediente.
-              </p>
-
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-700">
-                  Motivo de Abandono o No Incorporación:
-                </label>
-                <select
-                  value={motivoAbandono}
-                  onChange={(e) => setMotivoAbandono(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-1 focus:ring-amber-500"
-                >
-                  <option value="">Seleccionar motivo frecuente...</option>
-                  <option value="El candidato decide no incorporarse por motivos laborales o personales">
-                    Decisión personal o compatibilidad laboral
-                  </option>
-                  <option value="Desiste del porcentaje de acceso/beca otorgado">
-                    Desiste del porcentaje de beca otorgado
-                  </option>
-                  <option value="No responde a las convocatorias de entrevista o pruebas">
-                    Sin respuesta en convocatorias de entrevista
-                  </option>
-                  <option value="Incorporación a otra oportunidad académica/profesional">
-                    Incorporación a otra institución
-                  </option>
-                </select>
-
-                <textarea
-                  rows={2}
-                  value={motivoAbandono}
-                  onChange={(e) => setMotivoAbandono(e.target.value)}
-                  placeholder="Detallar observaciones o motivo específico..."
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-1 focus:ring-amber-500 mt-2"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end space-x-2 pt-3 border-t border-[#EEEEEE]">
                 <button
                   type="button"
                   onClick={() => setModalAbandonar(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer"
+                  className="px-4 py-2 border border-[#E0E0E0] text-[#424242] text-xs font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -1277,81 +1287,94 @@ export const CandidatoPerfilPage: React.FC = () => {
                   type="button"
                   onClick={() => abandonarMutation.mutate()}
                   disabled={abandonarMutation.isPending}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {abandonarMutation.isPending ? 'Archivando...' : 'Confirmar Abandono'}
+                  {abandonarMutation.isPending ? 'Procesando...' : 'Confirmar Abandono'}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* MODAL: AGENDAR GOOGLE MEET (Cierre al hacer clic fuera) */}
+        {/* ========================================================= */}
+        {/* MODAL: AGENDAR GOOGLE MEET (Con cierre al clic fuera)     */}
+        {/* ========================================================= */}
         {modalEntrevista && (
           <div
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setModalEntrevista(false);
-            }}
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setModalEntrevista(false)}
+            className="fixed inset-0 z-50 bg-[#000000]/40 backdrop-blur-2xs flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-900 flex items-center space-x-2">
-                  <Video className="w-5 h-5 text-blue-600" />
-                  <span>Programar Entrevista Google Meet</span>
-                </h3>
-                <button onClick={() => setModalEntrevista(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
-                  <UserX className="w-4 h-4" />
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-lg max-w-md w-full p-6 shadow-md border border-[#E0E0E0] space-y-4"
+            >
+              <div className="flex justify-between items-start border-b border-[#EEEEEE] pb-3">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-[#E6EFF5] text-[#01579B] rounded-lg">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#212121]">Agendar Entrevista Técnica</h3>
+                    <p className="text-xs text-[#757575]">Coordinación de Google Meet para deliberación.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setModalEntrevista(false)}
+                  className="p-1 rounded-lg text-[#757575] hover:text-[#212121] cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Fecha y Hora de la Sesión:</label>
+                  <label className="block text-xs font-semibold text-[#424242] mb-1">
+                    Fecha y Hora Programada:
+                  </label>
                   <input
                     type="datetime-local"
                     value={fechaEntrevista}
                     onChange={(e) => setFechaEntrevista(e.target.value)}
-                    className="w-full border border-slate-300 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-blue-500"
+                    className="w-full border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs text-[#212121] bg-white focus:ring-1 focus:ring-[#01579B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Enlace a Google Meet:</label>
-                  <div className="flex space-x-2">
-                    <input
-                      type="url"
-                      value={enlaceMeet}
-                      onChange={(e) => setEnlaceMeet(e.target.value)}
-                      placeholder="https://meet.google.com/xyz-abcd-uvw"
-                      className="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono"
-                    />
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-semibold text-[#424242]">Enlace de Google Meet:</label>
                     <button
                       type="button"
                       onClick={generarEnlaceMeet}
-                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer"
+                      className="text-[11px] text-[#01579B] hover:text-[#004174] font-semibold cursor-pointer"
                     >
-                      Generar
+                      Generar aleatorio
                     </button>
                   </div>
+                  <input
+                    type="url"
+                    value={enlaceMeet}
+                    onChange={(e) => setEnlaceMeet(e.target.value)}
+                    placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                    className="w-full border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs text-[#212121] bg-white font-mono focus:ring-1 focus:ring-[#01579B]"
+                  />
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+              <div className="flex justify-between items-center pt-3 border-t border-[#EEEEEE]">
                 <button
                   type="button"
                   onClick={abrirEnGoogleCalendar}
                   disabled={!fechaEntrevista}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 disabled:opacity-40 cursor-pointer"
+                  className="text-xs text-[#01579B] hover:text-[#004174] font-semibold disabled:opacity-40 cursor-pointer"
                 >
-                  + Añadir a Google Calendar
+                  Abrir en Google Calendar
                 </button>
 
                 <div className="flex space-x-2">
                   <button
                     type="button"
                     onClick={() => setModalEntrevista(false)}
-                    className="px-3 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold cursor-pointer"
+                    className="px-4 py-2 border border-[#E0E0E0] text-[#424242] text-xs font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -1359,9 +1382,9 @@ export const CandidatoPerfilPage: React.FC = () => {
                     type="button"
                     onClick={() => agendarMutation.mutate()}
                     disabled={!fechaEntrevista || agendarMutation.isPending}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold cursor-pointer"
+                    className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
                   >
-                    {agendarMutation.isPending ? 'Guardando...' : 'Agendar Sesión'}
+                    {agendarMutation.isPending ? 'Guardando...' : 'Confirmar Agenda'}
                   </button>
                 </div>
               </div>
@@ -1369,25 +1392,29 @@ export const CandidatoPerfilPage: React.FC = () => {
           </div>
         )}
 
-        {/* MODAL: CREDENCIALES E INVITACIÓN */}
+        {/* Modal de Invitación y Credenciales */}
         {modalInvitacion && (
           <InvitacionCandidatoModal
             isOpen={modalInvitacion}
-            onClose={() => setModalInvitacion(false)}
-            candidatoId={id!}
+            candidatoId={candidato.id}
             candidatoNombre={`${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`}
-            candidatoEmail={candidato.usuario?.email || ''}
+            candidatoEmail={candidato.usuario?.email}
+            onClose={() => {
+              setModalInvitacion(false);
+              queryClient.invalidateQueries({ queryKey: ['candidato-perfil', id] });
+            }}
           />
         )}
 
-        {/* MODAL: RESUMEN PDF CON PLANTILLA OFICIAL */}
+        {/* Modal Oficial de PDF Informe de Entrevista */}
         {showPdfModal && (
           <ResumenResultadosPdfModal
             isOpen={showPdfModal}
-            onClose={() => setShowPdfModal(false)}
             candidato={candidato}
+            onClose={() => setShowPdfModal(false)}
           />
         )}
+
       </main>
     </div>
   );

@@ -101,25 +101,25 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto font-sans"
     >
-      <div className="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 my-8 space-y-5">
+      <div className="bg-white rounded-lg max-w-xl w-full p-6 shadow-xl border border-[#E0E0E0] my-8 space-y-5">
         {/* Cabecera */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-3 border-b border-[#EEEEEE]">
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-brand-50 text-brand-600 border border-brand-100">
+            <div className="p-2 rounded-lg bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB]">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">Aperturar Nueva Convocatoria</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="font-bold text-[#212121] text-base">Aperturar Nueva Convocatoria</h3>
+              <p className="text-xs text-[#616161]">
                 Inicia un nuevo ciclo de admisiones continuas para la recepción de postulantes.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-1 rounded-lg text-[#757575] hover:text-[#212121] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -143,10 +143,10 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
               type="button"
               onClick={() => setModoSemestre('existente')}
               disabled={semestresDisponibles.length === 0}
-              className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
+              className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
                 modoSemestre === 'existente'
-                  ? 'bg-brand-50 border-brand-500 text-brand-700 shadow-xs'
-                  : 'border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed'
+                  ? 'bg-[#E6EFF5] border-[#01579B] text-[#01579B]'
+                  : 'border-[#E0E0E0] text-[#616161] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -156,10 +156,10 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
             <button
               type="button"
               onClick={() => setModoSemestre('nuevo')}
-              className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
+              className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
                 modoSemestre === 'nuevo'
-                  ? 'bg-brand-50 border-brand-500 text-brand-700 shadow-xs'
-                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ? 'bg-[#E6EFF5] border-[#01579B] text-[#01579B]'
+                  : 'border-[#E0E0E0] text-[#616161] hover:bg-[#F5F5F5]'
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -169,11 +169,11 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
 
           {modoSemestre === 'existente' ? (
             <div>
-              <label className="block text-xs text-slate-600 mb-1">Selecciona el semestre académico:</label>
+              <label className="block text-xs text-[#616161] mb-1">Selecciona el semestre académico:</label>
               <select
                 value={semestreId}
                 onChange={(e) => setSemestreId(e.target.value)}
-                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white"
+                className="w-full text-xs px-3 py-2 border border-[#E0E0E0] rounded-lg focus:ring-1 focus:ring-[#01579B] bg-white text-[#212121]"
               >
                 {semestresDisponibles.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -183,10 +183,10 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
               </select>
             </div>
           ) : (
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E0E0E0] space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  <label className="block text-[11px] font-semibold text-[#616161] mb-1">
                     Denominación del Curso:
                   </label>
                   <input
@@ -194,17 +194,17 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
                     value={cursoDenominacion}
                     onChange={(e) => setCursoDenominacion(e.target.value)}
                     placeholder="ej. Curso 2026-2027"
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white"
+                    className="w-full text-xs px-3 py-2 border border-[#E0E0E0] rounded-lg bg-white text-[#212121]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  <label className="block text-[11px] font-semibold text-[#616161] mb-1">
                     Periodo Semestral:
                   </label>
                   <select
                     value={periodoSemestre}
                     onChange={(e) => setPeriodoSemestre(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white"
+                    className="w-full text-xs px-3 py-2 border border-[#E0E0E0] rounded-lg bg-white text-[#212121]"
                   >
                     <option value="SEM-01">SEM-01 (Semestre I)</option>
                     <option value="SEM-02">SEM-02 (Semestre II)</option>
@@ -215,21 +215,21 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Año Inicio:</label>
+                  <label className="block text-[11px] font-semibold text-[#616161] mb-1">Año Inicio:</label>
                   <input
                     type="number"
                     value={anioInicio}
                     onChange={(e) => setAnioInicio(Number(e.target.value))}
-                    className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded-lg bg-white"
+                    className="w-full text-xs px-3 py-1.5 border border-[#E0E0E0] rounded-lg bg-white text-[#212121]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Año Fin:</label>
+                  <label className="block text-[11px] font-semibold text-[#616161] mb-1">Año Fin:</label>
                   <input
                     type="number"
                     value={anioFin}
                     onChange={(e) => setAnioFin(Number(e.target.value))}
-                    className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded-lg bg-white"
+                    className="w-full text-xs px-3 py-1.5 border border-[#E0E0E0] rounded-lg bg-white text-[#212121]"
                   />
                 </div>
               </div>
@@ -238,50 +238,50 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
         </div>
 
         {/* Datos de la Convocatoria */}
-        <div className="space-y-3 pt-2 border-t border-slate-100">
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+        <div className="space-y-3 pt-2 border-t border-[#EEEEEE]">
+          <label className="block text-xs font-bold text-[#424242] uppercase tracking-wider">
             Detalles de la Convocatoria
           </label>
 
           <div>
-            <label className="block text-xs text-slate-600 mb-1">Título / Denominación Oficial:</label>
+            <label className="block text-xs text-[#616161] mb-1">Título / Denominación Oficial:</label>
             <input
               type="text"
               value={denominacion}
               onChange={(e) => setDenominacion(e.target.value)}
               placeholder="ej. Convocatoria Admisión Septiembre 2026"
-              className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 font-medium"
+              className="w-full text-xs px-3 py-2 border border-[#E0E0E0] rounded-lg focus:ring-1 focus:ring-[#01579B] font-medium text-[#212121] bg-white"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-600 mb-1">Fecha de Apertura:</label>
+              <label className="block text-xs text-[#616161] mb-1">Fecha de Apertura:</label>
               <input
                 type="date"
                 value={fechaApertura}
                 onChange={(e) => setFechaApertura(e.target.value)}
-                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                className="w-full text-xs px-3 py-2 border border-[#E0E0E0] rounded-lg bg-white text-[#212121]"
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-600 mb-1">Fecha de Cierre Prevista:</label>
+              <label className="block text-xs text-[#616161] mb-1">Fecha de Cierre Prevista:</label>
               <input
                 type="date"
                 value={fechaCierre}
                 onChange={(e) => setFechaCierre(e.target.value)}
-                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                className="w-full text-xs px-3 py-2 border border-[#E0E0E0] rounded-lg bg-white text-[#212121]"
               />
             </div>
           </div>
         </div>
 
         {/* Botones de acción */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-between pt-4 border-t border-[#EEEEEE]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] rounded-lg border border-[#E0E0E0] transition-colors cursor-pointer"
           >
             Cancelar
           </button>
@@ -290,7 +290,7 @@ export const AperturarConvocatoriaModal: React.FC<AperturarConvocatoriaModalProp
             type="button"
             onClick={() => aperturarMutation.mutate()}
             disabled={aperturarMutation.isPending || !denominacion.trim() || !fechaApertura || !fechaCierre}
-            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md shadow-brand-600/25 transition-all flex items-center space-x-1.5 disabled:opacity-50"
+            className="px-5 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
             <span>{aperturarMutation.isPending ? 'Aperturando...' : 'Aperturar Convocatoria'}</span>

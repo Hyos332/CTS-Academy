@@ -141,30 +141,30 @@ export const ImportarSedeModal: React.FC<ImportarSedeModalProps> = ({ isOpen, on
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto font-sans"
     >
-      <div className="bg-white rounded-2xl max-w-3xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 my-8 space-y-5">
+      <div className="bg-white rounded-lg max-w-3xl w-full p-6 shadow-xl border border-[#E0E0E0] my-8 space-y-5">
         {/* Cabecera */}
-        <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+        <div className="flex items-start justify-between pb-4 border-b border-[#EEEEEE]">
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-brand-50 text-brand-600 rounded-xl">
-              <UploadCloud className="w-6 h-6" />
+            <div className="p-2.5 bg-[#E6EFF5] text-[#01579B] rounded-lg border border-[#CCDDEB]">
+              <UploadCloud className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
-                CU: importarCandidatosSede
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#01579B] bg-[#E6EFF5] px-2 py-0.5 rounded border border-[#CCDDEB]">
+                Módulo de Admisión • Grupo FUNIBER
               </span>
-              <h2 className="text-lg font-black text-slate-900 mt-1">
+              <h2 className="text-base font-bold text-[#212121] mt-1">
                 Importación Masiva de Nómina por Sede
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#616161]">
                 Carga por lote de candidatos universitarios remitidos por las sedes para la convocatoria activa.
               </p>
             </div>
           </div>
           <button
             onClick={handleCerrar}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+            className="p-1.5 text-[#757575] hover:text-[#212121] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -343,34 +343,34 @@ export const ImportarSedeModal: React.FC<ImportarSedeModalProps> = ({ isOpen, on
             )}
 
             {/* Opciones de Despacho Inmediato */}
-            <div className="p-3 bg-indigo-50/70 border border-indigo-200/70 rounded-xl">
-              <label className="flex items-center space-x-2 text-xs font-bold text-indigo-950 cursor-pointer">
+            <div className="p-3 bg-[#E6EFF5] border border-[#CCDDEB] rounded-lg">
+              <label className="flex items-center space-x-2 text-xs font-bold text-[#01579B] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={enviarInvitaciones}
                   onChange={(e) => setEnviarInvitaciones(e.target.checked)}
-                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  className="rounded border-[#BDBDBD] text-[#01579B] focus:ring-[#01579B]"
                 />
                 <span>Habilitar credenciales y registrar despacho de invitación por correo</span>
               </label>
-              <p className="text-[11px] text-slate-500 pl-6 mt-0.5">
+              <p className="text-[11px] text-[#616161] pl-6 mt-0.5">
                 Cada aspirante dispondrá de acceso inmediato con su contraseña temporal (CtsAcademy2026!) para
                 rendir las 3 baterías.
               </p>
             </div>
 
             {/* Acciones */}
-            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+            <div className="flex justify-end space-x-2 pt-3 border-t border-[#EEEEEE]">
               <button
                 onClick={handleCerrar}
-                className="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 border border-[#E0E0E0] text-[#424242] text-xs font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => importarMutation.mutate()}
                 disabled={validosCount === 0 || importarMutation.isPending}
-                className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center space-x-1.5"
+                className="px-5 py-2 bg-[#01579B] hover:bg-[#004174] disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-2xs transition-all flex items-center space-x-1.5 cursor-pointer"
               >
                 {importarMutation.isPending ? (
                   <span>Importando nómina...</span>

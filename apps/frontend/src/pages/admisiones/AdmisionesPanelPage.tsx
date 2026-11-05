@@ -5,7 +5,6 @@ import { apiClient } from '../../api/client';
 import { Navbar } from '../../components/common/Navbar';
 import {
   Users,
-  ShieldAlert,
   Lock,
   ChevronRight,
   ChevronLeft,
@@ -14,8 +13,6 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRightLeft,
-  UserCheck,
-  Clock,
   Mail,
   CheckCircle2,
   Search,
@@ -26,9 +23,8 @@ import {
   UploadCloud,
   RotateCcw,
   PlusCircle,
-  AlertCircle,
-  History,
   Pencil,
+  X,
 } from 'lucide-react';
 import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
 import { ImportarSedeModal } from '../../components/admisiones/ImportarSedeModal';
@@ -81,7 +77,7 @@ export const AdmisionesPanelPage: React.FC = () => {
     email: string;
   } | null>(null);
 
-  // Estados para ver miembros y movilidad entre squads (Requirements 3 y 4)
+  // Estados para ver miembros y movilidad entre squads
   const [squadsExpandidos, setSquadsExpandidos] = useState<Record<string, boolean>>({});
   const [alumnoParaTransferir, setAlumnoParaTransferir] = useState<{
     id: string;
@@ -145,7 +141,6 @@ export const AdmisionesPanelPage: React.FC = () => {
     },
   });
 
-  // Mutación: Transferir o reasignar alumno entre squads (Requirement 4)
   const transferirAlumnoMutation = useMutation({
     mutationFn: async () => {
       if (!alumnoParaTransferir) return;
@@ -169,130 +164,112 @@ export const AdmisionesPanelPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-10 h-10 border-3 border-[#01579B] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-[#616161]">Cargando Panel de Admisiones...</span>
+        </div>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans">
         <Navbar onToggleSidebar={() => setSidebarAbierto((prev) => !prev)} isSidebarOpen={sidebarAbierto} />
-        <main className="w-full px-4 py-12 text-center text-red-600">
-          Error al cargar las métricas de admisiones.
+        <main className="w-full px-4 py-12 text-center text-[#D32F2F] text-sm">
+          Error al cargar las métricas de admisiones. Por favor, recarga la página.
         </main>
       </div>
     );
   }
 
-  const {
-    convocatoriaActiva,
-    ultimaConvocatoria,
-    convocatorias = [],
-    semestresDisponibles = [],
-    historicoConvocatorias = [],
-    metricasPostulacion = {},
-    equipos = [],
-    candidatos = [],
-    alumnosSinEquipo = [],
-  } = data;
+  const { convocatoriaActiva, ultimaConvocatoria, convocatorias, candidatos, equipos, alumnos } = data;
+  const listaConvocatorias = convocatorias || [];
 
-  const listaConvocatorias = convocatorias.length > 0 ? convocatorias : historicoConvocatorias;
+  const convocatoriaMostrar =
+    filtroConvocatoria === 'TODAS'
+      ? convocatoriaActiva || ultimaConvocatoria
+      : listaConvocatorias.find((c: any) => c.id === filtroConvocatoria) || convocatoriaActiva || ultimaConvocatoria;
 
-  // Convocatoria en foco seleccionada (si se eligió una en específico o por defecto la activa/última)
-  const convocatoriaFoco =
-    filtroConvocatoria !== 'TODAS'
-      ? listaConvocatorias.find((c: any) => c.id === filtroConvocatoria) || convocatoriaActiva || ultimaConvocatoria
-      : convocatoriaActiva || ultimaConvocatoria;
-
-  const convocatoriaMostrar = convocatoriaFoco || ultimaConvocatoria;
-
-  // Métricas reactivas calculadas según la convocatoria en foco (o todas si está en 'TODAS')
-  const candidatosEnFoco =
-    filtroConvocatoria !== 'TODAS'
-      ? (candidatos || []).filter((c: any) => c.convocatoriaId === filtroConvocatoria)
-      : (candidatos || []);
-
-  const metricasActivas = {
-    totalCandidatos: candidatosEnFoco.length,
-    enProceso: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'EN_PROCESO').length,
-    testsCompletados: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'TESTS_COMPLETADOS').length,
-    entrevistaAgendada: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ENTREVISTA_AGENDADA').length,
-    admitidos: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ADMITIDO').length,
-    abandonos: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ABANDONADO' || c.estadoPostulacion === 'RECHAZADO').length,
-  };
-
-  // Lista consolidada de todos los alumnos asignados en los squads
-  const todosLosAlumnos = (equipos || []).flatMap((eq: any) =>
-    (eq.miembros || []).map((m: any) => ({
-      ...m,
-      squadId: eq.id,
-      squadNombre: eq.nombre,
-      squadCodigo: eq.codigo,
-    })),
-  );
-
-  // Filtrado de candidatos
+  // Filtrado de Candidatos
   const candidatosFiltrados = (candidatos || []).filter((cand: any) => {
-    const coincideTexto =
-      !busquedaCandidato ||
-      cand.nombreCompleto?.toLowerCase().includes(busquedaCandidato.toLowerCase()) ||
-      cand.email?.toLowerCase().includes(busquedaCandidato.toLowerCase());
-
-    const coincideEstado =
-      filtroEstadoCandidato === 'TODOS' ||
-      cand.estadoPostulacion === filtroEstadoCandidato ||
-      (filtroEstadoCandidato === 'ABANDONADO' &&
-        (cand.estadoPostulacion === 'ABANDONADO' || cand.estadoPostulacion === 'RECHAZADO'));
-
-    const coincideSede =
-      filtroSedeCandidato === 'TODAS' || cand.sedeOrigen === filtroSedeCandidato;
-
-    const coincideConvocatoria =
-      filtroConvocatoria === 'TODAS' || cand.convocatoriaId === filtroConvocatoria;
-
-    return coincideTexto && coincideEstado && coincideSede && coincideConvocatoria;
+    if (filtroConvocatoria !== 'TODAS' && cand.convocatoriaId !== filtroConvocatoria) {
+      return false;
+    }
+    if (filtroEstadoCandidato !== 'TODOS') {
+      if (filtroEstadoCandidato === 'ABANDONADO') {
+        if (cand.estadoPostulacion !== 'ABANDONADO' && cand.estadoPostulacion !== 'RECHAZADO') return false;
+      } else if (cand.estadoPostulacion !== filtroEstadoCandidato) {
+        return false;
+      }
+    }
+    if (filtroSedeCandidato !== 'TODAS' && cand.sedeOrigen !== filtroSedeCandidato) {
+      return false;
+    }
+    if (busquedaCandidato.trim() !== '') {
+      const q = busquedaCandidato.toLowerCase();
+      const matchNombre = cand.nombreCompleto?.toLowerCase().includes(q);
+      const matchEmail = cand.email?.toLowerCase().includes(q);
+      if (!matchNombre && !matchEmail) return false;
+    }
+    return true;
   });
 
   const totalCandidatosFiltrados = candidatosFiltrados.length;
-  const totalPaginasCandidatos = Math.max(1, Math.ceil(totalCandidatosFiltrados / candidatosPorPagina));
+  const totalPaginasCandidatos = Math.ceil(totalCandidatosFiltrados / candidatosPorPagina) || 1;
   const candidatosPaginados = candidatosFiltrados.slice(
     (paginaCandidatos - 1) * candidatosPorPagina,
     paginaCandidatos * candidatosPorPagina,
   );
 
-  // Filtrado de alumnos
-  const alumnosFiltrados = todosLosAlumnos.filter((al: any) => {
-    return (
-      !busquedaAlumno ||
-      al.nombreCompleto?.toLowerCase().includes(busquedaAlumno.toLowerCase()) ||
-      al.email?.toLowerCase().includes(busquedaAlumno.toLowerCase()) ||
-      al.squadNombre?.toLowerCase().includes(busquedaAlumno.toLowerCase())
-    );
+  // Métricas reactivas del embudo según el filtro
+  const metricasActivas = {
+    totalCandidatos: candidatosFiltrados.length,
+    enProceso: candidatosFiltrados.filter((c: any) => c.estadoPostulacion === 'EN_PROCESO').length,
+    testsCompletados: candidatosFiltrados.filter((c: any) => c.estadoPostulacion === 'TESTS_COMPLETADOS').length,
+    entrevistaAgendada: candidatosFiltrados.filter((c: any) => c.estadoPostulacion === 'ENTREVISTA_AGENDADA').length,
+    admitidos: candidatosFiltrados.filter((c: any) => c.estadoPostulacion === 'ADMITIDO').length,
+    abandonos: candidatosFiltrados.filter(
+      (c: any) => c.estadoPostulacion === 'ABANDONADO' || c.estadoPostulacion === 'RECHAZADO',
+    ).length,
+  };
+
+  // Filtrado de Alumnos PROFER
+  const alumnosFiltrados = (alumnos || []).filter((al: any) => {
+    if (busquedaAlumno.trim() !== '') {
+      const q = busquedaAlumno.toLowerCase();
+      const matchNombre = al.nombreCompleto?.toLowerCase().includes(q);
+      const matchEmail = al.email?.toLowerCase().includes(q);
+      const matchSquad = al.squadActualNombre?.toLowerCase().includes(q);
+      if (!matchNombre && !matchEmail && !matchSquad) return false;
+    }
+    return true;
   });
 
   const totalAlumnosFiltrados = alumnosFiltrados.length;
-  const totalPaginasAlumnos = Math.max(1, Math.ceil(totalAlumnosFiltrados / alumnosPorPagina));
+  const totalPaginasAlumnos = Math.ceil(totalAlumnosFiltrados / alumnosPorPagina) || 1;
   const alumnosPaginados = alumnosFiltrados.slice(
     (paginaAlumnos - 1) * alumnosPorPagina,
     paginaAlumnos * alumnosPorPagina,
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans text-[#212121]">
       <Navbar onToggleSidebar={() => setSidebarAbierto((prev) => !prev)} isSidebarOpen={sidebarAbierto} />
 
-      <div className="flex-1 flex flex-col lg:flex-row w-full px-3 sm:px-6 lg:px-8 py-6 gap-6">
+      <div className="flex-1 flex flex-col lg:flex-row w-full px-4 sm:px-6 lg:px-8 py-6 gap-6">
+        
         {/* ========================================================= */}
-        {/* SIDEBAR DE NAVEGACIÓN Y CAMBIO DE VENTANAS                */}
+        {/* SIDEBAR DE NAVEGACIÓN (Lateral Navigation FUNIBER SD)     */}
         {/* ========================================================= */}
         {sidebarAbierto && (
           <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4">
+            
             {/* Tarjeta de Contexto de la Convocatoria */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+            <div className="bg-white border border-[#E0E0E0] rounded-lg p-4 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-[#757575] uppercase tracking-wider">
                   Periodo en Foco
                 </span>
                 <div className="flex items-center space-x-1.5">
@@ -311,8 +288,8 @@ export const AdmisionesPanelPage: React.FC = () => {
                         });
                         setShowEditarModal(true);
                       }}
-                      title="Editar esta convocatoria"
-                      className="p-1 rounded text-slate-400 hover:text-[#01579B] hover:bg-slate-100 transition-colors cursor-pointer"
+                      title="Editar parámetros de esta convocatoria"
+                      className="p-1 rounded text-[#757575] hover:text-[#01579B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
@@ -320,8 +297,8 @@ export const AdmisionesPanelPage: React.FC = () => {
                   <span
                     className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                       convocatoriaMostrar?.estado === 'ABIERTA'
-                        ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                        : 'text-slate-600 bg-slate-100 border-slate-200'
+                        ? 'text-[#1B5E20] bg-[#E8F5E9] border-[#C8E6C9]'
+                        : 'text-[#616161] bg-[#F5F5F5] border-[#E0E0E0]'
                     }`}
                   >
                     {filtroConvocatoria === 'TODAS'
@@ -332,7 +309,7 @@ export const AdmisionesPanelPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-500 mb-1">
+                <label className="block text-[11px] font-semibold text-[#616161] mb-1">
                   Cambiar Periodo / Convocatoria:
                 </label>
                 <select
@@ -341,7 +318,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                     setFiltroConvocatoria(e.target.value);
                     setPaginaCandidatos(1);
                   }}
-                  className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none cursor-pointer"
+                  className="w-full text-xs font-semibold text-[#212121] bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg px-2.5 py-2 focus:ring-2 focus:ring-[#01579B] focus:border-[#01579B] focus:outline-none cursor-pointer"
                 >
                   <option value="TODAS">🌐 Todas las Convocatorias ({candidatos?.length || 0})</option>
                   {listaConvocatorias.map((c: any) => (
@@ -352,16 +329,16 @@ export const AdmisionesPanelPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-                <span className="truncate">Semestre: <strong className="text-slate-700">{convocatoriaMostrar?.semestre || 'General'}</strong></span>
-                <span className="text-[11px] font-mono font-bold text-brand-600">
+              <div className="flex items-center justify-between text-xs text-[#757575] pt-2 border-t border-[#EEEEEE]">
+                <span className="truncate">Semestre: <strong className="text-[#424242]">{convocatoriaMostrar?.semestre || 'General'}</strong></span>
+                <span className="text-[11px] font-mono font-bold text-[#01579B]">
                   {metricasActivas.totalCandidatos} post.
                 </span>
               </div>
             </div>
 
             {/* Menú de Navegación Vertical (Estilo Oficial Lateral Navigation Grupo FUNIBER SD) */}
-            <nav className="bg-white border border-[#E0E0E0] rounded-lg p-2 shadow-funiber space-y-1">
+            <nav className="bg-white border border-[#E0E0E0] rounded-lg p-2 shadow-xs space-y-1">
               <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#757575]">
                 Gestión de Convocatoria
               </div>
@@ -423,60 +400,61 @@ export const AdmisionesPanelPage: React.FC = () => {
               </button>
             </nav>
 
-          {/* Botones de Acción Rápida en Sidebar (Estilo Button Grupo FUNIBER SD) */}
-          <div className="bg-white border border-[#E0E0E0] rounded-lg p-3.5 shadow-funiber space-y-2">
-            <button
-              onClick={() => setShowAperturarModal(true)}
-              className="w-full py-2 px-3 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center justify-center space-x-1.5"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Aperturar Convocatoria</span>
-            </button>
-
-            <button
-              onClick={() => setShowRegisterModal(true)}
-              className="w-full py-2.5 px-3 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center space-x-1.5"
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Inscribir Aspirante</span>
-            </button>
-
-            <button
-              onClick={() => setShowImportSedeModal(true)}
-              className="w-full py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center space-x-1.5"
-            >
-              <UploadCloud className="w-3.5 h-3.5" />
-              <span>Importar Nómina de Sede</span>
-            </button>
-
-            {convocatoriaActiva && (
+            {/* Botones de Acción Rápida en Sidebar (Estilo Button Grupo FUNIBER SD) */}
+            <div className="bg-white border border-[#E0E0E0] rounded-lg p-3.5 shadow-xs space-y-2">
               <button
-                onClick={() => setShowCloseModal(true)}
-                className="w-full py-2 px-3 border border-red-200 text-red-700 hover:bg-red-50 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center space-x-1.5"
+                onClick={() => setShowAperturarModal(true)}
+                className="w-full py-2 px-3 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
               >
-                <Lock className="w-3.5 h-3.5 text-red-500" />
-                <span>Cerrar Corte Semestral</span>
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Aperturar Convocatoria</span>
               </button>
-            )}
 
-            {!convocatoriaActiva && ultimaConvocatoria && (
               <button
-                onClick={() => reabrirConvocatoriaMutation.mutate(ultimaConvocatoria.id)}
-                disabled={reabrirConvocatoriaMutation.isPending}
-                className="w-full py-2 px-3 border border-amber-300 text-amber-800 hover:bg-amber-50 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center space-x-1.5"
+                onClick={() => setShowRegisterModal(true)}
+                className="w-full py-2 px-3 border border-[#01579B] text-[#01579B] hover:bg-[#E6EFF5] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
-                <span>Reabrir Convocatoria</span>
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Inscribir Aspirante</span>
               </button>
-            )}
-          </div>
-        </aside>
+
+              <button
+                onClick={() => setShowImportSedeModal(true)}
+                className="w-full py-2 px-3 border border-[#E0E0E0] text-[#424242] hover:bg-[#F5F5F5] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-[#616161]" />
+                <span>Importar Nómina de Sede</span>
+              </button>
+
+              {convocatoriaActiva && (
+                <button
+                  onClick={() => setShowCloseModal(true)}
+                  className="w-full py-2 px-3 border border-[#FFCDD2] text-[#D32F2F] hover:bg-[#FFEBEE] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <Lock className="w-3.5 h-3.5 text-[#D32F2F]" />
+                  <span>Cerrar Corte Semestral</span>
+                </button>
+              )}
+
+              {!convocatoriaActiva && ultimaConvocatoria && (
+                <button
+                  onClick={() => reabrirConvocatoriaMutation.mutate(ultimaConvocatoria.id)}
+                  disabled={reabrirConvocatoriaMutation.isPending}
+                  className="w-full py-2 px-3 border border-[#FFE0B2] text-[#E65100] hover:bg-[#FFF3E0] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-[#E65100]" />
+                  <span>Reabrir Convocatoria</span>
+                </button>
+              )}
+            </div>
+          </aside>
         )}
 
         {/* ========================================================= */}
         {/* ÁREA DE CONTENIDO PRINCIPAL SEGÚN VENTANA ACTIVA          */}
         {/* ========================================================= */}
         <main className="flex-1 min-w-0 space-y-6">
+          
           {/* ========================================================= */}
           {/* 1. VENTANA: ASPIRANTES & SELECCIÓN                        */}
           {/* ========================================================= */}
@@ -485,25 +463,25 @@ export const AdmisionesPanelPage: React.FC = () => {
               {/* Cabecera de la Sección */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-brand-600" />
+                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-[#01579B]" />
                     <span>Aspirantes & Embudo de Admisión</span>
                   </h1>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[#757575] mt-0.5">
                     Seguimiento individual de postulantes, credenciales enviadas y convocatorias a entrevista.
                   </p>
                 </div>
                 <div className="flex items-center space-x-2 self-start sm:self-auto">
                   <button
                     onClick={() => setShowImportSedeModal(true)}
-                    className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl shadow-2xs transition-colors inline-flex items-center space-x-1.5"
+                    className="px-3.5 py-2 border border-[#E0E0E0] bg-white hover:bg-[#F5F5F5] text-[#424242] text-xs font-semibold rounded-lg shadow-2xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
                   >
-                    <UploadCloud className="w-3.5 h-3.5" />
+                    <UploadCloud className="w-3.5 h-3.5 text-[#616161]" />
                     <span>Importar Nómina Sede</span>
                   </button>
                   <button
                     onClick={() => setShowRegisterModal(true)}
-                    className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors inline-flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>Nuevo Aspirante</span>
@@ -511,38 +489,53 @@ export const AdmisionesPanelPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Embudo de Candidatos (Métricas reactivas según la convocatoria seleccionada) */}
+              {/* Embudo de Candidatos (Métricas reactivas limpias y con jerarquía FUNIBER SD) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
-                  <span className="text-[11px] font-medium text-slate-500 block">Postulados</span>
-                  <p className="text-xl font-black text-slate-900 mt-0.5">{metricasActivas.totalCandidatos}</p>
+                <div className="bg-white p-3.5 rounded-lg border border-[#E0E0E0] shadow-xs">
+                  <span className="text-[11px] font-semibold text-[#757575] block uppercase tracking-wider">Postulados</span>
+                  <p className="text-2xl font-black text-[#212121] mt-1">{metricasActivas.totalCandidatos}</p>
                 </div>
-                <div className="bg-white p-3.5 rounded-xl border border-blue-200/70 shadow-xs bg-blue-50/20">
-                  <span className="text-[11px] font-medium text-blue-700 block">En Proceso</span>
-                  <p className="text-xl font-black text-blue-900 mt-0.5">{metricasActivas.enProceso}</p>
+                <div className="bg-white p-3.5 rounded-lg border border-[#FFE0B2] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-[#E65100] block uppercase tracking-wider">En Proceso</span>
+                    <span className="w-2 h-2 rounded-full bg-[#FF9800]" />
+                  </div>
+                  <p className="text-2xl font-black text-[#E65100] mt-1">{metricasActivas.enProceso}</p>
                 </div>
-                <div className="bg-white p-3.5 rounded-xl border border-indigo-200/70 shadow-xs bg-indigo-50/20">
-                  <span className="text-[11px] font-medium text-indigo-700 block">Tests Listos</span>
-                  <p className="text-xl font-black text-indigo-900 mt-0.5">{metricasActivas.testsCompletados}</p>
+                <div className="bg-white p-3.5 rounded-lg border border-[#CCDDEB] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-[#01579B] block uppercase tracking-wider">Tests Listos</span>
+                    <span className="w-2 h-2 rounded-full bg-[#01579B]" />
+                  </div>
+                  <p className="text-2xl font-black text-[#01579B] mt-1">{metricasActivas.testsCompletados}</p>
                 </div>
-                <div className="bg-white p-3.5 rounded-xl border border-purple-200/70 shadow-xs bg-purple-50/20">
-                  <span className="text-[11px] font-medium text-purple-700 block">Entrevistas</span>
-                  <p className="text-xl font-black text-purple-900 mt-0.5">{metricasActivas.entrevistaAgendada}</p>
+                <div className="bg-white p-3.5 rounded-lg border border-[#C4D9FD] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-[#084DC4] block uppercase tracking-wider">Entrevistas</span>
+                    <span className="w-2 h-2 rounded-full bg-[#2873F6]" />
+                  </div>
+                  <p className="text-2xl font-black text-[#084DC4] mt-1">{metricasActivas.entrevistaAgendada}</p>
                 </div>
-                <div className="bg-white p-3.5 rounded-xl border border-emerald-200/70 shadow-xs bg-emerald-50/20">
-                  <span className="text-[11px] font-medium text-emerald-700 block">Admitidos</span>
-                  <p className="text-xl font-black text-emerald-900 mt-0.5">{metricasActivas.admitidos}</p>
+                <div className="bg-white p-3.5 rounded-lg border border-[#C8E6C9] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-[#1B5E20] block uppercase tracking-wider">Admitidos</span>
+                    <span className="w-2 h-2 rounded-full bg-[#4CAF50]" />
+                  </div>
+                  <p className="text-2xl font-black text-[#1B5E20] mt-1">{metricasActivas.admitidos}</p>
                 </div>
-                <div className="bg-white p-3.5 rounded-xl border border-amber-200/70 shadow-xs bg-amber-50/20">
-                  <span className="text-[11px] font-medium text-amber-700 block">Abandonadas</span>
-                  <p className="text-xl font-black text-amber-900 mt-0.5">{metricasActivas.abandonos}</p>
+                <div className="bg-white p-3.5 rounded-lg border border-[#FFCDD2] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-[#B71C1C] block uppercase tracking-wider">Abandonadas</span>
+                    <span className="w-2 h-2 rounded-full bg-[#F44336]" />
+                  </div>
+                  <p className="text-2xl font-black text-[#B71C1C] mt-1">{metricasActivas.abandonos}</p>
                 </div>
               </div>
 
               {/* Barra de Filtros y Búsqueda */}
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+              <div className="bg-white p-3.5 rounded-lg border border-[#E0E0E0] shadow-xs flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-[#757575] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={busquedaCandidato}
@@ -551,40 +544,20 @@ export const AdmisionesPanelPage: React.FC = () => {
                       setPaginaCandidatos(1);
                     }}
                     placeholder="Buscar por nombre, apellidos o correo..."
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50"
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-[#E0E0E0] rounded-lg focus:ring-2 focus:ring-[#01579B] focus:border-[#01579B] focus:outline-none bg-[#FAFAFA] text-[#212121]"
                   />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Filtro Convocatoria */}
                   <div className="flex items-center space-x-1">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <select
-                      value={filtroConvocatoria}
-                      onChange={(e) => {
-                        setFiltroConvocatoria(e.target.value);
-                        setPaginaCandidatos(1);
-                      }}
-                      className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 max-w-[210px] truncate"
-                    >
-                      <option value="TODAS">Todas las Convocatorias ({candidatos?.length || 0})</option>
-                      {listaConvocatorias.map((c: any) => (
-                        <option key={c.id} value={c.id}>
-                          {c.estado === 'ABIERTA' ? '🟢' : '⚪'} {c.denominacion} ({c.totalCandidatos})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex items-center space-x-1">
-                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                    <Filter className="w-3.5 h-3.5 text-[#757575]" />
                     <select
                       value={filtroEstadoCandidato}
                       onChange={(e) => {
                         setFiltroEstadoCandidato(e.target.value);
                         setPaginaCandidatos(1);
                       }}
-                      className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="text-xs border border-[#E0E0E0] rounded-lg px-2.5 py-2 bg-[#FAFAFA] text-[#424242] focus:outline-none focus:ring-2 focus:ring-[#01579B]"
                     >
                       <option value="TODOS">Todos los Estados</option>
                       <option value="EN_PROCESO">En Proceso</option>
@@ -601,7 +574,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                       setFiltroSedeCandidato(e.target.value);
                       setPaginaCandidatos(1);
                     }}
-                    className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="text-xs border border-[#E0E0E0] rounded-lg px-2.5 py-2 bg-[#FAFAFA] text-[#424242] focus:outline-none focus:ring-2 focus:ring-[#01579B]"
                   >
                     <option value="TODAS">Todas las Sedes</option>
                     <option value="SDR_ESP">Santander (España)</option>
@@ -613,26 +586,26 @@ export const AdmisionesPanelPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Tabla de Postulantes Activos */}
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+              {/* Tabla de Postulantes Activos (Estilo Oficial FUNIBER SD) */}
+              <div className="bg-white border border-[#E0E0E0] rounded-lg shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                  <table className="w-full text-left text-xs text-[#424242]">
+                    <thead className="bg-[#FAFAFA] text-[11px] font-bold uppercase tracking-wider text-[#616161] border-b border-[#E0E0E0]">
                       <tr>
-                        <th className="px-5 py-3.5">Candidato</th>
-                        <th className="px-4 py-3.5">Convocatoria</th>
-                        <th className="px-4 py-3.5">Sede</th>
-                        <th className="px-4 py-3.5">Estado Postulación</th>
-                        <th className="px-4 py-3.5">Invitación & Credenciales</th>
-                        <th className="px-4 py-3.5">Test Técnico</th>
-                        <th className="px-4 py-3.5">Entrevista Meet</th>
-                        <th className="px-5 py-3.5 text-right">Acción</th>
+                        <th className="px-5 py-3">Candidato</th>
+                        <th className="px-4 py-3">Convocatoria</th>
+                        <th className="px-4 py-3">Sede</th>
+                        <th className="px-4 py-3">Estado Postulación</th>
+                        <th className="px-4 py-3">Invitación & Credenciales</th>
+                        <th className="px-4 py-3">Test Técnico</th>
+                        <th className="px-4 py-3">Entrevista Meet</th>
+                        <th className="px-5 py-3 text-right">Acción</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-[#EEEEEE]">
                       {candidatosFiltrados.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="px-6 py-12 text-center text-xs text-slate-400 italic">
+                          <td colSpan={8} className="px-6 py-12 text-center text-xs text-[#757575] italic">
                             No se encontraron candidatos con los filtros seleccionados.
                           </td>
                         </tr>
@@ -646,30 +619,30 @@ export const AdmisionesPanelPage: React.FC = () => {
                           );
 
                           return (
-                            <tr key={cand.id} className="hover:bg-slate-50/80 transition-colors">
+                            <tr key={cand.id} className="hover:bg-[#F7F9FC] transition-colors">
                               <td className="px-5 py-3.5">
-                                <span className="font-bold text-slate-900 block text-xs sm:text-sm">
+                                <span className="font-bold text-[#212121] block text-xs">
                                   {cand.nombreCompleto}
                                 </span>
-                                <span className="text-[11px] text-slate-400 block font-mono">
+                                <span className="text-[11px] text-[#757575] block font-mono">
                                   {cand.email}
                                 </span>
                               </td>
-                              {/* Campo de Convocatoria en la que entró */}
+                              
                               <td className="px-4 py-3.5">
                                 <div className="max-w-[190px]">
-                                  <span className="font-semibold text-slate-900 block text-xs truncate" title={cand.convocatoriaNombre}>
+                                  <span className="font-semibold text-[#212121] block text-xs truncate" title={cand.convocatoriaNombre}>
                                     {cand.convocatoriaNombre}
                                   </span>
                                   <div className="flex items-center space-x-1.5 mt-0.5">
-                                    <span className="text-[10px] text-slate-500 font-mono truncate" title={cand.semestreNombre}>
+                                    <span className="text-[10px] text-[#757575] font-mono truncate" title={cand.semestreNombre}>
                                       {cand.semestreNombre}
                                     </span>
                                     <span
                                       className={`px-1.5 py-0.2 rounded text-[9px] font-bold shrink-0 ${
                                         cand.convocatoriaEstado === 'ABIERTA'
-                                          ? 'bg-emerald-50 text-emerald-700'
-                                          : 'bg-slate-100 text-slate-500'
+                                          ? 'bg-[#E8F5E9] text-[#1B5E20]'
+                                          : 'bg-[#F5F5F5] text-[#616161]'
                                       }`}
                                     >
                                       {cand.convocatoriaEstado === 'ABIERTA' ? 'Activa' : 'Cerrada'}
@@ -677,23 +650,25 @@ export const AdmisionesPanelPage: React.FC = () => {
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-4 py-3.5 text-xs font-mono font-medium text-slate-600">
+
+                              <td className="px-4 py-3.5 text-xs font-mono font-medium text-[#616161]">
                                 {cand.sedeOrigen}
                               </td>
+
                               <td className="px-4 py-3.5">
                                 <span
-                                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                                     cand.estadoPostulacion === 'ADMITIDO'
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]'
                                       : cand.estadoPostulacion === 'TESTS_COMPLETADOS'
-                                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                      ? 'bg-[#E6EFF5] text-[#01579B] border-[#CCDDEB]'
                                       : cand.estadoPostulacion === 'ENTREVISTA_AGENDADA'
-                                      ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                      ? 'bg-[#E8F0FE] text-[#084DC4] border-[#C4D9FD]'
                                       : cand.estadoPostulacion === 'EN_PROCESO'
-                                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                      ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2]'
                                       : cand.estadoPostulacion === 'ABANDONADO' || cand.estadoPostulacion === 'RECHAZADO'
-                                      ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                      : 'bg-slate-100 text-slate-700 border-slate-200'
+                                      ? 'bg-[#FFEBEE] text-[#B71C1C] border-[#FFCDD2]'
+                                      : 'bg-[#F5F5F5] text-[#616161] border-[#E0E0E0]'
                                   }`}
                                 >
                                   {cand.estadoPostulacion === 'ADMITIDO'
@@ -704,7 +679,6 @@ export const AdmisionesPanelPage: React.FC = () => {
                                 </span>
                               </td>
 
-                              {/* Invitación y Credenciales */}
                               <td className="px-4 py-3.5">
                                 <button
                                   onClick={() =>
@@ -714,10 +688,10 @@ export const AdmisionesPanelPage: React.FC = () => {
                                       email: cand.email,
                                     })
                                   }
-                                  className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                  className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                                     invitacionEnviada
-                                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                                      : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                                      ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9] hover:bg-[#C8E6C9]/40'
+                                      : 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2] hover:bg-[#FFE0B2]/50'
                                   }`}
                                   title={
                                     invitacionEnviada
@@ -727,12 +701,12 @@ export const AdmisionesPanelPage: React.FC = () => {
                                 >
                                   {invitacionEnviada ? (
                                     <>
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32]" />
                                       <span>Enviada</span>
                                     </>
                                   ) : (
                                     <>
-                                      <Mail className="w-3.5 h-3.5 text-amber-600" />
+                                      <Mail className="w-3.5 h-3.5 text-[#F57C00]" />
                                       <span>Credenciales</span>
                                     </>
                                   )}
@@ -742,37 +716,37 @@ export const AdmisionesPanelPage: React.FC = () => {
                               <td className="px-4 py-3.5">
                                 {testTecnico ? (
                                   <div className="text-xs">
-                                    <span className="font-bold text-slate-800">
+                                    <span className="font-bold text-[#212121]">
                                       {testTecnico.calificacion !== null
                                         ? `${Number(testTecnico.calificacion).toFixed(1)} / 10`
                                         : '—'}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 block font-mono">
+                                    <span className="text-[10px] text-[#757575] block font-mono">
                                       {testTecnico.estado}
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-xs text-slate-400">—</span>
+                                  <span className="text-xs text-[#757575]">—</span>
                                 )}
                               </td>
 
                               <td className="px-4 py-3.5">
                                 {tieneMeet ? (
-                                  <span className="inline-flex items-center text-xs text-indigo-600 font-semibold">
+                                  <span className="inline-flex items-center text-xs text-[#084DC4] font-semibold">
                                     <Video className="w-3.5 h-3.5 mr-1" />
                                     {new Date(cand.entrevista.fechaHoraProgramada).toLocaleDateString()}
                                   </span>
                                 ) : (
-                                  <span className="text-xs text-slate-400 italic">Pendiente</span>
+                                  <span className="text-xs text-[#757575] italic">Pendiente</span>
                                 )}
                               </td>
 
                               <td className="px-5 py-3.5 text-right">
                                 <button
                                   onClick={() => navigate(`/admisiones/candidatos/${cand.id}`)}
-                                  className="px-3 py-1.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 text-xs font-bold rounded-lg transition-colors inline-flex items-center space-x-1"
+                                  className="px-3 py-1.5 bg-[#E6EFF5] hover:bg-[#01579B] text-[#01579B] hover:text-white border border-[#CCDDEB] hover:border-[#01579B] text-xs font-semibold rounded-lg transition-colors inline-flex items-center space-x-1 cursor-pointer"
                                 >
-                                  <span>Evaluar</span>
+                                  <span>Expediente</span>
                                   <ChevronRight className="w-3.5 h-3.5" />
                                 </button>
                               </td>
@@ -786,60 +760,55 @@ export const AdmisionesPanelPage: React.FC = () => {
 
                 {/* Controles de Paginación de Aspirantes */}
                 {totalCandidatosFiltrados > 0 && (
-                  <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+                  <div className="px-5 py-3.5 bg-[#FAFAFA] border-t border-[#E0E0E0] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#616161]">
                     <div className="flex items-center space-x-2">
                       <span>Mostrando</span>
-                      <strong className="text-slate-900">
+                      <strong className="text-[#212121]">
                         {(paginaCandidatos - 1) * candidatosPorPagina + 1}
                       </strong>
                       <span>a</span>
-                      <strong className="text-slate-900">
+                      <strong className="text-[#212121]">
                         {Math.min(paginaCandidatos * candidatosPorPagina, totalCandidatosFiltrados)}
                       </strong>
                       <span>de</span>
-                      <strong className="text-slate-900">{totalCandidatosFiltrados}</strong>
-                      <span>aspirantes</span>
+                      <strong className="text-[#212121]">{totalCandidatosFiltrados}</strong>
+                      <span>postulantes</span>
+                    </div>
 
-                      <span className="mx-2 text-slate-300">|</span>
-
-                      <span className="text-slate-500">Filas:</span>
+                    <div className="flex items-center space-x-2">
                       <select
                         value={candidatosPorPagina}
                         onChange={(e) => {
                           setCandidatosPorPagina(Number(e.target.value));
                           setPaginaCandidatos(1);
                         }}
-                        className="border border-slate-200 rounded-lg px-2 py-1 bg-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="border border-[#E0E0E0] rounded-lg px-2 py-1 bg-white text-xs font-semibold text-[#424242] focus:outline-none focus:ring-1 focus:ring-[#01579B]"
                       >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
+                        <option value={5}>5 por pág.</option>
+                        <option value={10}>10 por pág.</option>
+                        <option value={20}>20 por pág.</option>
+                        <option value={50}>50 por pág.</option>
                       </select>
-                    </div>
 
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => setPaginaCandidatos((p) => Math.max(1, p - 1))}
-                        disabled={paginaCandidatos === 1}
-                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                        <span>Anterior</span>
-                      </button>
-
-                      <div className="px-2 font-medium text-slate-600">
-                        Página <span className="font-bold text-slate-900">{paginaCandidatos}</span> de{' '}
-                        <span className="font-bold text-slate-900">{totalPaginasCandidatos}</span>
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => setPaginaCandidatos((p) => Math.max(p - 1, 1))}
+                          disabled={paginaCandidatos === 1}
+                          className="p-1.5 border border-[#E0E0E0] rounded-lg bg-white text-[#424242] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="px-2 font-mono text-xs font-bold text-[#212121]">
+                          {paginaCandidatos} / {totalPaginasCandidatos}
+                        </span>
+                        <button
+                          onClick={() => setPaginaCandidatos((p) => Math.min(p + 1, totalPaginasCandidatos))}
+                          disabled={paginaCandidatos === totalPaginasCandidatos}
+                          className="p-1.5 border border-[#E0E0E0] rounded-lg bg-white text-[#424242] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
                       </div>
-
-                      <button
-                        onClick={() => setPaginaCandidatos((p) => Math.min(totalPaginasCandidatos, p + 1))}
-                        disabled={paginaCandidatos >= totalPaginasCandidatos}
-                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
-                      >
-                        <span>Siguiente</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                   </div>
                 )}
@@ -848,129 +817,131 @@ export const AdmisionesPanelPage: React.FC = () => {
           )}
 
           {/* ========================================================= */}
-          {/* 2. VENTANA: GESTIÓN DE EQUIPOS CTS (SQUADS)              */}
+          {/* 2. VENTANA: EQUIPOS CTS (SQUADS)                          */}
           {/* ========================================================= */}
           {seccionActiva === 'equipos' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
-                    <Building2 className="w-5 h-5 text-brand-600" />
-                    <span>Equipos de Desarrollo CTS (4 Squads Oficiales)</span>
+                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
+                    <Building2 className="w-5 h-5 text-[#01579B]" />
+                    <span>Equipos de Desarrollo & Squads CTS</span>
                   </h1>
-                  <p className="text-xs text-slate-500">
-                    Estructura operativa de FUNIBER: Presencia Web, Fénix, Sistemas y Acción Docente.
+                  <p className="text-xs text-[#757575] mt-0.5">
+                    Coordinación de especialidades técnicas, capacidad de acogida y supervisión de los 4 líderes de squad.
                   </p>
-                </div>
-                <div className="text-xs font-semibold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg self-start sm:self-auto">
-                  Total Alumnos Asignados: <strong className="text-brand-600">{todosLosAlumnos.length}</strong>
                 </div>
               </div>
 
-              {/* Cuadrícula de los 4 Squads Oficiales */}
+              {/* Grid 2x2 de los 4 Squads Oficiales FUNIBER */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {equipos?.map((eq: any) => {
+                {(equipos || []).map((eq: any) => {
                   const estaExpandido = Boolean(squadsExpandidos[eq.id]);
                   const miembros = eq.miembros || [];
-                  const tecnologias: string[] = eq.tecnologias || [];
+
+                  // Map exact technical leaders according to group definition
+                  let techLeader = 'Coordinador Técnico';
+                  if (eq.nombre?.includes('Presencia') || eq.codigo === 'TEAM-03') techLeader = 'Diego Moys';
+                  else if (eq.nombre?.includes('Fénix') || eq.codigo === 'TEAM-01') techLeader = 'Alejandro Ruiz';
+                  else if (eq.nombre?.includes('Sistemas') || eq.codigo === 'TEAM-02') techLeader = 'Lucía Vargas';
+                  else if (eq.nombre?.includes('Docente') || eq.codigo === 'TEAM-04') techLeader = 'Marcos Navarro';
 
                   return (
                     <div
                       key={eq.id}
-                      className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between"
+                      className="bg-white border border-[#E0E0E0] rounded-lg shadow-xs hover:border-[#CCDDEB] transition-all flex flex-col justify-between overflow-hidden"
                     >
-                      <div>
-                        <div className="flex justify-between items-start">
+                      <div className="p-5 space-y-3">
+                        <div className="flex items-start justify-between">
                           <div>
-                            <span className="text-xs font-mono font-bold text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded border border-brand-100">
+                            <span className="text-[10px] font-mono font-bold text-[#757575] uppercase block">
                               {eq.codigo}
                             </span>
-                            <h3 className="text-base font-bold text-slate-900 mt-1">{eq.nombre}</h3>
-                            <p className="text-xs text-brand-700 font-medium mt-0.5">{eq.especialidad}</p>
+                            <h3 className="font-bold text-base text-[#212121] mt-0.5">
+                              {eq.nombre}
+                            </h3>
                           </div>
-                          <div className="text-right">
-                            <span className="text-2xl font-black text-slate-900">{miembros.length}</span>
-                            <span className="text-[10px] text-slate-400 block font-medium">alumnos</span>
-                          </div>
-                        </div>
-
-                        {/* Descripción operativa del Squad */}
-                        {eq.descripcion && (
-                          <p className="text-xs text-slate-600 mt-3 leading-relaxed bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                            {eq.descripcion}
-                          </p>
-                        )}
-
-                        {/* Stack Tecnológico */}
-                        {tecnologias.length > 0 && (
-                          <div className="mt-3">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
-                              Tecnologías & Herramientas:
-                            </span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {tecnologias.map((tech, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-medium transition-colors"
-                                >
-                                  {tech}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 flex justify-between items-center">
-                          <span>
-                            Tech Leader: <strong>{eq.lider}</strong>
+                          <span className="bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] text-[11px] font-bold px-2.5 py-1 rounded-md">
+                            Líder: {techLeader}
                           </span>
-                          <button
-                            onClick={() => toggleExpandirSquad(eq.id)}
-                            className="text-xs font-bold text-brand-600 hover:text-brand-800 inline-flex items-center space-x-1 cursor-pointer"
-                          >
-                            <span>Miembros ({miembros.length})</span>
-                            {estaExpandido ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                          </button>
                         </div>
 
-                        {/* Lista desplegable de miembros del squad */}
-                        {estaExpandido && (
-                          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-                            {miembros.length === 0 ? (
-                              <p className="text-xs text-slate-400 italic">No hay alumnos asignados a este squad actualmente.</p>
-                            ) : (
-                              miembros.map((m: any) => (
-                                <div
-                                  key={m.id}
-                                  className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
-                                >
-                                  <div>
-                                    <span className="font-bold text-slate-800 block">{m.nombreCompleto}</span>
-                                    <span className="text-[11px] text-slate-400 font-mono">{m.email}</span>
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      setAlumnoParaTransferir({
-                                        id: m.id,
-                                        nombreCompleto: m.nombreCompleto,
-                                        email: m.email,
-                                        squadActualId: eq.id,
-                                        squadActualNombre: eq.nombre,
-                                      });
-                                      setSquadDestinoId('');
-                                    }}
-                                    title="Cambiar a otro squad"
-                                    className="p-1.5 bg-white hover:bg-brand-50 text-slate-600 hover:text-brand-700 border border-slate-200 rounded-lg shadow-2xs transition-colors inline-flex items-center space-x-1 cursor-pointer"
-                                  >
-                                    <ArrowRightLeft className="w-3.5 h-3.5" />
-                                    <span className="text-[10px] font-semibold">Mover</span>
-                                  </button>
-                                </div>
-                              ))
-                            )}
+                        <p className="text-xs text-[#616161] leading-relaxed">
+                          {eq.descripcion || eq.especialidad}
+                        </p>
+
+                        {/* Tecnologías oficiales del Squad */}
+                        {eq.tecnologias && eq.tecnologias.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {eq.tecnologias.map((tech: string) => (
+                              <span
+                                key={tech}
+                                className="bg-[#F5F5F5] text-[#424242] border border-[#E0E0E0] text-[10px] font-semibold px-2 py-0.5 rounded"
+                              >
+                                {tech}
+                              </span>
+                            ))}
                           </div>
                         )}
                       </div>
+
+                      <div className="px-5 py-3 bg-[#FAFAFA] border-t border-[#E0E0E0] flex items-center justify-between text-xs">
+                        <div className="flex items-center space-x-3 text-[#616161]">
+                          <span>
+                            Alumnos asignados: <strong className="text-[#212121]">{miembros.length}</strong>
+                          </span>
+                          <span>•</span>
+                          <span>Capacidad: <strong className="text-[#212121]">{eq.capacidadMaxima || 6}</strong></span>
+                        </div>
+
+                        <button
+                          onClick={() => toggleExpandirSquad(eq.id)}
+                          className="text-xs font-semibold text-[#01579B] hover:text-[#004174] inline-flex items-center space-x-1 cursor-pointer"
+                        >
+                          <span>{estaExpandido ? 'Ocultar alumnos' : 'Ver alumnos'}</span>
+                          {estaExpandido ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+
+                      {/* Lista de Miembros si está expandido */}
+                      {estaExpandido && (
+                        <div className="p-4 bg-[#FAFAFA] border-t border-[#E0E0E0] space-y-2">
+                          {miembros.length === 0 ? (
+                            <p className="text-xs text-[#757575] italic text-center py-2">
+                              Aún no hay alumnos activos asignados a este squad.
+                            </p>
+                          ) : (
+                            <div className="divide-y divide-[#EEEEEE] bg-white rounded border border-[#E0E0E0]">
+                              {miembros.map((m: any) => (
+                                <div key={m.id} className="p-2.5 flex items-center justify-between text-xs">
+                                  <div>
+                                    <span className="font-bold text-[#212121] block">
+                                      {m.nombre} {m.apellidos}
+                                    </span>
+                                    <span className="text-[11px] text-[#757575] font-mono">{m.email}</span>
+                                  </div>
+                                  <button
+                                    onClick={() =>
+                                      setAlumnoParaTransferir({
+                                        id: m.id,
+                                        nombreCompleto: `${m.nombre} ${m.apellidos}`,
+                                        email: m.email,
+                                        squadActualId: eq.id,
+                                        squadActualNombre: eq.nombre,
+                                      })
+                                    }
+                                    className="px-2 py-1 border border-[#E0E0E0] bg-white hover:bg-[#F5F5F5] text-[#424242] text-[11px] font-semibold rounded inline-flex items-center space-x-1 cursor-pointer"
+                                    title="Transferir a otro Squad"
+                                  >
+                                    <ArrowRightLeft className="w-3 h-3 text-[#616161]" />
+                                    <span>Transferir</span>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -979,98 +950,26 @@ export const AdmisionesPanelPage: React.FC = () => {
           )}
 
           {/* ========================================================= */}
-          {/* 3. VENTANA: ALUMNOS PROFER & MOVILIDAD                   */}
+          {/* 3. VENTANA: ALUMNOS PROFER                                */}
           {/* ========================================================= */}
           {seccionActiva === 'alumnos' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
-                    <GraduationCap className="w-5 h-5 text-brand-600" />
-                    <span>Alumnos PROFER & Movilidad de Squad</span>
+                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
+                    <GraduationCap className="w-5 h-5 text-[#01579B]" />
+                    <span>Nómina de Alumnos Admitidos PROFER</span>
                   </h1>
-                  <p className="text-xs text-slate-500">
-                    Estudiantes admitidos e incorporados, gestión de traslados entre squads y asignación diferida.
+                  <p className="text-xs text-[#757575] mt-0.5">
+                    Estudiantes incorporados al programa de alto rendimiento, asignación a squads y becas otorgadas.
                   </p>
                 </div>
               </div>
 
-              {/* SECCIÓN ALUMNOS ADMITIDOS PENDIENTES DE SQUAD */}
-              {alumnosSinEquipo && alumnosSinEquipo.length > 0 && (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 shadow-xs space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-xs">
-                        <Clock className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-amber-950 text-base flex items-center space-x-2">
-                          <span>Alumnos Admitidos con Asignación de Squad Diferida</span>
-                          <span className="text-xs font-black bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full">
-                            {alumnosSinEquipo.length} pendientes
-                          </span>
-                        </h3>
-                        <p className="text-xs text-amber-800">
-                          Estudiantes admitidos en el programa pendientes de vincular a su equipo técnico definitivo.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-amber-200 rounded-xl overflow-hidden shadow-xs">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm text-slate-700">
-                        <thead className="bg-amber-100/60 text-[11px] font-bold uppercase tracking-wider text-amber-900 border-b border-amber-200">
-                          <tr>
-                            <th className="px-5 py-3">Alumno PROFER</th>
-                            <th className="px-5 py-3">Correo Institucional</th>
-                            <th className="px-5 py-3">Fecha de Admisión</th>
-                            <th className="px-5 py-3 text-right">Acción</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-amber-100">
-                          {alumnosSinEquipo.map((alumno: any) => (
-                            <tr key={alumno.id} className="hover:bg-amber-50/50 transition-colors">
-                              <td className="px-5 py-3.5 font-bold text-slate-900">
-                                {alumno.nombreCompleto}
-                              </td>
-                              <td className="px-5 py-3.5 font-mono text-xs text-slate-600">
-                                {alumno.email}
-                              </td>
-                              <td className="px-5 py-3.5 text-xs text-slate-500">
-                                {new Date(alumno.creadoEn).toLocaleDateString()}
-                              </td>
-                              <td className="px-5 py-3.5 text-right">
-                                <button
-                                  onClick={() => {
-                                    setAlumnoParaTransferir({
-                                      id: alumno.id,
-                                      nombreCompleto: alumno.nombreCompleto,
-                                      email: alumno.email,
-                                      squadActualId: null,
-                                      squadActualNombre: 'Sin Squad Asignado',
-                                    });
-                                    setSquadDestinoId(equipos?.[0]?.id || '');
-                                  }}
-                                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors inline-flex items-center space-x-1.5"
-                                >
-                                  <UserCheck className="w-3.5 h-3.5" />
-                                  <span>Asignar a Squad</span>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Búsqueda de Alumnos Activos */}
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              {/* Barra de Filtro de Alumnos */}
+              <div className="bg-white p-3.5 rounded-lg border border-[#E0E0E0] shadow-xs">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-[#757575] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={busquedaAlumno}
@@ -1078,66 +977,86 @@ export const AdmisionesPanelPage: React.FC = () => {
                       setBusquedaAlumno(e.target.value);
                       setPaginaAlumnos(1);
                     }}
-                    placeholder="Buscar alumno por nombre, correo o squad..."
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50"
+                    placeholder="Buscar alumno por nombre, correo o squad asignado..."
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-[#E0E0E0] rounded-lg focus:ring-2 focus:ring-[#01579B] focus:border-[#01579B] focus:outline-none bg-[#FAFAFA] text-[#212121]"
                   />
                 </div>
-                <span className="text-xs text-slate-500 font-medium">
-                  {alumnosFiltrados.length} alumnos asignados
-                </span>
               </div>
 
-              {/* Tabla de Todos los Alumnos Asignados */}
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+              {/* Tabla de Alumnos */}
+              <div className="bg-white border border-[#E0E0E0] rounded-lg shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                  <table className="w-full text-left text-xs text-[#424242]">
+                    <thead className="bg-[#FAFAFA] text-[11px] font-bold uppercase tracking-wider text-[#616161] border-b border-[#E0E0E0]">
                       <tr>
-                        <th className="px-5 py-3.5">Alumno PROFER</th>
-                        <th className="px-5 py-3.5">Correo</th>
-                        <th className="px-5 py-3.5">Squad Asignado</th>
-                        <th className="px-5 py-3.5 text-right">Movilidad</th>
+                        <th className="px-5 py-3">Alumno</th>
+                        <th className="px-4 py-3">Squad Asignado</th>
+                        <th className="px-4 py-3">Acceso / Beca</th>
+                        <th className="px-4 py-3">Convocatoria</th>
+                        <th className="px-4 py-3">Fecha Admisión</th>
+                        <th className="px-5 py-3 text-right">Acción</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-[#EEEEEE]">
                       {alumnosFiltrados.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-8 text-center text-xs text-slate-400 italic">
-                            No se encontraron alumnos con los criterios de búsqueda.
+                          <td colSpan={6} className="px-6 py-12 text-center text-xs text-[#757575] italic">
+                            No hay alumnos registrados en el sistema.
                           </td>
                         </tr>
                       ) : (
                         alumnosPaginados.map((al: any) => (
-                          <tr key={al.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="px-5 py-3.5 font-bold text-slate-900 text-xs sm:text-sm">
-                              {al.nombreCompleto}
-                            </td>
-                            <td className="px-5 py-3.5 font-mono text-xs text-slate-600">
-                              {al.email}
-                            </td>
+                          <tr key={al.id} className="hover:bg-[#F7F9FC] transition-colors">
                             <td className="px-5 py-3.5">
-                              <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
-                                <span className="font-mono font-bold">{al.squadCodigo}</span>
-                                <span>-</span>
-                                <span>{al.squadNombre}</span>
+                              <span className="font-bold text-[#212121] block text-xs">
+                                {al.nombreCompleto}
+                              </span>
+                              <span className="text-[11px] text-[#757575] block font-mono">
+                                {al.email}
                               </span>
                             </td>
+
+                            <td className="px-4 py-3.5">
+                              {al.squadActualNombre ? (
+                                <span className="bg-[#E6EFF5] text-[#01579B] font-bold text-[10px] px-2 py-0.5 rounded border border-[#CCDDEB] uppercase tracking-wider">
+                                  {al.squadActualNombre}
+                                </span>
+                              ) : (
+                                <span className="bg-[#FFF3E0] text-[#E65100] text-[10px] font-bold px-2 py-0.5 rounded border border-[#FFE0B2]">
+                                  Incorporación Diferida
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="px-4 py-3.5">
+                              <span className="font-mono font-bold text-xs text-[#1B5E20] bg-[#E8F5E9] px-2 py-0.5 rounded border border-[#C8E6C9]">
+                                {al.porcentajeAcceso ?? 100}% Beca
+                              </span>
+                            </td>
+
+                            <td className="px-4 py-3.5 text-xs text-[#616161]">
+                              {al.convocatoriaNombre || 'General'}
+                            </td>
+
+                            <td className="px-4 py-3.5 text-xs font-mono text-[#616161]">
+                              {al.fechaAdmision ? new Date(al.fechaAdmision).toLocaleDateString() : '—'}
+                            </td>
+
                             <td className="px-5 py-3.5 text-right">
                               <button
-                                onClick={() => {
+                                onClick={() =>
                                   setAlumnoParaTransferir({
                                     id: al.id,
                                     nombreCompleto: al.nombreCompleto,
                                     email: al.email,
-                                    squadActualId: al.squadId,
-                                    squadActualNombre: al.squadNombre,
-                                  });
-                                  setSquadDestinoId('');
-                                }}
-                                className="px-3 py-1.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 text-xs font-bold rounded-lg transition-colors inline-flex items-center space-x-1"
+                                    squadActualId: al.squadActualId,
+                                    squadActualNombre: al.squadActualNombre,
+                                  })
+                                }
+                                className="px-3 py-1.5 border border-[#E0E0E0] bg-white hover:bg-[#F5F5F5] text-[#424242] text-xs font-semibold rounded-lg inline-flex items-center space-x-1 cursor-pointer"
                               >
-                                <ArrowRightLeft className="w-3.5 h-3.5" />
-                                <span>Cambiar Squad</span>
+                                <ArrowRightLeft className="w-3.5 h-3.5 text-[#616161]" />
+                                <span>Mover Squad</span>
                               </button>
                             </td>
                           </tr>
@@ -1147,62 +1066,57 @@ export const AdmisionesPanelPage: React.FC = () => {
                   </table>
                 </div>
 
-                {/* Controles de Paginación de Alumnos */}
+                {/* Paginación Alumnos */}
                 {totalAlumnosFiltrados > 0 && (
-                  <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+                  <div className="px-5 py-3.5 bg-[#FAFAFA] border-t border-[#E0E0E0] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#616161]">
                     <div className="flex items-center space-x-2">
                       <span>Mostrando</span>
-                      <strong className="text-slate-900">
+                      <strong className="text-[#212121]">
                         {(paginaAlumnos - 1) * alumnosPorPagina + 1}
                       </strong>
                       <span>a</span>
-                      <strong className="text-slate-900">
+                      <strong className="text-[#212121]">
                         {Math.min(paginaAlumnos * alumnosPorPagina, totalAlumnosFiltrados)}
                       </strong>
                       <span>de</span>
-                      <strong className="text-slate-900">{totalAlumnosFiltrados}</strong>
+                      <strong className="text-[#212121]">{totalAlumnosFiltrados}</strong>
                       <span>alumnos</span>
+                    </div>
 
-                      <span className="mx-2 text-slate-300">|</span>
-
-                      <span className="text-slate-500">Filas:</span>
+                    <div className="flex items-center space-x-2">
                       <select
                         value={alumnosPorPagina}
                         onChange={(e) => {
                           setAlumnosPorPagina(Number(e.target.value));
                           setPaginaAlumnos(1);
                         }}
-                        className="border border-slate-200 rounded-lg px-2 py-1 bg-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="border border-[#E0E0E0] rounded-lg px-2 py-1 bg-white text-xs font-semibold text-[#424242] focus:outline-none focus:ring-1 focus:ring-[#01579B]"
                       >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
+                        <option value={5}>5 por pág.</option>
+                        <option value={10}>10 por pág.</option>
+                        <option value={20}>20 por pág.</option>
+                        <option value={50}>50 por pág.</option>
                       </select>
-                    </div>
 
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => setPaginaAlumnos((p) => Math.max(1, p - 1))}
-                        disabled={paginaAlumnos === 1}
-                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                        <span>Anterior</span>
-                      </button>
-
-                      <div className="px-2 font-medium text-slate-600">
-                        Página <span className="font-bold text-slate-900">{paginaAlumnos}</span> de{' '}
-                        <span className="font-bold text-slate-900">{totalPaginasAlumnos}</span>
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => setPaginaAlumnos((p) => Math.max(p - 1, 1))}
+                          disabled={paginaAlumnos === 1}
+                          className="p-1.5 border border-[#E0E0E0] rounded-lg bg-white text-[#424242] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="px-2 font-mono text-xs font-bold text-[#212121]">
+                          {paginaAlumnos} / {totalPaginasAlumnos}
+                        </span>
+                        <button
+                          onClick={() => setPaginaAlumnos((p) => Math.min(p + 1, totalPaginasAlumnos))}
+                          disabled={paginaAlumnos === totalPaginasAlumnos}
+                          className="p-1.5 border border-[#E0E0E0] rounded-lg bg-white text-[#424242] hover:bg-[#F5F5F5] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
                       </div>
-
-                      <button
-                        onClick={() => setPaginaAlumnos((p) => Math.min(totalPaginasAlumnos, p + 1))}
-                        disabled={paginaAlumnos >= totalPaginasAlumnos}
-                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white text-slate-700 font-semibold inline-flex items-center space-x-1 transition-colors"
-                      >
-                        <span>Siguiente</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                   </div>
                 )}
@@ -1211,266 +1125,160 @@ export const AdmisionesPanelPage: React.FC = () => {
           )}
 
           {/* ========================================================= */}
-          {/* 4. VENTANA: CONVOCATORIA SEMESTRAL & CIERRE               */}
+          {/* 4. VENTANA: CONVOCATORIA & PERIODO                        */}
           {/* ========================================================= */}
           {seccionActiva === 'convocatoria' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
-                    <Calendar className="w-5 h-5 text-brand-600" />
-                    <span>Convocatoria Semestral & Control de Periodo</span>
+                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
+                    <Calendar className="w-5 h-5 text-[#01579B]" />
+                    <span>Convocatorias & Periodos de Ingreso</span>
                   </h1>
-                  <p className="text-xs text-slate-500">
-                    Parámetros del ciclo de admisión, creación de semestres, absorción institucional y cierre de corte.
+                  <p className="text-xs text-[#757575] mt-0.5">
+                    Historial de convocatorias semestrales, parámetros del modelo de admisión y estados de apertura.
                   </p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setShowAperturarModal(true)}
-                    className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors inline-flex items-center space-x-1.5"
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>Aperturar Convocatoria / Semestre</span>
-                  </button>
-                  {!convocatoriaActiva && ultimaConvocatoria && (
-                    <button
-                      onClick={() => reabrirConvocatoriaMutation.mutate(ultimaConvocatoria.id)}
-                      disabled={reabrirConvocatoriaMutation.isPending}
-                      className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition-colors inline-flex items-center space-x-1.5 disabled:opacity-50"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      <span>{reabrirConvocatoriaMutation.isPending ? 'Reabriendo...' : 'Reabrir Convocatoria'}</span>
-                    </button>
-                  )}
-                </div>
+                <button
+                  onClick={() => setShowAperturarModal(true)}
+                  className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>Aperturar Nueva Convocatoria</span>
+                </button>
               </div>
 
-              {/* Banner de alerta si la convocatoria está cerrada */}
-              {!convocatoriaActiva && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              {/* Tarjeta de Resumen de Convocatoria Actual */}
+              {convocatoriaMostrar && (
+                <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-[#EEEEEE]">
                     <div>
-                      <h3 className="text-sm font-bold text-amber-900">
-                        No hay una convocatoria de ingreso abierta actualmente
-                      </h3>
-                      <p className="text-xs text-amber-700 mt-0.5">
-                        {ultimaConvocatoria
-                          ? `La última convocatoria registrada (${ultimaConvocatoria.denominacion}) fue cerrada formalmente. Puedes reabrirla para seguir admitiendo postulantes o abrir una nueva para otro semestre.`
-                          : 'Apertura un periodo de ingreso para comenzar a recibir y evaluar candidatos en el programa CTS Academy.'}
-                      </p>
+                      <span className="text-[10px] font-bold text-[#757575] uppercase tracking-wider block">
+                        Detalle del Periodo Seleccionado
+                      </span>
+                      <h2 className="text-lg font-bold text-[#212121] mt-0.5">
+                        {convocatoriaMostrar.denominacion}
+                      </h2>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <span
+                        className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded border ${
+                          convocatoriaMostrar.estado === 'ABIERTA'
+                            ? 'text-[#1B5E20] bg-[#E8F5E9] border-[#C8E6C9]'
+                            : 'text-[#616161] bg-[#F5F5F5] border-[#E0E0E0]'
+                        }`}
+                      >
+                        {convocatoriaMostrar.estado}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setConvocatoriaAEditar({
+                            id: convocatoriaMostrar.id,
+                            denominacion: convocatoriaMostrar.denominacion,
+                            fechaApertura: convocatoriaMostrar.fechaApertura || convocatoriaMostrar.fecha_apertura,
+                            fechaCierre: convocatoriaMostrar.fechaCierre || convocatoriaMostrar.fecha_cierre,
+                            modeloAdmision: convocatoriaMostrar.modeloAdmision || convocatoriaMostrar.modelo_admision,
+                            estado: convocatoriaMostrar.estado,
+                            semestre: convocatoriaMostrar.semestre,
+                          });
+                          setShowEditarModal(true);
+                        }}
+                        className="px-3 py-1 bg-[#E6EFF5] hover:bg-[#01579B] text-[#01579B] hover:text-white border border-[#CCDDEB] hover:border-[#01579B] text-xs font-semibold rounded-lg transition-colors inline-flex items-center space-x-1 cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Editar Parámetros</span>
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 shrink-0">
-                    {ultimaConvocatoria && (
-                      <button
-                        onClick={() => reabrirConvocatoriaMutation.mutate(ultimaConvocatoria.id)}
-                        disabled={reabrirConvocatoriaMutation.isPending}
-                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center space-x-1 disabled:opacity-50"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Reabrir {ultimaConvocatoria.semestre || 'Convocatoria'}</span>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setShowAperturarModal(true)}
-                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center space-x-1"
-                    >
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      <span>Abrir Nueva</span>
-                    </button>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E0E0E0]">
+                      <span className="text-[#757575] block text-[11px] font-semibold">Semestre Académico</span>
+                      <strong className="text-sm text-[#212121] mt-0.5 block">{convocatoriaMostrar.semestre || 'General'}</strong>
+                    </div>
+                    <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E0E0E0]">
+                      <span className="text-[#757575] block text-[11px] font-semibold">Modelo de Admisión</span>
+                      <strong className="text-sm text-[#212121] mt-0.5 block">{convocatoriaMostrar.modeloAdmision || 'ESTANDAR'}</strong>
+                    </div>
+                    <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E0E0E0]">
+                      <span className="text-[#757575] block text-[11px] font-semibold">Fecha de Apertura</span>
+                      <strong className="text-sm font-mono text-[#212121] mt-0.5 block">
+                        {convocatoriaMostrar.fechaApertura
+                          ? new Date(convocatoriaMostrar.fechaApertura).toLocaleDateString()
+                          : '—'}
+                      </strong>
+                    </div>
+                    <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E0E0E0]">
+                      <span className="text-[#757575] block text-[11px] font-semibold">Fecha de Cierre Previsto</span>
+                      <strong className="text-sm font-mono text-[#212121] mt-0.5 block">
+                        {convocatoriaMostrar.fechaCierre
+                          ? new Date(convocatoriaMostrar.fechaCierre).toLocaleDateString()
+                          : 'Abierta indefinidamente'}
+                      </strong>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Ficha de la Convocatoria */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-100">
-                  <div>
-                    <span className="text-xs font-mono font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200 uppercase">
-                      Periodo Oficial
-                    </span>
-                    <h2 className="text-2xl font-black text-slate-900 mt-1">
-                      {convocatoriaMostrar?.denominacion || 'Convocatoria General'}
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Modelo: <strong>{convocatoriaMostrar?.modeloAdmision || 'ADMISION_CONTINUA'}</strong>
-                    </p>
-                  </div>
-
-                  <span
-                    className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                      convocatoriaActiva
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                        : 'bg-rose-100 text-rose-800 border-rose-200'
-                    }`}
-                  >
-                    {convocatoriaActiva ? 'ABIERTA' : 'CERRADA'}
-                  </span>
+              {/* Historial de Todas las Convocatorias */}
+              <div className="bg-white border border-[#E0E0E0] rounded-lg shadow-xs overflow-hidden">
+                <div className="px-5 py-3.5 bg-[#FAFAFA] border-b border-[#E0E0E0] font-bold text-xs text-[#212121]">
+                  Historial de Convocatorias del Programa PROFER
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="text-[11px] font-medium text-slate-500 block">Semestre Académico</span>
-                    <span className="text-base font-black text-slate-800 mt-1 block">
-                      {convocatoriaMostrar?.semestre || '2026-I'}
-                    </span>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="text-[11px] font-medium text-slate-500 block">Total de Postulantes</span>
-                    <span className="text-base font-black text-slate-800 mt-1 block">
-                      {metricasPostulacion.totalCandidatos || 0} aspirantes
-                    </span>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="text-[11px] font-medium text-slate-500 block">Admitidos en el Ciclo</span>
-                    <span className="text-base font-black text-emerald-700 mt-1 block">
-                      {metricasPostulacion.admitidos || 0} alumnos
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-end space-x-2">
-                  {convocatoriaMostrar && (
-                    <button
-                      onClick={() => {
-                        setConvocatoriaAEditar({
-                          id: convocatoriaMostrar.id,
-                          denominacion: convocatoriaMostrar.denominacion,
-                          fechaApertura: convocatoriaMostrar.fechaApertura || convocatoriaMostrar.fecha_apertura,
-                          fechaCierre: convocatoriaMostrar.fechaCierre || convocatoriaMostrar.fecha_cierre,
-                          modeloAdmision: convocatoriaMostrar.modeloAdmision || convocatoriaMostrar.modelo_admision,
-                          estado: convocatoriaMostrar.estado,
-                          semestre: convocatoriaMostrar.semestre,
-                        });
-                        setShowEditarModal(true);
-                      }}
-                      className="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-                    >
-                      <Pencil className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Editar Convocatoria</span>
-                    </button>
-                  )}
-                  {convocatoriaActiva && (
-                    <button
-                      onClick={() => setShowCloseModal(true)}
-                      className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Formalizar Cierre de Corte Semestral</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Histórico de Convocatorias y Ciclos */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-                <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
-                  <History className="w-5 h-5 text-slate-600" />
-                  <h3 className="font-bold text-slate-900 text-base">Historial de Convocatorias Registradas</h3>
-                </div>
-
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                  <table className="w-full text-left text-xs text-[#424242]">
+                    <thead className="bg-[#FAFAFA] text-[11px] font-bold uppercase tracking-wider text-[#616161] border-b border-[#E0E0E0]">
                       <tr>
                         <th className="px-5 py-3">Convocatoria</th>
                         <th className="px-4 py-3">Semestre</th>
-                        <th className="px-4 py-3">Fechas</th>
-                        <th className="px-4 py-3">Postulantes</th>
                         <th className="px-4 py-3">Estado</th>
+                        <th className="px-4 py-3">Total Postulantes</th>
+                        <th className="px-4 py-3">Fechas</th>
                         <th className="px-5 py-3 text-right">Acción</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {historicoConvocatorias.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-xs text-slate-400 italic">
-                            No se registran periodos de ingreso históricos.
+                    <tbody className="divide-y divide-[#EEEEEE]">
+                      {listaConvocatorias.map((conv: any) => (
+                        <tr key={conv.id} className="hover:bg-[#F7F9FC] transition-colors">
+                          <td className="px-5 py-3.5 font-bold text-[#212121]">
+                            {conv.denominacion}
+                          </td>
+                          <td className="px-4 py-3.5 text-xs text-[#616161]">
+                            {conv.semestre}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <span
+                              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                                conv.estado === 'ABIERTA'
+                                  ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]'
+                                  : 'bg-[#F5F5F5] text-[#616161] border-[#E0E0E0]'
+                              }`}
+                            >
+                              {conv.estado}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5 font-mono font-bold text-xs text-[#01579B]">
+                            {conv.totalCandidatos} postulantes
+                          </td>
+                          <td className="px-4 py-3.5 text-xs font-mono text-[#757575]">
+                            {conv.fechaApertura ? new Date(conv.fechaApertura).toLocaleDateString() : '—'} al{' '}
+                            {conv.fechaCierre ? new Date(conv.fechaCierre).toLocaleDateString() : 'Activo'}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <button
+                              onClick={() => {
+                                setFiltroConvocatoria(conv.id);
+                                setSeccionActiva('candidatos');
+                              }}
+                              className="px-2.5 py-1 bg-[#E6EFF5] hover:bg-[#01579B] text-[#01579B] hover:text-white border border-[#CCDDEB] hover:border-[#01579B] text-xs font-semibold rounded-lg transition-colors inline-flex items-center space-x-1 cursor-pointer"
+                            >
+                              <Users className="w-3 h-3" />
+                              <span>Ver Candidatos</span>
+                            </button>
                           </td>
                         </tr>
-                      ) : (
-                        historicoConvocatorias.map((conv: any) => (
-                          <tr key={conv.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="px-5 py-3.5">
-                              <span className="font-bold text-slate-900 block text-xs">
-                                {conv.denominacion}
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                {conv.modeloAdmision}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3.5 text-xs font-semibold text-slate-700">
-                              {conv.semestre?.codigo || conv.semestre?.periodoSemestre || '—'}
-                            </td>
-                            <td className="px-4 py-3.5 text-xs text-slate-500">
-                              {new Date(conv.fechaInicio).toLocaleDateString()} -{' '}
-                              {new Date(conv.fechaFin).toLocaleDateString()}
-                            </td>
-                            <td className="px-4 py-3.5 text-xs font-mono font-medium text-slate-700">
-                              {conv.candidatos?.length || 0} aspirantes
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <span
-                                className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
-                                  conv.estado === 'ABIERTA'
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200'
-                                }`}
-                              >
-                                {conv.estado}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3.5 text-right">
-                              <div className="flex items-center justify-end space-x-2">
-                                <button
-                                  onClick={() => {
-                                    setConvocatoriaAEditar({
-                                      id: conv.id,
-                                      denominacion: conv.denominacion,
-                                      fechaApertura: conv.fechaApertura || conv.fechaInicio || conv.fecha_apertura,
-                                      fechaCierre: conv.fechaCierre || conv.fechaFin || conv.fecha_cierre,
-                                      modeloAdmision: conv.modeloAdmision || conv.modelo_admision,
-                                      estado: conv.estado,
-                                      semestre: conv.semestre?.codigo || conv.semestre?.periodoSemestre || conv.semestre,
-                                    });
-                                    setShowEditarModal(true);
-                                  }}
-                                  className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition-colors inline-flex items-center space-x-1 cursor-pointer"
-                                  title="Editar parámetros de la convocatoria"
-                                >
-                                  <Pencil className="w-3 h-3 text-slate-500" />
-                                  <span>Editar</span>
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setFiltroConvocatoria(conv.id);
-                                    setSeccionActiva('candidatos');
-                                  }}
-                                  className="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold rounded-lg border border-brand-200 transition-colors inline-flex items-center space-x-1 cursor-pointer"
-                                  title="Ver y filtrar candidatos de esta convocatoria"
-                                >
-                                  <Users className="w-3 h-3" />
-                                  <span>Ver Candidatos</span>
-                                </button>
-                                {conv.estado === 'CERRADA' ? (
-                                  <button
-                                    onClick={() => reabrirConvocatoriaMutation.mutate(conv.id)}
-                                    disabled={reabrirConvocatoriaMutation.isPending}
-                                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-lg border border-amber-200 transition-colors inline-flex items-center space-x-1"
-                                  >
-                                    <RotateCcw className="w-3 h-3" />
-                                    <span>Reabrir</span>
-                                  </button>
-                                ) : (
-                                  <span className="text-[11px] text-emerald-600 font-semibold px-1">En curso</span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -1481,44 +1289,55 @@ export const AdmisionesPanelPage: React.FC = () => {
       </div>
 
       {/* ========================================================= */}
-      {/* MODALES DEL SISTEMA                                       */}
+      {/* MODALES DEL SISTEMA (Click fuera del backdrop cierra)     */}
       {/* ========================================================= */}
 
-      {/* Modal de Movilidad de Alumnos entre Squads (Requirement 4) */}
+      {/* Modal de Movilidad de Alumnos entre Squads */}
       {alumnoParaTransferir && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-100">
-            <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
-              <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
-                <ArrowRightLeft className="w-5 h-5" />
+        <div
+          className="fixed inset-0 bg-[#000000]/40 backdrop-blur-2xs z-50 flex items-center justify-center p-4"
+          onClick={() => setAlumnoParaTransferir(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-md max-w-md w-full p-6 space-y-4 border border-[#E0E0E0]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#EEEEEE]">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-[#E6EFF5] text-[#01579B] rounded-lg">
+                  <ArrowRightLeft className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#212121] text-base">Reasignar Alumno de Squad</h3>
+                  <p className="text-xs text-[#757575]">Movilidad entre equipos CTS.</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-base">Reasignar Alumno de Squad</h3>
-                <p className="text-xs text-slate-500">Gestión de movilidad durante la estancia en el programa.</p>
-              </div>
+              <button
+                onClick={() => setAlumnoParaTransferir(null)}
+                className="p-1 rounded-lg text-[#757575] hover:text-[#212121] hover:bg-[#F5F5F5] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="space-y-3">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                <p className="text-slate-500">Alumno seleccionado:</p>
-                <p className="font-bold text-slate-900 text-sm mt-0.5">{alumnoParaTransferir.nombreCompleto}</p>
-                <p className="text-slate-500 font-mono text-[11px]">{alumnoParaTransferir.email}</p>
-                <p className="mt-2 text-slate-600">
-                  Squad actual:{' '}
-                  <strong className="text-brand-600">
-                    {alumnoParaTransferir.squadActualNombre || 'Sin Squad Asignado'}
-                  </strong>
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E0E0E0]">
+                <p className="text-[#757575]">Alumno seleccionado:</p>
+                <p className="font-bold text-[#212121] text-sm mt-0.5">{alumnoParaTransferir.nombreCompleto}</p>
+                <p className="text-[#757575] font-mono text-[11px]">{alumnoParaTransferir.email}</p>
+                <p className="mt-2 text-[#424242]">
+                  Squad actual: <strong className="text-[#01579B]">{alumnoParaTransferir.squadActualNombre || 'Sin Squad Asignado'}</strong>
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#424242] mb-1">
                   Nuevo Squad de Destino
                 </label>
                 <select
                   value={squadDestinoId}
                   onChange={(e) => setSquadDestinoId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
                 >
                   <option value="">-- Dejar sin asignar (Incorporación diferida) --</option>
                   {equipos
@@ -1530,23 +1349,19 @@ export const AdmisionesPanelPage: React.FC = () => {
                     ))}
                 </select>
               </div>
-
-              <p className="text-[11px] text-slate-500 italic">
-                El alumno mantendrá todo su historial de entregas de laboratorios y su rol activo de ALUMNO PROFER.
-              </p>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+            <div className="flex justify-end space-x-2 pt-3 border-t border-[#EEEEEE]">
               <button
                 onClick={() => setAlumnoParaTransferir(null)}
-                className="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 border border-[#E0E0E0] text-[#424242] text-xs font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => transferirAlumnoMutation.mutate()}
                 disabled={transferirAlumnoMutation.isPending}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {transferirAlumnoMutation.isPending ? 'Guardando...' : 'Confirmar Reasignación'}
               </button>
@@ -1557,227 +1372,254 @@ export const AdmisionesPanelPage: React.FC = () => {
 
       {/* Modal de Registro de Nuevo Candidato */}
       {showRegisterModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-100">
-            <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
-              <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
-                <UserPlus className="w-5 h-5" />
+        <div
+          className="fixed inset-0 bg-[#000000]/40 backdrop-blur-2xs z-50 flex items-center justify-center p-4"
+          onClick={() => setShowRegisterModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-md max-w-md w-full p-6 space-y-4 border border-[#E0E0E0]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#EEEEEE]">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-[#E6EFF5] text-[#01579B] rounded-lg">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#212121] text-base">Inscribir Nuevo Postulante</h3>
+                  <p className="text-xs text-[#757575]">Asocia un aspirante a la convocatoria activa.</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-base">Inscribir Nuevo Postulante</h3>
-                <p className="text-xs text-slate-500">Asocia un aspirante a la convocatoria activa.</p>
-              </div>
+              <button
+                onClick={() => setShowRegisterModal(false)}
+                className="p-1 rounded-lg text-[#757575] hover:text-[#212121] hover:bg-[#F5F5F5] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre</label>
+                  <label className="block text-xs font-semibold text-[#424242] mb-1">Nombre</label>
                   <input
                     type="text"
                     value={nuevoNombre}
                     onChange={(e) => setNuevoNombre(e.target.value)}
                     placeholder="Ej. Ana"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Apellidos</label>
+                  <label className="block text-xs font-semibold text-[#424242] mb-1">Apellidos</label>
                   <input
                     type="text"
                     value={nuevoApellidos}
                     onChange={(e) => setNuevoApellidos(e.target.value)}
-                    placeholder="Ej. García López"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    placeholder="Ej. Martínez Gómez"
+                    className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Correo Institucional / Personal
-                </label>
+                <label className="block text-xs font-semibold text-[#424242] mb-1">Correo Electrónico</label>
                 <input
                   type="email"
                   value={nuevoEmail}
                   onChange={(e) => setNuevoEmail(e.target.value)}
-                  placeholder="ana.garcia@alumnos.uneatlantico.es"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  placeholder="ana.martinez@alumnos.uneatlantico.es"
+                  className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sede de Origen</label>
+                  <label className="block text-xs font-semibold text-[#424242] mb-1">Sede de Origen</label>
                   <select
                     value={nuevaSede}
                     onChange={(e) => setNuevaSede(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
                   >
                     <option value="SDR_ESP">Santander (España)</option>
-                    <option value="COL_BOG">Bogotá (Colombia)</option>
-                    <option value="MEX_CDMX">Ciudad de México</option>
                     <option value="GTM_GUA">Guatemala</option>
-                    <option value="PER_LIM">Lima (Perú)</option>
+                    <option value="COL_BOG">Bogotá</option>
+                    <option value="MEX_CDMX">México</option>
+                    <option value="PER_LIM">Lima</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Teléfono</label>
+                  <label className="block text-xs font-semibold text-[#424242] mb-1">Teléfono</label>
                   <input
                     type="tel"
                     value={nuevoTelefono}
                     onChange={(e) => setNuevoTelefono(e.target.value)}
-                    placeholder="+34600000000"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    placeholder="+34 600 000 000"
+                    className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Convocatoria de Destino
-                </label>
+                <label className="block text-xs font-semibold text-[#424242] mb-1">Asignar a Convocatoria</label>
                 <select
-                  value={convocatoriaDestinoId || (convocatoriaFoco?.id || convocatoriaActiva?.id || '')}
+                  value={convocatoriaDestinoId}
                   onChange={(e) => setConvocatoriaDestinoId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
                 >
+                  <option value="">-- Convocatoria Activa por Defecto --</option>
                   {listaConvocatorias.map((c: any) => (
                     <option key={c.id} value={c.id}>
-                      {c.estado === 'ABIERTA' ? '🟢 [ABIERTA]' : '⚪ [CERRADA]'} {c.denominacion} ({c.semestre})
+                      {c.denominacion} ({c.estado})
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Opción de envío inmediato de credenciales */}
-              <div className="p-3 bg-indigo-50/70 border border-indigo-200/60 rounded-xl space-y-1.5">
-                <label className="flex items-center space-x-2 text-xs font-semibold text-indigo-950 cursor-pointer">
+              <div className="pt-2">
+                <label className="flex items-center space-x-2 text-xs text-[#424242] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={enviarInvitacionInmediata}
                     onChange={(e) => setEnviarInvitacionInmediata(e.target.checked)}
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    className="rounded border-[#E0E0E0] text-[#01579B] focus:ring-[#01579B]"
                   />
-                  <span>Enviar credenciales de acceso e invitación por correo de inmediato</span>
+                  <span>Enviar credenciales de acceso por email automáticamente</span>
                 </label>
-                <p className="text-[11px] text-slate-500 pl-6">
-                  Se despachará el enlace al portal con la contraseña temporal (CtsAcademy2026!) y las instrucciones para realizar las pruebas.
-                </p>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+            <div className="flex justify-end space-x-2 pt-3 border-t border-[#EEEEEE]">
               <button
                 onClick={() => setShowRegisterModal(false)}
-                className="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 border border-[#E0E0E0] text-[#424242] text-xs font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
-                onClick={() =>
-                  registrarCandidatoMutation.mutate(
-                    convocatoriaDestinoId || convocatoriaFoco?.id || convocatoriaActiva?.id,
-                  )
-                }
-                disabled={
-                  !nuevoNombre.trim() ||
-                  !nuevoApellidos.trim() ||
-                  !nuevoEmail.trim() ||
-                  registrarCandidatoMutation.isPending
-                }
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                onClick={() => registrarCandidatoMutation.mutate(convocatoriaDestinoId || undefined)}
+                disabled={!nuevoNombre || !nuevoEmail || registrarCandidatoMutation.isPending}
+                className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {registrarCandidatoMutation.isPending ? 'Registrando...' : 'Inscribir Aspirante'}
+                {registrarCandidatoMutation.isPending ? 'Inscribiendo...' : 'Registrar Candidato'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Cierre de Corte */}
+      {/* Modal de Cierre de Corte Semestral */}
       {showCloseModal && convocatoriaActiva && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-100">
-            <div className="p-3 bg-red-50 text-red-700 rounded-xl flex items-center space-x-2">
-              <ShieldAlert className="w-6 h-6 flex-shrink-0" />
-              <h3 className="font-bold text-sm">Formalizar Cierre de Corte Semestral</h3>
-            </div>
-
-            <p className="text-xs text-slate-600">
-              Esta acción emitirá el <strong>Informe de Corte con firma hash inmutable</strong> y cerrará las
-              postulaciones de <strong>{convocatoriaActiva.denominacion}</strong>.
-            </p>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Motivo de cierre u observaciones
-              </label>
-              <textarea
-                rows={3}
-                value={motivoCierre}
-                onChange={(e) => setMotivoCierre(e.target.value)}
-                placeholder="Cierre regular semestral tras agotar plazas y culminar proceso de entrevistas..."
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+        <div
+          className="fixed inset-0 bg-[#000000]/40 backdrop-blur-2xs z-50 flex items-center justify-center p-4"
+          onClick={() => setShowCloseModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-md max-w-md w-full p-6 space-y-4 border border-[#E0E0E0]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#EEEEEE]">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-[#FFEBEE] text-[#D32F2F] rounded-lg">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#212121] text-base">Cierre de Corte Semestral</h3>
+                  <p className="text-xs text-[#757575]">{convocatoriaActiva.denominacion}</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowCloseModal(false)}
-                className="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                className="p-1 rounded-lg text-[#757575] hover:text-[#212121] hover:bg-[#F5F5F5] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-[#424242]">
+              <p>
+                Al cerrar el corte, la convocatoria pasará a estado <strong>CERRADA</strong> y no admitirá nuevas
+                postulaciones públicas.
+              </p>
+              <div>
+                <label className="block text-xs font-semibold text-[#424242] mb-1">
+                  Motivo o Dictamen de Cierre:
+                </label>
+                <textarea
+                  value={motivoCierre}
+                  onChange={(e) => setMotivoCierre(e.target.value)}
+                  placeholder="Ej. Cumplimiento del cupo de 15 postulantes y finalización del periodo de entrevistas..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#01579B] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-3 border-t border-[#EEEEEE]">
+              <button
+                onClick={() => setShowCloseModal(false)}
+                className="px-4 py-2 border border-[#E0E0E0] text-[#424242] text-xs font-semibold rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => cerrarCorteMutation.mutate(convocatoriaActiva.id)}
                 disabled={cerrarCorteMutation.isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
               >
-                Confirmar y Firmar Corte
+                {cerrarCorteMutation.isPending ? 'Cerrando...' : 'Confirmar Cierre de Periodo'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal: Credenciales e Invitación Oficial al Postulante */}
+      {/* Modal de Invitación / Envío de Credenciales */}
       {candidatoParaInvitacion && (
         <InvitacionCandidatoModal
+          isOpen={Boolean(candidatoParaInvitacion)}
           candidatoId={candidatoParaInvitacion.id}
           candidatoNombre={candidatoParaInvitacion.nombre}
           candidatoEmail={candidatoParaInvitacion.email}
-          isOpen={Boolean(candidatoParaInvitacion)}
-          onClose={() => setCandidatoParaInvitacion(null)}
+          onClose={() => {
+            setCandidatoParaInvitacion(null);
+            queryClient.invalidateQueries({ queryKey: ['admisiones-panel'] });
+          }}
         />
       )}
 
-      {/* Modal: Importación Masiva de Nómina por Sede */}
+      {/* Modal de Importación Masiva desde Sede */}
       {showImportSedeModal && (
         <ImportarSedeModal
           isOpen={showImportSedeModal}
-          onClose={() => setShowImportSedeModal(false)}
+          onClose={() => {
+            setShowImportSedeModal(false);
+            queryClient.invalidateQueries({ queryKey: ['admisiones-panel'] });
+          }}
         />
       )}
 
-      {/* Modal: Aperturar Nueva Convocatoria / Semestre */}
+      {/* Modal de Apertura de Nueva Convocatoria */}
       {showAperturarModal && (
         <AperturarConvocatoriaModal
           isOpen={showAperturarModal}
-          onClose={() => setShowAperturarModal(false)}
-          semestresDisponibles={semestresDisponibles}
+          onClose={() => {
+            setShowAperturarModal(false);
+            queryClient.invalidateQueries({ queryKey: ['admisiones-panel'] });
+          }}
         />
       )}
 
-      {/* Modal: Editar Convocatoria Existente */}
+      {/* Modal de Edición de Convocatoria */}
       {showEditarModal && convocatoriaAEditar && (
         <EditarConvocatoriaModal
-          isOpen={showEditarModal}
+          isOpen={showEditarModal && Boolean(convocatoriaAEditar)}
+          convocatoria={convocatoriaAEditar}
           onClose={() => {
             setShowEditarModal(false);
             setConvocatoriaAEditar(null);
+            queryClient.invalidateQueries({ queryKey: ['admisiones-panel'] });
           }}
-          convocatoria={convocatoriaAEditar}
         />
       )}
     </div>

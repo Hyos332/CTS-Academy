@@ -186,7 +186,7 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
                     <PolarGrid stroke="#E2E8F0" />
                     <PolarAngleAxis dataKey="habilidad" tick={{ fill: '#334155', fontSize: 8 }} />
                     <PolarRadiusAxis domain={[0, 5]} stroke="#CBD5E1" tickCount={6} />
-                    <Radar dataKey="nivel" stroke="#0266CC" fill="#0266CC" fillOpacity={0.4} />
+                    <Radar dataKey="nivel" stroke="#01579B" fill="#01579B" fillOpacity={0.4} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
@@ -347,8 +347,8 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
                 <Radar
                   name="evaluado"
                   dataKey="evaluado"
-                  stroke="#0266CC"
-                  fill="#0266CC"
+                  stroke="#01579B"
+                  fill="#01579B"
                   fillOpacity={0.4}
                 />
                 <Radar
@@ -418,8 +418,8 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
                         <Radar
                           name="Nivel"
                           dataKey="nivel"
-                          stroke="#0266CC"
-                          fill="#0266CC"
+                          stroke="#01579B"
+                          fill="#01579B"
                           fillOpacity={0.45}
                         />
                       </RadarChart>

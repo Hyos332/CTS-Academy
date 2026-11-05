@@ -15,18 +15,21 @@ export const AlumnoPanelPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-10 h-10 border-3 border-[#01579B] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-[#616161]">Cargando Panel de Alumno...</span>
+        </div>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-12 text-center text-red-600">
-          Error al cargar los datos del panel de alumno.
+        <main className="max-w-7xl mx-auto px-4 py-12 text-center text-[#D32F2F] text-sm">
+          Error al cargar los datos del panel de alumno. Por favor, recarga la página.
         </main>
       </div>
     );
@@ -38,22 +41,22 @@ export const AlumnoPanelPage: React.FC = () => {
     switch (estado) {
       case 'APROBADO':
         return (
-          <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <CheckCircle className="w-3.5 h-3.5 mr-1" />
+          <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9] uppercase tracking-wider">
+            <CheckCircle className="w-3 h-3 mr-1 text-[#2E7D32]" />
             Aprobado
           </span>
         );
       case 'CAMBIOS_SOLICITADOS':
         return (
-          <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
-            <AlertTriangle className="w-3.5 h-3.5 mr-1" />
+          <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2] uppercase tracking-wider">
+            <AlertTriangle className="w-3 h-3 mr-1 text-[#F57C00]" />
             Cambios Solicitados
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-            <Clock className="w-3.5 h-3.5 mr-1" />
+          <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] uppercase tracking-wider">
+            <Clock className="w-3 h-3 mr-1 text-[#01579B]" />
             En Revisión
           </span>
         );
@@ -61,30 +64,30 @@ export const AlumnoPanelPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans text-[#212121]">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
         {/* Encabezado del Alumno */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="bg-white rounded-lg shadow-xs border border-[#E0E0E0] p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{alumno.nombreCompleto}</h1>
-            <p className="text-sm text-slate-500">
-              Squad: <span className="font-semibold text-slate-700">{alumno.equipo}</span> • Especialidad: <span className="font-semibold text-slate-700">{alumno.especialidad}</span>
+            <h1 className="text-2xl font-bold text-[#212121] tracking-tight">{alumno.nombreCompleto}</h1>
+            <p className="text-xs text-[#757575] mt-1">
+              Squad: <span className="font-semibold text-[#01579B]">{alumno.equipo}</span> • Especialidad: <span className="font-semibold text-[#424242]">{alumno.especialidad}</span>
             </p>
           </div>
           <div className="w-full sm:w-64">
-            <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+            <div className="flex justify-between text-xs font-semibold text-[#616161] mb-1">
               <span>Progreso Global</span>
-              <span>{progresoGlobal.porcentaje}%</span>
+              <span className="font-mono text-[#01579B] font-bold">{progresoGlobal.porcentaje}%</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-[#EEEEEE] rounded-full h-2 overflow-hidden">
               <div
-                className="bg-brand-600 h-2.5 rounded-full transition-all duration-500"
+                className="bg-[#01579B] h-2 rounded-full transition-all duration-500"
                 style={{ width: `${progresoGlobal.porcentaje}%` }}
-              ></div>
+              />
             </div>
-            <span className="text-[10px] text-slate-400 mt-0.5 block">
+            <span className="text-[11px] text-[#757575] mt-1 block">
               {progresoGlobal.materialesLeidos} de {progresoGlobal.totalMateriales} recursos estudiados
             </span>
           </div>
@@ -93,8 +96,8 @@ export const AlumnoPanelPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Módulos de Aprendizaje */}
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
-              <BookOpen className="w-5 h-5 text-brand-600" />
+            <h2 className="text-base font-bold text-[#212121] flex items-center space-x-2">
+              <BookOpen className="w-4 h-4 text-[#01579B]" />
               <span>Módulos de Formación</span>
             </h2>
 
@@ -102,21 +105,21 @@ export const AlumnoPanelPage: React.FC = () => {
               {modulos.map((mod: any) => (
                 <div
                   key={mod.id}
-                  className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-slate-300 transition-colors"
+                  className="bg-white border border-[#E0E0E0] rounded-lg p-5 shadow-xs hover:border-[#CCDDEB] transition-colors"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-xs font-semibold text-brand-600 tracking-wide uppercase">
+                      <span className="text-[10px] font-bold text-[#01579B] tracking-wider uppercase">
                         Módulo {mod.orden}
                       </span>
-                      <h3 className="text-base font-bold text-slate-900">{mod.titulo}</h3>
+                      <h3 className="text-sm font-bold text-[#212121] mt-0.5">{mod.titulo}</h3>
                       {mod.descripcion && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{mod.descripcion}</p>
+                        <p className="text-xs text-[#616161] mt-1 line-clamp-2">{mod.descripcion}</p>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <div className="mt-4 pt-3 border-t border-[#EEEEEE] flex items-center justify-between text-xs text-[#757575]">
                     <span>{mod.totalMateriales} Materiales didácticos</span>
                     <span>{mod.totalLaboratorios} Laboratorios prácticos</span>
                   </div>
@@ -127,28 +130,28 @@ export const AlumnoPanelPage: React.FC = () => {
 
           {/* Entregables Recientes */}
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
-              <GitPullRequest className="w-5 h-5 text-purple-600" />
+            <h2 className="text-base font-bold text-[#212121] flex items-center space-x-2">
+              <GitPullRequest className="w-4 h-4 text-[#01579B]" />
               <span>Entregas de Laboratorio</span>
             </h2>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 divide-y divide-slate-100">
+            <div className="bg-white rounded-lg shadow-xs border border-[#E0E0E0] p-4 divide-y divide-[#EEEEEE]">
               {entregasRecientes.length === 0 ? (
-                <p className="text-xs text-slate-400 py-4 text-center">
+                <p className="text-xs text-[#757575] py-4 text-center italic">
                   Aún no has registrado entregas de laboratorio.
                 </p>
               ) : (
                 entregasRecientes.map((entrega: any) => (
                   <div key={entrega.id} className="py-3 first:pt-0 last:pb-0 space-y-1.5">
                     <div className="flex justify-between items-start">
-                      <h4 className="text-xs font-bold text-slate-900">{entrega.laboratorio}</h4>
+                      <h4 className="text-xs font-bold text-[#212121]">{entrega.laboratorio}</h4>
                       {renderBadgeEstado(entrega.estado)}
                     </div>
-                    <p className="text-[11px] text-slate-500">{entrega.modulo}</p>
+                    <p className="text-[11px] text-[#757575]">{entrega.modulo}</p>
                     {entrega.calificacion && (
-                      <p className="text-xs font-semibold text-slate-800 flex items-center">
-                        <Award className="w-3.5 h-3.5 text-amber-500 mr-1" />
-                        Nota: {entrega.calificacion} / 10
+                      <p className="text-xs font-semibold text-[#424242] flex items-center">
+                        <Award className="w-3.5 h-3.5 text-[#F57C00] mr-1" />
+                        Nota: <strong className="ml-1 text-[#212121]">{entrega.calificacion} / 10</strong>
                       </p>
                     )}
                   </div>
@@ -161,3 +164,5 @@ export const AlumnoPanelPage: React.FC = () => {
     </div>
   );
 };
+
+export default AlumnoPanelPage;

@@ -23,7 +23,7 @@ const CtsLogoSquircle: React.FC<{ size?: number; className?: string }> = ({ size
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    <rect width="100" height="100" rx="22" fill="#0266CC" />
+    <rect width="100" height="100" rx="22" fill="#01579B" />
     {/* Cristal de diamante facetado */}
     <polygon points="50,18 28,45 50,45" fill="#93C5FD" />
     <polygon points="50,18 72,45 50,45" fill="#60A5FA" />
@@ -129,9 +129,9 @@ const SvgRadarAptitud: React.FC<{ categorias: any[] }> = ({ categorias }) => {
         {/* Poligono evaluado */}
         <polygon
           points={candPoints}
-          fill="#0266CC"
+          fill="#01579B"
           fillOpacity="0.4"
-          stroke="#0266CC"
+          stroke="#01579B"
           strokeWidth="2"
         />
 
