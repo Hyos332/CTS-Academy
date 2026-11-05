@@ -36,37 +36,38 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
   const convocatoria = candidato.convocatoria?.denominacion || 'Convocatoria Admisión Febrero 2026';
   const estadoPostulacion = candidato.estado_postulacion || 'EN_PROCESO';
 
-  // Datos del Squad Recomendado
-  const recomendacion = candidato.recomendacionSquad || {};
-  const squadSugerido = recomendacion.equipoSugerido || {
-    codigo: 'SQUAD-GEN',
-    nombre: 'Team Fénix',
-    especialidad: 'Fullstack TypeScript & Arquitectura Cloud',
-    lider: 'Diego Moys (Tech Lead)',
-    afinidadPorcentaje: 85,
-    justificacion: 'Alineación sobresaliente con arquitectura limpia, patrones modulares y trabajo en equipo.',
-    fortalezasClave: ['Arquitectura Limpia', 'Clean Architecture', 'Colaboración'],
-  };
+  // Detección del estado real de los tests
+  const testActitud = candidato.tests?.find((t: any) => t.tipo_bateria === 'ACTITUD');
+  const testAptitud = candidato.tests?.find((t: any) => t.tipo_bateria === 'APTITUD');
+  const testTecnico = candidato.tests?.find((t: any) => t.tipo_bateria === 'TECNICO');
+
+  const tieneInforme16PF =
+    testActitud?.estado === 'COMPLETADO' && !!candidato.perfil_competencias?.informe16PF;
+  const tieneAptitud =
+    testAptitud?.estado === 'COMPLETADO' && !!candidato.perfil_competencias?.matrizAptitudes;
+  const tieneTecnico =
+    testTecnico?.estado === 'COMPLETADO' &&
+    testTecnico?.calificacion_obtenida !== null &&
+    testTecnico?.calificacion_obtenida !== undefined;
+
+  // Datos del Squad Recomendado (Solo si tiene test técnico completado)
+  const recomendacion = candidato.recomendacionSquad;
+  const squadSugerido = tieneTecnico && recomendacion?.equipoSugerido ? recomendacion.equipoSugerido : null;
 
   // Datos psicométricos (Test de Actitud 16PF)
   const perfilCompetencias = candidato.perfil_competencias || {};
-  const informe16PF = perfilCompetencias.informe16PF || {};
-  const distorsion = informe16PF.distorsion || {
-    decatipo: 6,
-    interpretacion: 'Respuestas consistentes y confiables. No se observan sesgos de distorsión deliberada.',
-  };
+  const informe16PF = tieneInforme16PF ? perfilCompetencias.informe16PF : null;
+  const distorsion = informe16PF?.distorsion || null;
 
   // Datos de Aptitud & Espectro
   const espectro = perfilCompetencias.espectro || {};
-  const espectroActitud = espectro.actitud || {};
-  const espectroAptitud = espectro.aptitud || {};
+  const espectroActitud = tieneInforme16PF ? espectro.actitud || {} : null;
+  const espectroAptitud = tieneAptitud ? espectro.aptitud || {} : null;
 
   // Test Técnico
-  const testTecnico = candidato.tests?.find((t: any) => t.tipo_bateria === 'TECNICO');
-  const calificacionTecnica =
-    testTecnico?.calificacion_obtenida !== null && testTecnico?.calificacion_obtenida !== undefined
-      ? Number(testTecnico.calificacion_obtenida).toFixed(1)
-      : '8.2';
+  const calificacionTecnica = tieneTecnico
+    ? Number(testTecnico.calificacion_obtenida).toFixed(1)
+    : null;
 
   // Entrevista
   const entrevista = candidato.entrevista;
@@ -147,30 +148,50 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
                 <Building2 className="w-3.5 h-3.5 text-brand-600" />
                 <span>1. Squad CTS Recomendado</span>
               </span>
-              <span className="text-xs font-black text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
-                {squadSugerido.afinidadPorcentaje || 85}% Match
-              </span>
+              {squadSugerido ? (
+                <span className="text-xs font-black text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
+                  {squadSugerido.afinidadPorcentaje}% Match
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  Pendiente
+                </span>
+              )}
             </div>
 
-            <div className="mt-2">
-              <span className="text-[9px] font-mono font-bold text-brand-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">
-                {squadSugerido.codigo}
-              </span>
-              <h3 className="text-sm font-black text-slate-900 mt-0.5">{squadSugerido.nombre}</h3>
-              <p className="text-[10px] text-slate-500">{squadSugerido.especialidad}</p>
-              <p className="text-[10px] text-slate-600 mt-0.5">
-                Tech Leader: <strong>{squadSugerido.lider}</strong>
-              </p>
-            </div>
+            {squadSugerido ? (
+              <>
+                <div className="mt-2">
+                  <span className="text-[9px] font-mono font-bold text-brand-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                    {squadSugerido.codigo}
+                  </span>
+                  <h3 className="text-sm font-black text-slate-900 mt-0.5">{squadSugerido.nombre}</h3>
+                  <p className="text-[10px] text-slate-500">{squadSugerido.especialidad}</p>
+                  <p className="text-[10px] text-slate-600 mt-0.5">
+                    Tech Leader: <strong>{squadSugerido.lider}</strong>
+                  </p>
+                </div>
 
-            <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200">
-              <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">
-                Justificación de Encaje Técnico:
-              </span>
-              <p className="text-[10px] text-slate-700 leading-snug line-clamp-3">
-                {squadSugerido.justificacion}
-              </p>
-            </div>
+                <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200">
+                  <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">
+                    Justificación de Encaje Técnico:
+                  </span>
+                  <p className="text-[10px] text-slate-700 leading-snug line-clamp-3">
+                    {squadSugerido.justificacion}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="mt-3 p-3 bg-white rounded-lg border border-dashed border-slate-200 text-center space-y-1.5">
+                <span className="text-xs font-bold text-slate-700 block">Evaluación en Curso</span>
+                <p className="text-[10px] text-slate-500 leading-relaxed">
+                  La asignación de Squad CTS requiere completar la prueba técnica oficial para ponderar el stack, arquitectura y afinidad del aspirante.
+                </p>
+                <div className="inline-block px-2 py-0.5 bg-amber-50 text-amber-800 rounded border border-amber-200 text-[9px] font-semibold">
+                  Requiere Test Técnico
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-2 pt-1.5 border-t border-slate-200">
@@ -178,15 +199,19 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
               Competencias Clave para el Squad:
             </span>
             <div className="flex flex-wrap gap-1">
-              {(squadSugerido.fortalezasClave || ['Arquitectura Limpia', 'TypeScript', 'Pair Programming']).map(
-                (f: string, idx: number) => (
+              {squadSugerido && squadSugerido.fortalezasClave?.length > 0 ? (
+                squadSugerido.fortalezasClave.map((f: string, idx: number) => (
                   <span
                     key={idx}
                     className="px-1.5 py-0.5 bg-white text-slate-700 border border-slate-200 rounded text-[9px] font-medium"
                   >
                     {f}
                   </span>
-                ),
+                ))
+              ) : (
+                <span className="text-[9px] text-slate-400 italic">
+                  Pendiente de determinar tras completar evaluaciones
+                </span>
               )}
             </div>
           </div>
@@ -200,56 +225,76 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
                 <HeartPulse className="w-3.5 h-3.5 text-rose-600" />
                 <span>2. Batería Actitud (16PF)</span>
               </span>
-              <span className="text-[10px] font-bold text-slate-500 font-mono">
-                Sinceridad: {distorsion.decatipo || 6}/10
-              </span>
+              {tieneInforme16PF && distorsion ? (
+                <span className="text-[10px] font-bold text-slate-500 font-mono">
+                  Sinceridad: {distorsion.decatipo}/10
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  {testActitud?.estado || 'NO_INICIADO'}
+                </span>
+              )}
             </div>
 
-            <div className="mt-2 space-y-1.5">
-              <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                <div className="flex justify-between items-center font-bold text-slate-800">
-                  <span>Estilo de Trabajo</span>
-                  <span className="text-rose-600">
-                    {espectroActitud.estiloTrabajo?.etiqueta || 'Colaborativo en Squad'}
-                  </span>
+            {tieneInforme16PF ? (
+              <div className="mt-2 space-y-1.5">
+                <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
+                  <div className="flex justify-between items-center font-bold text-slate-800">
+                    <span>Estilo de Trabajo</span>
+                    <span className="text-rose-600">
+                      {espectroActitud?.estiloTrabajo?.etiqueta || 'Colaborativo en Squad'}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
+                    {espectroActitud?.estiloTrabajo?.descripcion ||
+                      'Disposición notable para el pair programming, comunicación asertiva y objetivos de sprint.'}
+                  </p>
                 </div>
-                <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
-                  {espectroActitud.estiloTrabajo?.descripcion ||
-                    'Disposición notable para el pair programming, comunicación asertiva y objetivos de sprint.'}
-                </p>
-              </div>
 
-              <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                <div className="flex justify-between items-center font-bold text-slate-800">
-                  <span>Enfoque de Resolución</span>
-                  <span className="text-indigo-600">
-                    {espectroActitud.enfoqueResolucion?.etiqueta || 'Rigor Arquitectónico'}
-                  </span>
+                <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
+                  <div className="flex justify-between items-center font-bold text-slate-800">
+                    <span>Enfoque de Resolución</span>
+                    <span className="text-indigo-600">
+                      {espectroActitud?.enfoqueResolucion?.etiqueta || 'Rigor Arquitectónico'}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
+                    {espectroActitud?.enfoqueResolucion?.descripcion ||
+                      'Prioriza la solidez de diseño y desacoplamiento con entregas ágiles continuas.'}
+                  </p>
                 </div>
-                <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
-                  {espectroActitud.enfoqueResolucion?.descripcion ||
-                    'Prioriza la solidez de diseño y desacoplamiento con entregas ágiles continuas.'}
-                </p>
-              </div>
 
-              <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                <div className="flex justify-between items-center font-bold text-slate-800">
-                  <span>Adaptabilidad al Cambio</span>
-                  <span className="text-emerald-600">
-                    {espectroActitud.adaptabilidad?.etiqueta || 'Alta Resiliencia'}
-                  </span>
+                <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
+                  <div className="flex justify-between items-center font-bold text-slate-800">
+                    <span>Adaptabilidad al Cambio</span>
+                    <span className="text-emerald-600">
+                      {espectroActitud?.adaptabilidad?.etiqueta || 'Alta Resiliencia'}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
+                    {espectroActitud?.adaptabilidad?.descripcion ||
+                      'Afronta con solvencia los cambios de contexto e incertidumbre de requisitos.'}
+                  </p>
                 </div>
-                <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
-                  {espectroActitud.adaptabilidad?.descripcion ||
-                    'Afronta con solvencia los cambios de contexto e incertidumbre de requisitos.'}
-                </p>
               </div>
-            </div>
+            ) : (
+              <div className="mt-3 p-3 bg-white rounded-lg border border-dashed border-slate-200 text-center space-y-1.5">
+                <span className="text-xs font-bold text-slate-700 block">Test de Actitud Pendiente</span>
+                <p className="text-[10px] text-slate-500 leading-relaxed">
+                  El postulante aún no ha respondido el cuestionario psicométrico 16PF (102 preguntas). No se calculan factores ni distorsión hasta finalizarlo.
+                </p>
+                <div className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-semibold">
+                  102 reactivos pendientes
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-2 pt-1.5 border-t border-slate-200 text-[9px] text-slate-500 flex items-center justify-between">
             <span>Batería: 102 reactivos conductuales</span>
-            <span className="text-emerald-700 font-bold">Perfil Sin Sesgos</span>
+            <span className={tieneInforme16PF ? 'text-emerald-700 font-bold' : 'text-slate-400'}>
+              {tieneInforme16PF ? 'Perfil Registrado' : 'Pendiente de realización'}
+            </span>
           </div>
         </div>
 
@@ -261,48 +306,94 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
                 <Cpu className="w-3.5 h-3.5 text-indigo-600" />
                 <span>3. Aptitud & Test Técnico</span>
               </span>
-              <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                {calificacionTecnica} / 10
-              </span>
+              {tieneTecnico ? (
+                <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                  {calificacionTecnica} / 10
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  Pendiente
+                </span>
+              )}
             </div>
 
             <div className="mt-2 space-y-1.5">
-              <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-800">Razonamiento Deductivo</span>
-                  <span className="font-mono text-brand-600 font-bold">Sobresaliente</span>
-                </div>
-                <p className="text-[9px] text-slate-500 mt-0.5">
-                  {espectroAptitud.razonamiento?.descripcion ||
-                    'Capacidad demostrada para descomponer lógica compleja en componentes sencillos.'}
-                </p>
-              </div>
+              {tieneAptitud ? (
+                <>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-800">Razonamiento Deductivo</span>
+                      <span className="font-mono text-brand-600 font-bold">
+                        {espectroAptitud?.razonamiento?.nivel || 'Aptitud Evaluada'}
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-500 mt-0.5">
+                      {espectroAptitud?.razonamiento?.descripcion ||
+                        'Capacidad demostrada para descomponer lógica compleja en componentes sencillos.'}
+                    </p>
+                  </div>
 
-              <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-800">Abstracción de Software</span>
-                  <span className="font-mono text-indigo-600 font-bold">Elevado</span>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-800">Abstracción de Software</span>
+                      <span className="font-mono text-indigo-600 font-bold">
+                        {espectroAptitud?.abstraccion?.nivel || 'Aptitud Evaluada'}
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-500 mt-0.5">
+                      {espectroAptitud?.abstraccion?.descripcion ||
+                        'Alineado con Clean Architecture, inyección de dependencias y modelos de dominio.'}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="bg-white p-2 rounded-lg border border-dashed border-slate-200 text-[10px]">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-700">Matriz de Aptitudes (43 Habilidades)</span>
+                    <span className="text-[9px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                      {testAptitud?.estado || 'NO_INICIADO'}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 mt-0.5">
+                    Autoevaluación de competencias técnicas y habilidades blandas pendiente de realización.
+                  </p>
                 </div>
-                <p className="text-[9px] text-slate-500 mt-0.5">
-                  {espectroAptitud.abstraccion?.descripcion ||
-                    'Alineado con Clean Architecture, inyección de dependencias y modelos de dominio.'}
-                </p>
-              </div>
+              )}
 
+              {/* Test Técnico CTS */}
+              {!tieneTecnico && (
+                <div className="bg-white p-2 rounded-lg border border-dashed border-slate-200 text-[10px]">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-700">Prueba Técnica Oficial CTS (148 Preguntas)</span>
+                    <span className="text-[9px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                      {testTecnico?.estado || 'NO_INICIADO'}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 mt-0.5">
+                    El examen técnico no ha sido completado. Se requiere para emitir nota final sobre 10.
+                  </p>
+                </div>
+              )}
+
+              {/* Entrevista Técnica */}
               <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-slate-800 flex items-center space-x-1">
                     <Video className="w-3 h-3 text-indigo-600" />
                     <span>Entrevista Técnica Meet</span>
                   </span>
-                  <span className="font-bold text-emerald-700">
+                  <span className={`font-bold ${entrevista?.estado === 'COMPLETADA' ? 'text-emerald-700' : 'text-slate-600'}`}>
                     {entrevista?.fecha_hora_programada
-                      ? new Date(entrevista.fecha_hora_programada).toLocaleDateString()
-                      : 'Realizada'}
+                      ? `${new Date(entrevista.fecha_hora_programada).toLocaleDateString()} (${entrevista.estado || 'PROGRAMADA'})`
+                      : entrevista?.estado === 'COMPLETADA'
+                      ? 'Realizada'
+                      : 'Pendiente de Agendar'}
                   </span>
                 </div>
                 <p className="text-[9px] text-slate-500 mt-0.5">
-                  Comprobada la competencia y motivación del aspirante por los evaluadores.
+                  {entrevista?.estado === 'COMPLETADA'
+                    ? 'Comprobada la competencia y motivación del aspirante por los evaluadores.'
+                    : 'Entrevista individual con el comité evaluador y Tech Leads.'}
                 </p>
               </div>
             </div>
@@ -310,8 +401,20 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
 
           <div className="mt-2 pt-1.5 border-t border-slate-200 flex justify-between items-center text-[10px]">
             <span className="text-slate-500">Dictamen Final:</span>
-            <strong className="text-emerald-700 font-bold uppercase tracking-wider">
-              {estadoPostulacion === 'ADMITIDO' ? 'APROBADO PARA INCORPORACIÓN' : 'EN CONSIDERACIÓN'}
+            <strong
+              className={`font-bold uppercase tracking-wider ${
+                estadoPostulacion === 'ADMITIDO'
+                  ? 'text-emerald-700'
+                  : estadoPostulacion === 'RECHAZADO'
+                  ? 'text-red-700'
+                  : 'text-indigo-700'
+              }`}
+            >
+              {estadoPostulacion === 'ADMITIDO'
+                ? 'APROBADO PARA INCORPORACIÓN'
+                : estadoPostulacion === 'RECHAZADO'
+                ? 'NO SELECCIONADO'
+                : 'EN EVALUACIÓN'}
             </strong>
           </div>
         </div>

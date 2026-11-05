@@ -361,11 +361,106 @@ export function generarInforme16PF(
   nombre: string,
   edad: number | string = 21,
   cursoAcademico: string = '2026 - 2027',
-  fechaLlegada: string = new Date().toLocaleDateString('en-US'),
+  fechaLlegada: string = new Date().toLocaleDateString('es-ES'),
   respuestas?: any[],
-): Informe16PF {
-  // Si no hay respuestas detalladas o es el perfil de prueba base, se usa la batería oficial 16PF
-  const factores = BILLY_ORDORES_16PF.map((f) => ({ ...f }));
+): Informe16PF | null {
+  if (!respuestas || respuestas.length === 0) {
+    return null;
+  }
+
+  // Mapeo oficial 16PF de Cattell (preguntas 1 a 102)
+  const FACTOR_MAP: Record<number, string> = {
+    1: 'A', 17: 'A', 33: 'A', 49: 'A', 65: 'A', 81: 'A',
+    2: 'B', 18: 'B', 34: 'B', 50: 'B', 66: 'B', 82: 'B', 98: 'B', 99: 'B',
+    3: 'C', 19: 'C', 35: 'C', 51: 'C', 67: 'C', 83: 'C',
+    4: 'E', 20: 'E', 36: 'E', 52: 'E', 68: 'E', 84: 'E',
+    5: 'F', 21: 'F', 37: 'F', 53: 'F', 69: 'F', 85: 'F',
+    6: 'G', 22: 'G', 38: 'G', 54: 'G', 70: 'G', 86: 'G',
+    7: 'H', 23: 'H', 39: 'H', 55: 'H', 71: 'H', 87: 'H',
+    8: 'I', 24: 'I', 40: 'I', 56: 'I', 72: 'I', 88: 'I',
+    9: 'L', 25: 'L', 41: 'L', 57: 'L', 73: 'L', 89: 'L',
+    10: 'M', 26: 'M', 42: 'M', 58: 'M', 74: 'M', 90: 'M',
+    11: 'N', 27: 'N', 43: 'N', 59: 'N', 75: 'N', 91: 'N',
+    12: 'O', 28: 'O', 44: 'O', 60: 'O', 76: 'O', 92: 'O',
+    13: 'Q1', 29: 'Q1', 45: 'Q1', 61: 'Q1', 77: 'Q1', 93: 'Q1',
+    14: 'Q2', 30: 'Q2', 46: 'Q2', 62: 'Q2', 78: 'Q2', 94: 'Q2',
+    15: 'Q3', 31: 'Q3', 47: 'Q3', 63: 'Q3', 79: 'Q3', 95: 'Q3',
+    16: 'Q4', 32: 'Q4', 48: 'Q4', 64: 'Q4', 80: 'Q4', 96: 'Q4',
+  };
+
+  const puntuacionesDirectas: Record<string, number> = {
+    A: 0, B: 0, C: 0, E: 0, F: 0, G: 0, H: 0, I: 0, L: 0, M: 0, N: 0, O: 0, Q1: 0, Q2: 0, Q3: 0, Q4: 0,
+  };
+  const maxPuntosPorFactor: Record<string, number> = {
+    A: 12, B: 16, C: 12, E: 12, F: 12, G: 12, H: 12, I: 12, L: 12, M: 12, N: 12, O: 12, Q1: 12, Q2: 12, Q3: 12, Q4: 12,
+  };
+
+  let distorsionDirecta = 0;
+
+  for (const r of respuestas) {
+    const orden = r.pregunta?.orden || 0;
+    const factor = FACTOR_MAP[orden];
+    const textoOpcion = (r.opcion_seleccionada?.texto || '').toLowerCase().trim();
+
+    let puntos = 1;
+    if (textoOpcion.includes('sí') || textoOpcion.includes('verdadero') || textoOpcion.includes('siempre')) {
+      puntos = 2;
+    } else if (textoOpcion.includes('a veces') || textoOpcion.includes('intermedio') || textoOpcion.includes('término medio')) {
+      puntos = 1;
+    } else if (textoOpcion.includes('no') || textoOpcion.includes('falso') || textoOpcion.includes('nunca')) {
+      puntos = 0;
+    }
+
+    if (factor && puntuacionesDirectas[factor] !== undefined) {
+      puntuacionesDirectas[factor] += puntos;
+    }
+
+    if ([97, 100, 101, 102].includes(orden)) {
+      distorsionDirecta += puntos;
+    }
+  }
+
+  const claves = ['A', 'B', 'C', 'E', 'F', 'G', 'H', 'I', 'L', 'M', 'N', 'O', 'Q1', 'Q2', 'Q3', 'Q4'];
+  const factores: Factor16PFItem[] = claves.map((k) => {
+    const pd = puntuacionesDirectas[k] || 0;
+    const maxPd = maxPuntosPorFactor[k] || 12;
+    const pc = Math.min(10, Math.max(1, Math.round((pd / maxPd) * 9 + 1)));
+
+    const def = FACTORES_16PF_DEFINICION[k] || {
+      baja: 'BAJO',
+      alta: 'ALTO',
+      interpretacionBaja: 'Puntuación en rango bajo.',
+      interpretacionMedia: 'Puntuación en rango medio.',
+      interpretacionAlta: 'Puntuación en rango alto.',
+    };
+
+    let rango: 'BAJA' | 'MEDIA' | 'ALTA' = 'MEDIA';
+    let etiquetaResultado = 'PROMEDIO';
+    let interpretacion = def.interpretacionMedia;
+
+    if (pc <= 3) {
+      rango = 'BAJA';
+      etiquetaResultado = def.baja;
+      interpretacion = def.interpretacionBaja;
+    } else if (pc >= 8) {
+      rango = 'ALTA';
+      etiquetaResultado = def.alta;
+      interpretacion = def.interpretacionAlta;
+    }
+
+    return {
+      factor: k,
+      pd,
+      pc,
+      bajaPuntuacion: def.baja,
+      altaPuntuacion: def.alta,
+      etiquetaResultado,
+      rango,
+      interpretacion,
+    };
+  });
+
+  const decatipoDistorsion = Math.min(10, Math.max(1, Math.round((distorsionDirecta / 8) * 9 + 1)));
 
   return {
     nombreCandidato: nombre,
@@ -374,10 +469,12 @@ export function generarInforme16PF(
     fechaLlegada,
     factores,
     distorsion: {
-      decatipo: 6,
-      etiqueta: 'Distorsión Favorable',
+      decatipo: decatipoDistorsion,
+      etiqueta: decatipoDistorsion >= 8 ? 'Distorsión Marcada' : 'Distorsión Favorable',
       interpretacion:
-        'Índice de consistencia y sinceridad en las respuestas del postulante (6/10). No se aprecian sesgos de deseabilidad social marcada ni distorsión deliberada en las respuestas.',
+        decatipoDistorsion >= 8
+          ? 'El índice de distorsión sugiere una tendencia a proyectar una imagen excesivamente favorable.'
+          : `Índice de consistencia y sinceridad en las respuestas del postulante (${decatipoDistorsion}/10). Respuestas congruentes sin sesgo deliberado.`,
     },
   };
 }

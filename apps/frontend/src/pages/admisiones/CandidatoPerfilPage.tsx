@@ -403,83 +403,101 @@ export const CandidatoPerfilPage: React.FC = () => {
 
         {/* PESTAÑA: TEST ACTITUD 16PF OFICIAL */}
         {tabActiva === 'actitud16pf' && (
-          <Informe16PFView
-            informe={
-              perfilCompetencias.informe16PF || {
-                nombreCandidato: `${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`,
-                edad: 19,
-                cursoAcademico: '2026 - 2027',
-                fechaLlegada: new Date(candidato.creado_en).toLocaleDateString(),
-                factores: [],
-              }
-            }
-          />
+          perfilCompetencias.informe16PF ? (
+            <Informe16PFView informe={perfilCompetencias.informe16PF} />
+          ) : (
+            <div className="bg-white rounded-xl border border-[#E0E0E0] p-10 text-center space-y-4 shadow-funiber">
+              <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
+                <HeartPulse className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Batería de Actitud (16PF) Pendiente de Realización
+                </h3>
+                <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                  El postulante aún no ha completado el cuestionario de actitud 16PF (102 preguntas). Los factores de personalidad, decatipos y rasgos de conducta se computarán fielmente una vez que el candidato finalice su evaluación.
+                </p>
+              </div>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
+                <span>Estado de la batería:</span>
+                <span className="font-bold text-amber-800">{testActitud?.estado || 'NO_INICIADO'}</span>
+              </div>
+            </div>
+          )
         )}
 
         {/* PESTAÑA: TEST APTITUD MATRIZ HABILIDADES */}
         {tabActiva === 'aptitudMatriz' && (
-          <MatrizAptitudesView
-            matriz={
-              perfilCompetencias.matrizAptitudes || {
-                nombreCandidato: candidato.usuario?.email,
-                categorias: [],
-              }
-            }
-          />
+          perfilCompetencias.matrizAptitudes ? (
+            <MatrizAptitudesView matriz={perfilCompetencias.matrizAptitudes} />
+          ) : (
+            <div className="bg-white rounded-xl border border-[#E0E0E0] p-10 text-center space-y-4 shadow-funiber">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mx-auto">
+                <FileSpreadsheet className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Matriz de Aptitudes Técnicas Pendiente de Realización
+                </h3>
+                <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                  El candidato no ha completado la autoevaluación de aptitudes (43 competencias técnicas). La matriz de habilidades y el mapa de calor se generarán a partir de los niveles seleccionados por el postulante.
+                </p>
+              </div>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
+                <span>Estado de la batería:</span>
+                <span className="font-bold text-amber-800">{testAptitud?.estado || 'NO_INICIADO'}</span>
+              </div>
+            </div>
+          )
         )}
 
         {/* PESTAÑA: TEST TÉCNICO CTS OFICIAL */}
         {tabActiva === 'tecnicoCts' && (
-          <ReportePruebaTecnicaView
-            informe={
-              perfilCompetencias.informePruebaTecnica || {
-                idRespuesta: 74,
-                fechaEnvio: new Date(candidato.creado_en).toLocaleString(),
-                fechaInicio: new Date(new Date(candidato.creado_en).getTime() - 2 * 3600 * 1000).toLocaleString(),
-                fechaUltimaAccion: new Date(candidato.creado_en).toLocaleString(),
-                nombreCandidato: candidato.usuario?.nombre || 'Gerardo Daniel',
-                apellidosCandidato: candidato.usuario?.apellidos || 'Orellana Campos',
-                emailCandidato: candidato.usuario?.email || 'candidato@alumnos.uneatlantico.es',
-                sede: candidato.sede_origen || 'Santander (España)',
-                convocatoria: candidato.convocatoria?.denominacion || 'Convocatoria Admisión Febrero 2026',
-                puntuacionesPorArea: {
-                  general: 30,
-                  frontend: 65,
-                  backend: 85,
-                  sysadmin: 60,
-                  globalSobre10: 8.2,
-                },
-                squadRecomendado: sugerido
-                  ? {
-                      codigo: sugerido.codigo,
-                      nombre: sugerido.nombre,
-                      especialidad: sugerido.especialidad,
-                      lider: sugerido.lider?.nombre ? `${sugerido.lider.nombre} ${sugerido.lider.apellidos}` : 'Tech Lead CTS',
-                      afinidadPorcentaje: sugerido.afinidadPorcentaje,
-                      justificacion: sugerido.justificacion,
-                      fortalezasClave: sugerido.fortalezas || ['Clean Architecture', 'NestJS', 'TypeScript'],
-                    }
-                  : {
-                      codigo: 'TEAM-01',
-                      nombre: 'Team Fénix',
-                      especialidad: 'Fullstack TypeScript & Arquitectura Cloud',
-                      lider: 'Diego Moys (Tech Lead)',
-                      afinidadPorcentaje: 88,
-                      justificacion:
-                        'Excelente dominio en Back-End y fundamentos de POO y Arquitectura en Capas.',
-                      fortalezasClave: ['Arquitectura Limpia & NestJS', 'POO & Patrones', 'Asincronía & APIs'],
-                    },
-                preguntas: [],
-              }
-            }
-          />
+          perfilCompetencias.informePruebaTecnica ? (
+            <ReportePruebaTecnicaView informe={perfilCompetencias.informePruebaTecnica} />
+          ) : (
+            <div className="bg-white rounded-xl border border-[#E0E0E0] p-10 text-center space-y-4 shadow-funiber">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center mx-auto">
+                <Terminal className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Prueba Técnica CTS Pendiente de Envío
+                </h3>
+                <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                  El examen técnico oficial no ha sido completado por el aspirante. Una vez finalizado, aquí se auditarán sus respuestas pregunta a pregunta, el desglose por áreas (General, Frontend, Backend, Sysadmin) y la afinidad de Squads.
+                </p>
+              </div>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
+                <span>Estado de la batería:</span>
+                <span className="font-bold text-amber-800">{testTecnico?.estado || 'NO_INICIADO'}</span>
+              </div>
+            </div>
+          )
         )}
 
         {/* PESTAÑA: RESUMEN Y SQUAD */}
         {tabActiva === 'resumen' && (
           <div className="space-y-6">
             {/* 1. RECOMENDACIÓN DE SQUAD (Minimalista y Directo) */}
-            {sugerido && (
+            {!sugerido ? (
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-3">
+                <div className="flex items-start space-x-3">
+                  <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Recomendación de Squad Pendiente
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      El candidato se encuentra en estado <strong className="text-slate-800 font-mono">{candidato.estado_postulacion}</strong>.
+                      La asignación algorítmica y la afinidad porcentual a Squads CTS se calcularán automáticamente una vez que el aspirante complete la evaluación técnica.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
               <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg border border-indigo-500/30">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
@@ -515,7 +533,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                           setAsignacionDiferida(false);
                           setModalAdmitir(true);
                         }}
-                        className="px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-1.5"
+                        className="px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
                       >
                         <span>Asignar a {sugerido.nombre}</span>
                         <CheckCircle2 className="w-4 h-4" />
@@ -584,7 +602,7 @@ export const CandidatoPerfilPage: React.FC = () => {
               </div>
             )}
 
-            {/* 2. RESUMEN DE LAS 3 BATERÍAS (Minimalista, 3 Cards Ejecutivas con enlaces directos) */}
+            {/* 2. RESUMEN DE LAS 3 BATERÍAS (3 Cards Ejecutivas con estado real) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {/* Card 1: Batería de Actitud (16PF) */}
               <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
@@ -616,14 +634,16 @@ export const CandidatoPerfilPage: React.FC = () => {
                       Perfil Actitudinal
                     </span>
                     <span className="text-xs font-bold text-slate-800 mt-0.5 block truncate">
-                      {espectro.actitud?.estiloTrabajo?.etiqueta || 'Colaborativo / Alta Adaptabilidad'}
+                      {testActitud?.estado === 'COMPLETADO'
+                        ? (espectro.actitud?.estiloTrabajo?.etiqueta || 'Evaluación registrada')
+                        : 'Pendiente de realización'}
                     </span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setTabActiva('actitud16pf')}
-                  className="mt-4 w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center space-x-1"
+                  className="mt-4 w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
                 >
                   <span>Ver Informe 16PF Oficial</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -660,14 +680,16 @@ export const CandidatoPerfilPage: React.FC = () => {
                       Competencia Destacada
                     </span>
                     <span className="text-xs font-bold text-slate-800 mt-0.5 block truncate">
-                      {espectro.aptitud?.abstraccion?.etiqueta || 'Arquitectura & Backend DDD'}
+                      {testAptitud?.estado === 'COMPLETADO'
+                        ? (espectro.aptitud?.abstraccion?.etiqueta || 'Evaluación registrada')
+                        : 'Pendiente de realización'}
                     </span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setTabActiva('aptitudMatriz')}
-                  className="mt-4 w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center space-x-1"
+                  className="mt-4 w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
                 >
                   <span>Ver Matriz de Competencias</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -694,15 +716,15 @@ export const CandidatoPerfilPage: React.FC = () => {
                         ? Number(testTecnico?.calificacion_obtenida || 0) >= 5
                           ? 'Aprobado'
                           : 'No Aprobado'
-                        : 'En Progreso'}
+                        : 'Pendiente'}
                     </span>
                   </div>
 
                   <h3 className="text-sm font-bold text-slate-900">
-                    Evaluación Técnica
+                    Evaluación Técnica CTS
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Cuestionario teórico de arquitectura y solución funcional de reto en TypeScript.
+                    Cuestionario técnico oficial (148 preguntas) y auditoría por áreas de especialidad.
                   </p>
 
                   <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
@@ -711,7 +733,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                         Calificación Numérica
                       </span>
                       <span className="text-2xl font-black text-slate-900 mt-0.5 block">
-                        {testTecnico?.calificacion_obtenida !== null && testTecnico?.calificacion_obtenida !== undefined
+                        {testTecnico?.estado === 'COMPLETADO' && testTecnico?.calificacion_obtenida !== null && testTecnico?.calificacion_obtenida !== undefined
                           ? `${Number(testTecnico.calificacion_obtenida).toFixed(1)}`
                           : '—'}
                         <span className="text-xs font-normal text-slate-400 ml-1">/ 10</span>

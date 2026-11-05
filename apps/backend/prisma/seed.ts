@@ -891,7 +891,7 @@ async function main() {
               create: [
                 {
                   texto: q.respuestaCandidato || 'Opción conceptual estándar',
-                  es_correcta: q.estado === 'CORRECTA',
+                  es_correcta: q.estado !== 'INCORRECTA',
                 },
                 {
                   texto: 'Alternativa incorrecta o contraejemplo técnico',

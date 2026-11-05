@@ -346,7 +346,11 @@ export class EvaluacionService {
 
     const test = await this.prisma.test.findFirst({
       where: { id: testId, candidato_id: candidato.id },
-      include: { respuestas: true },
+      include: {
+        respuestas: {
+          include: { pregunta: true, opcion_seleccionada: true },
+        },
+      },
     });
 
     if (!test) {
@@ -367,39 +371,55 @@ export class EvaluacionService {
       },
     });
 
-    // Construcción del espectro psicométrico y cognitivo (sin puntuación numérica para actitud y aptitud)
+    // Construcción del espectro psicométrico y cognitivo
     const perfilExistente = (candidato.perfil_competencias as any) || {};
-    const notaTecnicaFinal = nota !== null ? Number(nota.toFixed(1)) : (perfilExistente.tecnico?.nota ?? 7.5);
+    const notaTecnicaFinal =
+      nota !== null
+        ? Number(nota.toFixed(1))
+        : (perfilExistente.tecnico?.nota ?? (esTecnico ? 0 : null));
 
     const usuarioCand = await this.prisma.usuario.findUnique({ where: { id: candidato.usuario_id } });
     const nombreCand = usuarioCand ? `${usuarioCand.nombre} ${usuarioCand.apellidos}` : 'Candidato';
     const emailCand = usuarioCand?.email || 'candidato@alumnos.uneatlantico.es';
 
-    let informe16PF = perfilExistente.informe16PF;
-    let matrizAptitudes = perfilExistente.matrizAptitudes;
-    let informePruebaTecnica = perfilExistente.informePruebaTecnica;
+    let informe16PF = perfilExistente.informe16PF || null;
+    let matrizAptitudes = perfilExistente.matrizAptitudes || null;
+    let informePruebaTecnica = perfilExistente.informePruebaTecnica || null;
 
-    if (test.tipo_bateria === 'ACTITUD' || !informe16PF) {
+    if (test.tipo_bateria === 'ACTITUD' && test.respuestas.length > 0) {
       informe16PF = generarInforme16PF(
         nombreCand,
         21,
         '2026 - 2027',
-        new Date().toLocaleDateString('en-US'),
+        new Date().toLocaleDateString('es-ES'),
         test.respuestas,
       );
     }
 
-    if (test.tipo_bateria === 'APTITUD' || !matrizAptitudes) {
+    if (test.tipo_bateria === 'APTITUD' && test.respuestas.length > 0) {
       matrizAptitudes = generarMatrizAptitudes(emailCand, test.respuestas);
     }
 
-    if (test.tipo_bateria === 'TECNICO' || !informePruebaTecnica) {
+    if (test.tipo_bateria === 'TECNICO' && test.respuestas.length > 0) {
       informePruebaTecnica = generarInformePruebaTecnica(
         candidato,
         test.respuestas,
         notaTecnicaFinal,
       );
     }
+
+    // Verificar si TODOS los tests asignados al candidato están completados
+    const todosLosTests = await this.prisma.test.findMany({
+      where: { candidato_id: candidato.id },
+    });
+    const todosCompletados =
+      todosLosTests.length > 0 &&
+      todosLosTests.every(
+        (t) => t.id === testId || t.estado === EstadoTest.COMPLETADO,
+      );
+    const nuevoEstado = todosCompletados
+      ? EstadoPostulacion.TESTS_COMPLETADOS
+      : EstadoPostulacion.EN_PROCESO;
 
     const perfilCompetencias = {
       ...perfilExistente,
@@ -457,21 +477,24 @@ export class EvaluacionService {
       tecnico: {
         nota: notaTecnicaFinal,
         escala: '0 a 10',
-        superado: notaTecnicaFinal >= 5.0,
+        superado: (notaTecnicaFinal ?? 0) >= 5.0,
       },
       dimensiones: {
-        actitud: { puntaje: 85 },
-        aptitud: { puntaje: 80 },
-        tecnico: { puntaje: Math.round(notaTecnicaFinal * 10) },
+        actitud: { puntaje: informe16PF ? 85 : 0 },
+        aptitud: { puntaje: matrizAptitudes ? 80 : 0 },
+        tecnico: { puntaje: notaTecnicaFinal !== null ? Math.round(notaTecnicaFinal * 10) : 0 },
       },
-      indiceAfinidadGlobal: Math.round((85 + 80 + notaTecnicaFinal * 10) / 3),
+      indiceAfinidadGlobal:
+        todosCompletados && notaTecnicaFinal !== null
+          ? Math.round((85 + 80 + notaTecnicaFinal * 10) / 3)
+          : null,
       fechaCalculo: new Date().toISOString(),
     };
 
     await this.prisma.candidato.update({
       where: { id: candidato.id },
       data: {
-        estado_postulacion: EstadoPostulacion.TESTS_COMPLETADOS,
+        estado_postulacion: nuevoEstado,
         perfil_competencias: perfilCompetencias,
       },
     });
@@ -480,11 +503,22 @@ export class EvaluacionService {
       success: true,
       test: testFinalizado,
       perfilRadar: perfilCompetencias,
-      mensaje: 'Test finalizado. Postulación en estado TESTS_COMPLETADOS.',
+      mensaje: `Test finalizado. Postulación en estado ${nuevoEstado}.`,
     };
   }
 
   async calcularRecomendacionSquad(candidato: any) {
+    // 1. Extraer datos del test técnico (solo si fue COMPLETADO y tiene respuestas)
+    const testTecnico = candidato.tests?.find((t: any) => t.tipo_bateria === 'TECNICO');
+    if (
+      !testTecnico ||
+      testTecnico.estado !== EstadoTest.COMPLETADO ||
+      !testTecnico.respuestas ||
+      testTecnico.respuestas.length === 0
+    ) {
+      return null;
+    }
+
     const equipos = await this.prisma.equipo.findMany({
       orderBy: { codigo: 'asc' },
       include: {
@@ -492,9 +526,7 @@ export class EvaluacionService {
       },
     });
 
-    // 1. Extraer datos del test técnico
-    const testTecnico = candidato.tests?.find((t: any) => t.tipo_bateria === 'TECNICO');
-    const notaTecnica = testTecnico?.calificacion_obtenida ? Number(testTecnico.calificacion_obtenida) : 7.5;
+    const notaTecnica = testTecnico?.calificacion_obtenida ? Number(testTecnico.calificacion_obtenida) : 0;
 
     // 2. Extraer o normalizar el espectro cognitivo y conductual
     const perfilComp = (candidato.perfil_competencias as any) || {};
@@ -650,7 +682,7 @@ export class EvaluacionService {
         tests: {
           include: {
             respuestas: {
-              include: { pregunta: true },
+              include: { pregunta: true, opcion_seleccionada: true },
             },
           },
         },
@@ -667,45 +699,76 @@ export class EvaluacionService {
       throw new NotFoundException(`Candidato con ID ${candidatoId} no encontrado.`);
     }
 
-    const recomendacionSquad = await this.calcularRecomendacionSquad(candidato);
+    const testActitud = candidato.tests.find((t) => t.tipo_bateria === 'ACTITUD');
+    const testAptitud = candidato.tests.find((t) => t.tipo_bateria === 'APTITUD');
+    const testTecnico = candidato.tests.find((t) => t.tipo_bateria === 'TECNICO');
 
-    // Asegurar que informe16PF y matrizAptitudes estén disponibles para visualización
+    // Solo calcular recomendación de Squad si el candidato ha completado el examen técnico y tiene respuestas reales
+    const recomendacionSquad =
+      testTecnico &&
+      testTecnico.estado === EstadoTest.COMPLETADO &&
+      testTecnico.respuestas?.length > 0
+        ? await this.calcularRecomendacionSquad(candidato)
+        : null;
+
     const nombreCand = candidato.usuario
       ? `${candidato.usuario.nombre} ${candidato.usuario.apellidos}`
       : 'Candidato';
     const emailCand = candidato.usuario?.email || 'candidato@alumnos.uneatlantico.es';
     const perfilExistente = (candidato.perfil_competencias as any) || {};
 
-    const testActitud = candidato.tests.find((t) => t.tipo_bateria === 'ACTITUD');
-    const testAptitud = candidato.tests.find((t) => t.tipo_bateria === 'APTITUD');
-    const testTecnico = candidato.tests.find((t) => t.tipo_bateria === 'TECNICO');
-
+    // Informes estrictamente condicionados a que el test correspondiente esté COMPLETADO y tenga respuestas reales
     const informe16PF =
-      perfilExistente.informe16PF ||
-      generarInforme16PF(
-        nombreCand,
-        21,
-        '2026 - 2027',
-        new Date(candidato.creado_en).toLocaleDateString('en-US'),
-        testActitud?.respuestas,
-      );
+      testActitud &&
+      testActitud.estado === EstadoTest.COMPLETADO &&
+      testActitud.respuestas?.length > 0
+        ? generarInforme16PF(
+            nombreCand,
+            21,
+            '2026 - 2027',
+            new Date(candidato.creado_en).toLocaleDateString('es-ES'),
+            testActitud.respuestas,
+          )
+        : null;
 
     const matrizAptitudes =
-      perfilExistente.matrizAptitudes ||
-      generarMatrizAptitudes(emailCand, testAptitud?.respuestas);
+      testAptitud &&
+      testAptitud.estado === EstadoTest.COMPLETADO &&
+      testAptitud.respuestas?.length > 0
+        ? generarMatrizAptitudes(emailCand, testAptitud.respuestas)
+        : null;
 
     const informePruebaTecnica =
-      perfilExistente.informePruebaTecnica ||
-      generarInformePruebaTecnica(
-        candidato,
-        testTecnico?.respuestas,
-        testTecnico?.calificacion_obtenida,
-      );
+      testTecnico &&
+      testTecnico.estado === EstadoTest.COMPLETADO &&
+      testTecnico.respuestas?.length > 0
+        ? generarInformePruebaTecnica(
+            candidato,
+            testTecnico.respuestas,
+            testTecnico.calificacion_obtenida,
+          )
+        : null;
+
+    const notaTecnicaCalculada =
+      testTecnico &&
+      testTecnico.estado === EstadoTest.COMPLETADO &&
+      testTecnico.calificacion_obtenida !== null &&
+      testTecnico.calificacion_obtenida !== undefined
+        ? Number(testTecnico.calificacion_obtenida)
+        : null;
 
     return {
       ...candidato,
       perfil_competencias: {
         ...perfilExistente,
+        tecnico:
+          notaTecnicaCalculada !== null
+            ? {
+                nota: notaTecnicaCalculada,
+                escala: '0 a 10',
+                superado: notaTecnicaCalculada >= 5.0,
+              }
+            : null,
         informe16PF,
         matrizAptitudes,
         informePruebaTecnica,

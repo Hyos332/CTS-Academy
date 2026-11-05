@@ -229,7 +229,32 @@ export const TestRunnerPage: React.FC = () => {
     entregarPracticaMutation.mutate({ preguntaId, codigo });
   };
 
-  const handleFinalizarTest = () => {
+  const handleFinalizarTest = async () => {
+    // Asegurar que cualquier respuesta seleccionada en borrador se persista antes de computar la nota
+    const promesas = [];
+    for (const [pId, opcionId] of Object.entries(respuestasSeleccionadas)) {
+      if (!respuestasBloqueadas[pId] && opcionId) {
+        promesas.push(
+          apiClient.post(`/evaluacion/baterias/${testId}/respuestas-teoricas`, {
+            preguntaId: pId,
+            opcionSeleccionadaId: opcionId,
+          }).catch((err) => console.error('Error guardando respuesta en borrador:', err)),
+        );
+      }
+    }
+    for (const [pId, codigo] of Object.entries(respuestasPracticas)) {
+      if (!practicasBloqueadas[pId] && codigo) {
+        promesas.push(
+          apiClient.post(`/evaluacion/baterias/${testId}/entregas-practicas`, {
+            preguntaId: pId,
+            codigoEntregado: codigo,
+          }).catch((err) => console.error('Error guardando práctica en borrador:', err)),
+        );
+      }
+    }
+    if (promesas.length > 0) {
+      await Promise.all(promesas);
+    }
     finalizarMutation.mutate();
   };
 
