@@ -7,23 +7,23 @@ import {
   ArrowLeft,
   Calendar,
   Video,
-  FileText,
   UserCheck,
   UserX,
   MessageSquare,
   ShieldAlert,
-  AlertTriangle,
-  Compass,
   CheckCircle2,
   Copy,
   ExternalLink,
   Mail,
-  LayoutDashboard,
   HeartPulse,
-  FileSpreadsheet,
+  Cpu,
   ArrowRight,
   FileDown,
   Terminal,
+  Clock,
+  Sparkles,
+  Users,
+  Award,
 } from 'lucide-react';
 import { InvitacionCandidatoModal } from '../../components/admisiones/InvitacionCandidatoModal';
 import { Informe16PFView } from '../../components/admisiones/Informe16PFView';
@@ -40,18 +40,22 @@ export const CandidatoPerfilPage: React.FC = () => {
   const [fechaEntrevista, setFechaEntrevista] = useState('');
   const [enlaceMeet, setEnlaceMeet] = useState('');
   const [comentariosEntrevista, setComentariosEntrevista] = useState('');
+  const [itemAnotacion, setItemAnotacion] = useState<'Actitud' | 'Aptitud' | 'Generalidades' | 'Recomendaciones'>('Generalidades');
+  const [calificacionAnotacion, setCalificacionAnotacion] = useState<'SOBRESALIENTE' | 'COMPETENTE' | 'EN_DESARROLLO' | 'NO_IDONEO'>('SOBRESALIENTE');
+  
   const [equipoSeleccionadoId, setEquipoSeleccionadoId] = useState('');
+  const [porcentajeAcceso, setPorcentajeAcceso] = useState<number>(100);
   const [asignacionDiferida, setAsignacionDiferida] = useState(false);
-  const [motivoRechazo, setMotivoRechazo] = useState('');
+  const [motivoAbandono, setMotivoAbandono] = useState('');
   const [copiadoMeet, setCopiadoMeet] = useState(false);
 
   const [modalEntrevista, setModalEntrevista] = useState(false);
   const [modalAdmitir, setModalAdmitir] = useState(false);
-  const [modalRechazar, setModalRechazar] = useState(false);
+  const [modalAbandonar, setModalAbandonar] = useState(false);
   const [modalInvitacion, setModalInvitacion] = useState(false);
-  const [tabActiva, setTabActiva] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz' | 'tecnicoCts'>('resumen');
-  const [confirmarIrreversibleAdmitir, setConfirmarIrreversibleAdmitir] = useState(false);
-  const [confirmarIrreversibleRechazar, setConfirmarIrreversibleRechazar] = useState(false);
+
+  // Vista activa: 'resumen' (página única sintetizada) o vista detallada de un test
+  const [vistaDetallada, setVistaDetallada] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz' | 'tecnicoCts'>('resumen');
 
   // Obtener perfil detallado del candidato (con cálculo de recomendación de squad)
   const { data: candidato, isLoading, error } = useQuery({
@@ -91,8 +95,8 @@ export const CandidatoPerfilPage: React.FC = () => {
   const anotacionesMutation = useMutation({
     mutationFn: async () => {
       return apiClient.post(`/evaluacion/candidatos/${id}/entrevista/anotaciones`, {
-        competenciaEvaluada: 'Evaluación Técnica y Aptitudinal Integral',
-        calificacionCualitativa: 'SOBRESALIENTE',
+        competenciaEvaluada: itemAnotacion,
+        calificacionCualitativa: calificacionAnotacion,
         comentario: comentariosEntrevista,
       });
     },
@@ -102,11 +106,12 @@ export const CandidatoPerfilPage: React.FC = () => {
     },
   });
 
-  // Mutación: Admitir Alumno Profer (admite con squad o con asignación diferida)
+  // Mutación: Admitir Alumno Profer (otorga porcentaje de acceso: 100%, 66%, 50%, 0% y asigna squad)
   const admitirMutation = useMutation({
     mutationFn: async () => {
       return apiClient.post(`/evaluacion/candidatos/${id}/admitir`, {
         equipoId: asignacionDiferida ? undefined : (equipoSeleccionadoId || undefined),
+        porcentajeAcceso,
       });
     },
     onSuccess: () => {
@@ -116,17 +121,17 @@ export const CandidatoPerfilPage: React.FC = () => {
     },
   });
 
-  // Mutación: Rechazar Candidatura
-  const rechazarMutation = useMutation({
+  // Mutación: Registrar Abandono de Candidatura (nunca "rechazado")
+  const abandonarMutation = useMutation({
     mutationFn: async () => {
-      return apiClient.post(`/evaluacion/candidatos/${id}/rechazar`, {
-        motivoRechazo,
+      return apiClient.post(`/evaluacion/candidatos/${id}/abandonar`, {
+        motivo: motivoAbandono || 'El candidato desiste de incorporarse al programa',
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['candidato-perfil', id] });
       queryClient.invalidateQueries({ queryKey: ['admisiones-panel'] });
-      setModalRechazar(false);
+      setModalAbandonar(false);
     },
   });
 
@@ -139,9 +144,10 @@ export const CandidatoPerfilPage: React.FC = () => {
     setEnlaceMeet(nuevoEnlace);
   };
 
-  const copiarEnlaceMeet = () => {
-    if (!enlaceMeet) return;
-    navigator.clipboard.writeText(enlaceMeet);
+  const copiarEnlaceMeet = (enlace?: string) => {
+    const link = enlace || enlaceMeet;
+    if (!link) return;
+    navigator.clipboard.writeText(link);
     setCopiadoMeet(true);
     setTimeout(() => setCopiadoMeet(false), 2000);
   };
@@ -153,14 +159,14 @@ export const CandidatoPerfilPage: React.FC = () => {
     const endObj = new Date(fechaObj.getTime() + 45 * 60000); // 45 min
     const endStr = endObj.toISOString().replace(/-|:|\.\d\d\d/g, '');
     const title = encodeURIComponent(
-      `Entrevista Técnica PROFER - ${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`,
+      `Entrevista Técnica PROFER - ${candidato?.usuario?.nombre} ${candidato?.usuario?.apellidos}`,
     );
     const details = encodeURIComponent(
       `Sesión de Entrevista de Selección CTS Academy.\nEnlace Meet: ${
         enlaceMeet || 'https://meet.google.com/cts-eval-demo'
-      }\nCandidato: ${candidato.usuario?.email}`,
+      }\nCandidato: ${candidato?.usuario?.email}`,
     );
-    const add = encodeURIComponent(candidato.usuario?.email || '');
+    const add = encodeURIComponent(candidato?.usuario?.email || '');
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startStr}/${endStr}&details=${details}&add=${add}`;
     window.open(url, '_blank');
   };
@@ -192,140 +198,92 @@ export const CandidatoPerfilPage: React.FC = () => {
   }
 
   const yaAdmitido = candidato.estado_postulacion === 'ADMITIDO';
-  const yaRechazado = candidato.estado_postulacion === 'RECHAZADO';
+  const yaAbandonado = candidato.estado_postulacion === 'ABANDONADO' || candidato.estado_postulacion === 'RECHAZADO';
   const recomendacion = candidato.recomendacionSquad;
   const sugerido = recomendacion?.equipoSugerido;
   const testTecnico = candidato.tests?.find((t: any) => t.tipo_bateria === 'TECNICO');
   const testActitud = candidato.tests?.find((t: any) => t.tipo_bateria === 'ACTITUD');
   const testAptitud = candidato.tests?.find((t: any) => t.tipo_bateria === 'APTITUD');
 
-  // Extraer espectro psicométrico (sin puntuación numérica para actitud y aptitud)
   const perfilCompetencias = candidato.perfil_competencias || {};
-  const espectro = perfilCompetencias.espectro || {
-    actitud: {
-      estiloTrabajo: {
-        poloIzquierdo: 'Autonomía e Iniciativa Individual',
-        poloDerecho: 'Colaboración en Squad & Sincronía',
-        posicionPorcentaje: 78,
-        etiqueta: 'Predominio Colaborativo',
-        descripcion:
-          'Alta disposición para el trabajo sinérgico en equipo, pair programming y alineación con objetivos comunes.',
-      },
-      enfoqueResolucion: {
-        poloIzquierdo: 'Pragmatismo Ágil & Entregas Rápidas',
-        poloDerecho: 'Rigor Arquitectónico & Perfeccionismo',
-        posicionPorcentaje: 72,
-        etiqueta: 'Equilibrio con Rigor Arquitectónico',
-        descripcion: 'Prioriza la robustez de diseño y desacoplamiento sin perder de vista los plazos del sprint.',
-      },
-      adaptabilidad: {
-        poloIzquierdo: 'Procesos Predecibles & Estabilidad',
-        poloDerecho: 'Flexibilidad & Resiliencia al Cambio',
-        posicionPorcentaje: 84,
-        etiqueta: 'Alta Resiliencia al Cambio',
-        descripcion: 'Maneja adecuadamente la ambigüedad de requisitos y evoluciona soluciones ante imprevistos.',
-      },
-    },
-    aptitud: {
-      razonamiento: {
-        poloIzquierdo: 'Empírico / Ensayo y Error',
-        poloDerecho: 'Lógico-Formal / Deductivo',
-        posicionPorcentaje: 82,
-        etiqueta: 'Razonamiento Deductivo Estructurado',
-        descripcion: 'Capacidad notable para desglosar problemas complejos en invariantes lógicas y estructuras claras.',
-      },
-      abstraccion: {
-        poloIzquierdo: 'Implementación Concreta Inmediata',
-        poloDerecho: 'Modelado Conceptual & Arquitectura',
-        posicionPorcentaje: 88,
-        etiqueta: 'Elevada Capacidad de Abstracción',
-        descripcion:
-          'Entiende y aplica patrones de arquitectura hexagonal, inversión de dependencias y límites de contexto.',
-      },
-      atencionDetalle: {
-        poloIzquierdo: 'Visión Macro Global',
-        poloDerecho: 'Foco Minucioso en Casos Borde',
-        posicionPorcentaje: 76,
-        etiqueta: 'Balance Sistémico y Casos Borde',
-        descripcion: 'Anticipa posibles fallos en condiciones excepcionales sin perder de vista el flujo principal.',
-      },
-    },
-  };
+  const porcentajeOtorgado = candidato.porcentaje_acceso ?? perfilCompetencias.porcentajeAcceso;
+
+  // Cálculo del paso activo en el Stepper (1 a 4)
+  const testsCompletadosCount = [
+    testActitud?.estado === 'COMPLETADO',
+    testAptitud?.estado === 'COMPLETADO',
+    testTecnico?.estado === 'COMPLETADO',
+  ].filter(Boolean).length;
+
+  const entrevistaRealizada =
+    candidato.entrevista?.estado === 'REALIZADA' ||
+    (candidato.entrevista?.anotaciones && candidato.entrevista.anotaciones.length > 0);
+
+  let etapaActual = 1;
+  if (yaAdmitido || yaAbandonado) {
+    etapaActual = 4;
+  } else if (candidato.estado_postulacion === 'ENTREVISTA_AGENDADA' || entrevistaRealizada) {
+    etapaActual = 3;
+  } else if (candidato.estado_postulacion === 'TESTS_COMPLETADOS' || testsCompletadosCount === 3) {
+    etapaActual = 3;
+  } else if (testsCompletadosCount > 0 || candidato.estado_postulacion === 'EN_PROCESO') {
+    etapaActual = 2;
+  } else {
+    etapaActual = 2; // Registro ya completado
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
       <Navbar />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
-        {/* Barra superior de navegación y estado */}
-        <div className="flex items-center justify-between">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6 max-w-7xl mx-auto">
+        {/* ========================================================= */}
+        {/* BARRA SUPERIOR DE NAVEGACIÓN Y BOTONES DE ACCIÓN (Punto 6)*/}
+        {/* ========================================================= */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white px-5 py-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <button
-            onClick={() => navigate('/admisiones/panel')}
-            className="inline-flex items-center space-x-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
+            onClick={() => {
+              if (vistaDetallada !== 'resumen') {
+                setVistaDetallada('resumen');
+              } else {
+                navigate('/admisiones/panel');
+              }
+            }}
+            className="inline-flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver al Panel de Admisiones</span>
+            <ArrowLeft className="w-4 h-4 text-slate-400" />
+            <span>
+              {vistaDetallada !== 'resumen'
+                ? '← Volver al Expediente Resumido'
+                : 'Volver al Panel de Admisiones'}
+            </span>
           </button>
 
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
-              yaAdmitido
-                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                : yaRechazado
-                ? 'bg-red-100 text-red-800 border-red-300'
-                : 'bg-blue-100 text-blue-800 border-blue-300'
-            }`}
-          >
-            {candidato.estado_postulacion}
-          </span>
-        </div>
-
-        {/* Ficha Principal del Candidato (Estilo Card Oficial Grupo FUNIBER SD) */}
-        <div className="bg-white rounded-lg border border-[#E0E0E0] p-6 shadow-funiber flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#212121]">
-              {candidato.usuario?.nombre} {candidato.usuario?.apellidos}
-            </h1>
-            <p className="text-xs text-[#616161] mt-1">
-              Email: <span className="font-semibold text-[#212121]">{candidato.usuario?.email}</span> • Sede:{' '}
-              <span className="font-semibold text-[#212121]">{candidato.sede_origen}</span> • Tel:{' '}
-              <span className="font-semibold text-[#212121]">{candidato.telefono || 'N/A'}</span>
-            </p>
-            <p className="text-xs text-[#757575] mt-1 font-medium">
-              Convocatoria: {candidato.convocatoria?.denominacion}
-            </p>
-          </div>
-
-          {/* Botones de Acción Editorial / Decisión (Estilo Button Grupo FUNIBER SD) */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setShowPdfModal(true)}
-              className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5"
+          {/* Estado del Candidato + Botones Admitir / Abandonar al lado del Chip */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Chip de Estado Oficial */}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider border inline-flex items-center space-x-1.5 ${
+                yaAdmitido
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                  : yaAbandonado
+                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                  : 'bg-blue-50 text-blue-800 border-blue-300'
+              }`}
             >
-              <FileDown className="w-4 h-4 text-blue-200" />
-              <span>Descargar Resumen PDF</span>
-            </button>
+              <span className={`w-2 h-2 rounded-full ${yaAdmitido ? 'bg-emerald-500' : yaAbandonado ? 'bg-amber-500' : 'bg-blue-500'}`} />
+              <span>
+                {yaAdmitido
+                  ? `Admitido • ${porcentajeOtorgado ?? 100}% Acceso`
+                  : yaAbandonado
+                  ? 'Candidatura Abandonada'
+                  : candidato.estado_postulacion}
+              </span>
+            </span>
 
-            <button
-              onClick={() => setModalInvitacion(true)}
-              className="px-3.5 py-2 border border-[#01579B] text-[#01579B] hover:bg-[#E6EFF5] text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-1.5"
-            >
-              <Mail className="w-3.5 h-3.5 text-[#01579B]" />
-              <span>Credenciales e Invitación</span>
-            </button>
-
-            {!yaAdmitido && !yaRechazado && (
+            {/* Botones de Decisión al lado del Chip de Estado */}
+            {!yaAdmitido && !yaAbandonado && (
               <>
-                <button
-                  onClick={() => {
-                    generarEnlaceMeet();
-                    setModalEntrevista(true);
-                  }}
-                  className="px-3.5 py-2 bg-[#084DC4] hover:bg-[#073E9D] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5"
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Agendar Google Meet</span>
-                </button>
                 <button
                   onClick={() => {
                     if (sugerido?.id) {
@@ -333,286 +291,374 @@ export const CandidatoPerfilPage: React.FC = () => {
                     }
                     setModalAdmitir(true);
                   }}
-                  className="px-3.5 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5"
+                  className="px-3.5 py-1.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
-                  <span>Admitir en Programa</span>
+                  <span>Admitir Alumno</span>
                 </button>
+
                 <button
-                  onClick={() => setModalRechazar(true)}
-                  className="px-3.5 py-2 border border-[#D32F2F] text-[#D32F2F] hover:bg-[#FFEBEE] text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5"
+                  onClick={() => setModalAbandonar(true)}
+                  className="px-3.5 py-1.5 border border-amber-300 bg-amber-50/50 text-amber-800 hover:bg-amber-100 text-xs font-bold rounded-lg transition-colors flex items-center space-x-1.5 cursor-pointer"
+                  title="Marcar si el candidato decide no continuar o no incorporarse"
                 >
-                  <UserX className="w-3.5 h-3.5" />
-                  <span>Rechazar</span>
+                  <UserX className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Abandonar Candidatura</span>
                 </button>
               </>
             )}
           </div>
         </div>
 
-        {/* Selector de Pestañas de Evaluación (Estilo Tabs Oficial Grupo FUNIBER SD) */}
-        <div className="flex border-b border-[#E0E0E0] space-x-4 overflow-x-auto pb-px bg-white px-4 rounded-lg shadow-funiber">
-          <button
-            onClick={() => setTabActiva('resumen')}
-            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
-              tabActiva === 'resumen'
-                ? 'border-[#01579B] text-[#01579B]'
-                : 'border-transparent text-[#757575] hover:text-[#212121]'
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Resumen & Squad Recomendado</span>
-          </button>
+        {/* ========================================================= */}
+        {/* FICHA RESUMEN DEL CANDIDATO (Sin botón agendar Meet arriba) */}
+        {/* ========================================================= */}
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <div className="flex items-center space-x-3">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                {candidato.usuario?.nombre} {candidato.usuario?.apellidos}
+              </h1>
+              {porcentajeOtorgado !== undefined && porcentajeOtorgado !== null && (
+                <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-100 text-[#01579B] border border-blue-200">
+                  {porcentajeOtorgado}% Beca / Acceso
+                </span>
+              )}
+            </div>
 
-          <button
-            onClick={() => setTabActiva('actitud16pf')}
-            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
-              tabActiva === 'actitud16pf'
-                ? 'border-[#01579B] text-[#01579B]'
-                : 'border-transparent text-[#757575] hover:text-[#212121]'
-            }`}
-          >
-            <HeartPulse className="w-4 h-4" />
-            <span>Informe Test Actitud (16PF Oficial)</span>
-          </button>
+            <p className="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>
+                Email: <strong className="text-slate-800 font-mono">{candidato.usuario?.email}</strong>
+              </span>
+              <span>•</span>
+              <span>
+                Sede: <strong className="text-slate-800">{candidato.sede_origen}</strong>
+              </span>
+              <span>•</span>
+              <span>
+                Teléfono: <strong className="text-slate-800">{candidato.telefono || 'No registrado'}</strong>
+              </span>
+            </p>
+            <p className="text-xs text-slate-400 mt-1 font-medium">
+              Convocatoria Oficial: <span className="text-slate-700">{candidato.convocatoria?.denominacion}</span>
+            </p>
+          </div>
 
-          <button
-            onClick={() => setTabActiva('aptitudMatriz')}
-            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
-              tabActiva === 'aptitudMatriz'
-                ? 'border-[#01579B] text-[#01579B]'
-                : 'border-transparent text-[#757575] hover:text-[#212121]'
-            }`}
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Informe Test Aptitud (Matriz Habilidades)</span>
-          </button>
+          {/* Botones de Reporte y Credenciales */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowPdfModal(true)}
+              className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center space-x-2"
+            >
+              <FileDown className="w-4 h-4 text-blue-200" />
+              <span>Descargar Informe de Entrevista (PDF)</span>
+            </button>
 
-          <button
-            onClick={() => setTabActiva('tecnicoCts')}
-            className={`py-3 px-3 text-xs font-bold transition-all flex items-center space-x-2 border-b-2 whitespace-nowrap ${
-              tabActiva === 'tecnicoCts'
-                ? 'border-[#01579B] text-[#01579B]'
-                : 'border-transparent text-[#757575] hover:text-[#212121]'
-            }`}
-          >
-            <Terminal className="w-4 h-4" />
-            <span>Informe Test Técnico (CTS Oficial)</span>
-          </button>
+            <button
+              onClick={() => setModalInvitacion(true)}
+              className="px-3.5 py-2 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-1.5"
+            >
+              <Mail className="w-3.5 h-3.5 text-slate-500" />
+              <span>Credenciales e Invitación</span>
+            </button>
+          </div>
         </div>
 
-        {/* PESTAÑA: TEST ACTITUD 16PF OFICIAL */}
-        {tabActiva === 'actitud16pf' && (
-          perfilCompetencias.informe16PF ? (
-            <Informe16PFView informe={perfilCompetencias.informe16PF} />
-          ) : (
-            <div className="bg-white rounded-xl border border-[#E0E0E0] p-10 text-center space-y-4 shadow-funiber">
-              <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
-                <HeartPulse className="w-7 h-7" />
+        {/* ========================================================= */}
+        {/* STEPPER / LÍNEA DE TIEMPO DEL PROCESO DE ADMISIÓN (Punto 7) */}
+        {/* ========================================================= */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Flujo de la Candidatura PROFER
+            </span>
+            <span className="text-xs font-semibold text-slate-600">
+              {yaAdmitido
+                ? 'Proceso Concluido: Alumno Admitido'
+                : yaAbandonado
+                ? 'Proceso Concluido: Candidatura Archivada'
+                : `Etapa ${etapaActual} de 4 en Curso`}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 relative">
+            {/* Paso 1: Registro */}
+            <div
+              className={`p-3 rounded-lg border transition-all ${
+                etapaActual >= 1
+                  ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900'
+                  : 'bg-slate-50 border-slate-200 text-slate-400'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider">Etapa 1</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
-                  Batería de Actitud (16PF) Pendiente de Realización
-                </h3>
-                <p className="text-xs text-slate-500 max-w-lg mx-auto">
-                  El postulante aún no ha completado el cuestionario de actitud 16PF (102 preguntas). Los factores de personalidad, decatipos y rasgos de conducta se computarán fielmente una vez que el candidato finalice su evaluación.
-                </p>
-              </div>
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
-                <span>Estado de la batería:</span>
-                <span className="font-bold text-amber-800">{testActitud?.estado || 'NO_INICIADO'}</span>
-              </div>
+              <h4 className="font-bold text-xs">Registro Inicial</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">Expediente y credenciales</p>
             </div>
-          )
-        )}
 
-        {/* PESTAÑA: TEST APTITUD MATRIZ HABILIDADES */}
-        {tabActiva === 'aptitudMatriz' && (
-          perfilCompetencias.matrizAptitudes ? (
-            <MatrizAptitudesView matriz={perfilCompetencias.matrizAptitudes} />
-          ) : (
-            <div className="bg-white rounded-xl border border-[#E0E0E0] p-10 text-center space-y-4 shadow-funiber">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mx-auto">
-                <FileSpreadsheet className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
-                  Matriz de Aptitudes Técnicas Pendiente de Realización
-                </h3>
-                <p className="text-xs text-slate-500 max-w-lg mx-auto">
-                  El candidato no ha completado la autoevaluación de aptitudes (43 competencias técnicas). La matriz de habilidades y el mapa de calor se generarán a partir de los niveles seleccionados por el postulante.
-                </p>
-              </div>
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
-                <span>Estado de la batería:</span>
-                <span className="font-bold text-amber-800">{testAptitud?.estado || 'NO_INICIADO'}</span>
-              </div>
-            </div>
-          )
-        )}
-
-        {/* PESTAÑA: TEST TÉCNICO CTS OFICIAL */}
-        {tabActiva === 'tecnicoCts' && (
-          perfilCompetencias.informePruebaTecnica ? (
-            <ReportePruebaTecnicaView informe={perfilCompetencias.informePruebaTecnica} />
-          ) : (
-            <div className="bg-white rounded-xl border border-[#E0E0E0] p-10 text-center space-y-4 shadow-funiber">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center mx-auto">
-                <Terminal className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
-                  Prueba Técnica CTS Pendiente de Envío
-                </h3>
-                <p className="text-xs text-slate-500 max-w-lg mx-auto">
-                  El examen técnico oficial no ha sido completado por el aspirante. Una vez finalizado, aquí se auditarán sus respuestas pregunta a pregunta, el desglose por áreas (General, Frontend, Backend, Sysadmin) y la afinidad de Squads.
-                </p>
-              </div>
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
-                <span>Estado de la batería:</span>
-                <span className="font-bold text-amber-800">{testTecnico?.estado || 'NO_INICIADO'}</span>
-              </div>
-            </div>
-          )
-        )}
-
-        {/* PESTAÑA: RESUMEN Y SQUAD */}
-        {tabActiva === 'resumen' && (
-          <div className="space-y-6">
-            {/* 1. RECOMENDACIÓN DE SQUAD (Minimalista y Directo) */}
-            {!sugerido ? (
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
-                    <AlertTriangle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">
-                      Recomendación de Squad Pendiente
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      El candidato se encuentra en estado <strong className="text-slate-800 font-mono">{candidato.estado_postulacion}</strong>.
-                      La asignación algorítmica y la afinidad porcentual a Squads CTS se calcularán automáticamente una vez que el aspirante complete la evaluación técnica.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-lg border border-indigo-500/30">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-900/60 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
-                        Squad Recomendado
-                      </span>
-                      <span className="text-xs font-mono font-bold text-slate-400">
-                        {sugerido.codigo}
-                      </span>
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-black mt-1 text-white">
-                      {sugerido.nombre}
-                    </h2>
-                    <p className="text-xs text-slate-300 mt-1 max-w-2xl line-clamp-2">
-                      {sugerido.justificacion}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center space-x-4 shrink-0">
-                    <div className="text-right">
-                      <div className="text-3xl font-black text-emerald-400">
-                        {sugerido.afinidadPorcentaje}%
-                      </div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                        Afinidad Global
-                      </span>
-                    </div>
-                    {!yaAdmitido && !yaRechazado && (
-                      <button
-                        onClick={() => {
-                          setEquipoSeleccionadoId(sugerido.id);
-                          setAsignacionDiferida(false);
-                          setModalAdmitir(true);
-                        }}
-                        className="px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
-                      >
-                        <span>Asignar a {sugerido.nombre}</span>
-                        <CheckCircle2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Fortalezas Clave */}
-                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10 items-center justify-between">
-                  <div className="flex flex-wrap gap-2">
-                    {sugerido.fortalezasClave?.map((f: string) => (
-                      <span
-                        key={f}
-                        className="text-[11px] font-semibold bg-white/5 hover:bg-white/10 text-indigo-200 px-2.5 py-1 rounded-lg border border-white/10"
-                      >
-                        ✓ {f}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-[11px] font-medium text-slate-400">
-                    Líder Técnico: <strong className="text-slate-200">{sugerido.lider}</strong>
-                  </span>
-                </div>
-
-                {/* Ranking compacto de los otros squads */}
-                {recomendacion.rankingEquipos && (
-                  <div className="mt-4 pt-3 border-t border-white/10">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                      Afinidad en los demás Squads CTS
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {recomendacion.rankingEquipos.map((eq: any) => {
-                        const esTop = eq.codigo === sugerido.codigo;
-                        return (
-                          <div
-                            key={eq.id}
-                            onClick={() => {
-                              if (!yaAdmitido && !yaRechazado) {
-                                setEquipoSeleccionadoId(eq.id);
-                                setAsignacionDiferida(false);
-                                setModalAdmitir(true);
-                              }
-                            }}
-                            className={`px-3 py-2 rounded-lg border text-center transition-all cursor-pointer ${
-                              esTop
-                                ? 'bg-indigo-600/40 border-indigo-400/60 ring-1 ring-indigo-400/50'
-                                : 'bg-white/5 border-white/10 hover:bg-white/10'
-                            }`}
-                          >
-                            <span className="text-[10px] font-mono text-slate-400 block">{eq.codigo}</span>
-                            <span className="text-xs font-bold text-white block truncate">{eq.nombre}</span>
-                            <span
-                              className={`text-xs font-extrabold mt-0.5 block ${
-                                esTop ? 'text-emerald-400' : 'text-slate-300'
-                              }`}
-                            >
-                              {eq.afinidadPorcentaje}%
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+            {/* Paso 2: Tests de Admisión */}
+            <div
+              className={`p-3 rounded-lg border transition-all ${
+                etapaActual > 2 || testsCompletadosCount === 3
+                  ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900'
+                  : etapaActual === 2
+                  ? 'bg-blue-50/80 border-blue-400 text-blue-900 ring-2 ring-blue-100'
+                  : 'bg-slate-50 border-slate-200 text-slate-400'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider">Etapa 2</span>
+                {testsCompletadosCount === 3 ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
                 )}
               </div>
-            )}
+              <h4 className="font-bold text-xs">Tests de Admisión</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {testsCompletadosCount === 3 ? '3/3 completados' : `${testsCompletadosCount}/3 completados`}
+              </p>
+            </div>
 
-            {/* 2. RESUMEN DE LAS 3 BATERÍAS (3 Cards Ejecutivas con estado real) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Card 1: Batería de Actitud (16PF) */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+            {/* Paso 3: Entrevista de Selección */}
+            <div
+              className={`p-3 rounded-lg border transition-all ${
+                etapaActual > 3 || entrevistaRealizada
+                  ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900'
+                  : etapaActual === 3
+                  ? 'bg-blue-50/80 border-blue-400 text-blue-900 ring-2 ring-blue-100'
+                  : 'bg-slate-50 border-slate-200 text-slate-400'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider">Etapa 3</span>
+                {entrevistaRealizada ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                ) : candidato.entrevista ? (
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                ) : (
+                  <span className="text-[10px] text-slate-400 font-mono">Pendiente</span>
+                )}
+              </div>
+              <h4 className="font-bold text-xs">Entrevista Técnica</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {entrevistaRealizada
+                  ? 'Realizada con anotaciones'
+                  : candidato.entrevista
+                  ? 'Sesión agendada'
+                  : 'Por agendar Meet'}
+              </p>
+            </div>
+
+            {/* Paso 4: Dictamen Final */}
+            <div
+              className={`p-3 rounded-lg border transition-all ${
+                yaAdmitido
+                  ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900'
+                  : yaAbandonado
+                  ? 'bg-amber-50/80 border-amber-300 text-amber-900'
+                  : etapaActual === 4
+                  ? 'bg-blue-50/80 border-blue-400 text-blue-900 ring-2 ring-blue-100'
+                  : 'bg-slate-50 border-slate-200 text-slate-400'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider">Etapa 4</span>
+                {yaAdmitido ? (
+                  <Award className="w-4 h-4 text-emerald-600" />
+                ) : yaAbandonado ? (
+                  <UserX className="w-4 h-4 text-amber-600" />
+                ) : (
+                  <span className="text-[10px] text-slate-400 font-mono">Pendiente</span>
+                )}
+              </div>
+              <h4 className="font-bold text-xs">Dictamen Final</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {yaAdmitido
+                  ? `${porcentajeOtorgado ?? 100}% Beca & Squad`
+                  : yaAbandonado
+                  ? 'Candidatura archivada'
+                  : 'Otorgar % acceso & squad'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* VISTAS DETALLADAS DE CADA TEST (Al pulsar "Ver Detalles") */}
+        {/* ========================================================= */}
+        {vistaDetallada === 'actitud16pf' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setVistaDetallada('resumen')}
+                className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center space-x-1"
+              >
+                <span>← Volver al Expediente Principal</span>
+              </button>
+              <span className="text-xs font-extrabold text-slate-700">Informe Psicométrico 16PF Oficial</span>
+            </div>
+            {perfilCompetencias.informe16PF ? (
+              <Informe16PFView informe={perfilCompetencias.informe16PF} />
+            ) : (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-500">
+                El candidato aún no ha completado el cuestionario de actitud 16PF.
+              </div>
+            )}
+          </div>
+        )}
+
+        {vistaDetallada === 'aptitudMatriz' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setVistaDetallada('resumen')}
+                className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center space-x-1"
+              >
+                <span>← Volver al Expediente Principal</span>
+              </button>
+              <span className="text-xs font-extrabold text-slate-700">Matriz Oficial de Aptitudes & Diagramas de Radar</span>
+            </div>
+            {perfilCompetencias.matrizAptitudes ? (
+              <MatrizAptitudesView matriz={perfilCompetencias.matrizAptitudes} />
+            ) : (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-500">
+                El candidato aún no ha completado la matriz de aptitudes.
+              </div>
+            )}
+          </div>
+        )}
+
+        {vistaDetallada === 'tecnicoCts' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setVistaDetallada('resumen')}
+                className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center space-x-1"
+              >
+                <span>← Volver al Expediente Principal</span>
+              </button>
+              <span className="text-xs font-extrabold text-slate-700">Auditoría de Prueba Técnica CTS</span>
+            </div>
+            {perfilCompetencias.informePruebaTecnica ? (
+              <ReportePruebaTecnicaView informe={perfilCompetencias.informePruebaTecnica} />
+            ) : (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-500">
+                El examen técnico oficial aún no ha sido completado por el aspirante.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* PÁGINA SINTETIZADA EN UNA SOLA VISTA (Punto 2)            */}
+        {/* ========================================================= */}
+        {vistaDetallada === 'resumen' && (
+          <div className="space-y-6">
+            {/* 1. CARD DE RECOMENDACIÓN DE EQUIPOS COMPACTA Y NO INVASIVA (Punto 4) */}
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-2.5 bg-rose-50 text-rose-600 rounded-xl">
-                      <HeartPulse className="w-5 h-5" />
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
+                    <Sparkles className="w-4 h-4 text-[#01579B]" />
+                    <span>Afinidad Algorítmica con Squads CTS Oficiales</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Evaluación computada sobre el stack tecnológico de los 4 equipos y la solvencia del aspirante.
+                  </p>
+                </div>
+                {sugerido && (
+                  <span className="text-[11px] font-extrabold px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full">
+                    Top Match: {sugerido.nombre} ({sugerido.afinidadPorcentaje}%)
+                  </span>
+                )}
+              </div>
+
+              {/* Grid compacto de los 4 Squads con Líder Integrado */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                {(recomendacion?.rankingEquipos || [
+                  { id: '1', codigo: 'TEAM-01', nombre: 'Fénix', afinidadPorcentaje: 0, lider: 'Diego Moys', tecnologias: ['React', 'Vue', 'PHP', 'Laravel'] },
+                  { id: '2', codigo: 'TEAM-02', nombre: 'Departamento de Sistemas', afinidadPorcentaje: 0, lider: 'Alejandro Ruiz', tecnologias: ['Express', 'NodeJS', 'Fortinet'] },
+                  { id: '3', codigo: 'TEAM-03', nombre: 'Presencia Web', afinidadPorcentaje: 0, lider: 'Lucía Vargas', tecnologias: ['WordPress', 'Drupal', 'NextJS'] },
+                  { id: '4', codigo: 'TEAM-04', nombre: 'Acción Docente', afinidadPorcentaje: 0, lider: 'Marcos Navarro', tecnologias: ['PHP', 'Moodle', 'TypeScript'] },
+                ]).map((eq: any) => {
+                  const esTop = sugerido && eq.codigo === sugerido.codigo;
+                  return (
+                    <div
+                      key={eq.id}
+                      onClick={() => {
+                        if (!yaAdmitido && !yaAbandonado) {
+                          setEquipoSeleccionadoId(eq.id);
+                          setModalAdmitir(true);
+                        }
+                      }}
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        esTop
+                          ? 'bg-blue-50/60 border-blue-400 ring-2 ring-blue-100 shadow-xs'
+                          : 'bg-slate-50/60 border-slate-200 hover:border-slate-300 hover:bg-slate-100/50'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">
+                            {eq.codigo}
+                          </span>
+                          {esTop && (
+                            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                              Recomendado
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="font-extrabold text-xs text-slate-900 truncate" title={eq.nombre}>
+                          {eq.nombre}
+                        </h4>
+
+                        {/* Líder Técnico dentro de cada equipo (Punto 4) */}
+                        <div className="flex items-center space-x-1 text-[11px] text-slate-600 mt-1">
+                          <Users className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span className="truncate">
+                            Líder: <strong className="text-slate-800">{eq.lider || 'Asignado'}</strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 pt-2.5 border-t border-slate-200/80">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-slate-500 font-medium">Afinidad</span>
+                          <span className={`text-xs font-black ${esTop ? 'text-blue-700' : 'text-slate-700'}`}>
+                            {eq.afinidadPorcentaje || 0}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${esTop ? 'bg-blue-600' : 'bg-slate-400'}`}
+                            style={{ width: `${eq.afinidadPorcentaje || 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. CARDS COMPACTAS DE LOS 3 TESTS CON REDIRECCIÓN A DETALLE (Puntos 2 y 9) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Card 1: Batería de Actitud (16PF) */}
+              <div
+                onClick={() => setVistaDetallada('actitud16pf')}
+                className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-rose-50 text-rose-600 rounded-lg">
+                      <HeartPulse className="w-4 h-4" />
                     </div>
                     <span
-                      className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         testActitud?.estado === 'COMPLETADO'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -622,43 +668,39 @@ export const CandidatoPerfilPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Batería de Actitud (16PF)
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Evaluación psicométrica oficial en 16 factores de personalidad y dinámicas de equipo.
+                  <h4 className="text-xs font-bold text-slate-900">Actitud (16PF Oficial)</h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">
+                    Factores psicométricos de personalidad y dinámicas colaborativas en squad.
                   </p>
 
-                  <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
-                      Perfil Actitudinal
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 mt-0.5 block truncate">
+                  <div className="mt-3 p-2 bg-slate-50 rounded-lg border border-slate-100 text-[11px]">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Perfil Actitudinal</span>
+                    <span className="font-bold text-slate-800 truncate block mt-0.5">
                       {testActitud?.estado === 'COMPLETADO'
-                        ? (espectro.actitud?.estiloTrabajo?.etiqueta || 'Evaluación registrada')
+                        ? (perfilCompetencias.informe16PF?.factoresPrincipales?.[0]?.etiqueta || 'Evaluación computada')
                         : 'Pendiente de realización'}
                     </span>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setTabActiva('actitud16pf')}
-                  className="mt-4 w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
-                >
-                  <span>Ver Informe 16PF Oficial</span>
+                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-rose-700 font-bold">
+                  <span>Ver informe 16PF</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                </div>
               </div>
 
-              {/* Card 2: Batería de Aptitud (Matriz) */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+              {/* Card 2: Batería de Aptitud (Matriz con Radars) */}
+              <div
+                onClick={() => setVistaDetallada('aptitudMatriz')}
+                className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between"
+              >
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                      <FileSpreadsheet className="w-5 h-5" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                      <Cpu className="w-4 h-4" />
                     </div>
                     <span
-                      className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         testAptitud?.estado === 'COMPLETADO'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -668,43 +710,39 @@ export const CandidatoPerfilPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Batería de Aptitud (Matriz)
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Matriz de 43 habilidades técnicas autoevaluadas (Escala 0-5) en 6 categorías de especialidad.
+                  <h4 className="text-xs font-bold text-slate-900">Aptitud (Diagramas de Radar)</h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">
+                    Diagramas polares y matriz técnica en 43 competencias de desarrollo.
                   </p>
 
-                  <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
-                      Competencia Destacada
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 mt-0.5 block truncate">
-                      {testAptitud?.estado === 'COMPLETADO'
-                        ? (espectro.aptitud?.abstraccion?.etiqueta || 'Evaluación registrada')
+                  <div className="mt-3 p-2 bg-slate-50 rounded-lg border border-slate-100 text-[11px]">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Promedio Aptitudes</span>
+                    <span className="font-extrabold text-[#01579B] truncate block mt-0.5">
+                      {testAptitud?.estado === 'COMPLETADO' && perfilCompetencias.matrizAptitudes
+                        ? `${perfilCompetencias.matrizAptitudes.promedioNivelActual || '2.8'} / 5.0`
                         : 'Pendiente de realización'}
                     </span>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setTabActiva('aptitudMatriz')}
-                  className="mt-4 w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
-                >
-                  <span>Ver Matriz de Competencias</span>
+                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-blue-700 font-bold">
+                  <span>Ver diagramas de radar</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                </div>
               </div>
 
-              {/* Card 3: Evaluación Técnica */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+              {/* Card 3: Evaluación Técnica CTS */}
+              <div
+                onClick={() => setVistaDetallada('tecnicoCts')}
+                className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between"
+              >
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
-                      <FileText className="w-5 h-5" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                      <Terminal className="w-4 h-4" />
                     </div>
                     <span
-                      className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         testTecnico?.estado === 'COMPLETADO'
                           ? Number(testTecnico?.calificacion_obtenida || 0) >= 5
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -720,495 +758,510 @@ export const CandidatoPerfilPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Evaluación Técnica CTS
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Cuestionario técnico oficial (148 preguntas) y auditoría por áreas de especialidad.
+                  <h4 className="text-xs font-bold text-slate-900">Evaluación Técnica CTS</h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">
+                    Cuestionario de 148 preguntas con desglose por Frontend, Backend y Sistemas.
                   </p>
 
-                  <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
-                        Calificación Numérica
-                      </span>
-                      <span className="text-2xl font-black text-slate-900 mt-0.5 block">
-                        {testTecnico?.estado === 'COMPLETADO' && testTecnico?.calificacion_obtenida !== null && testTecnico?.calificacion_obtenida !== undefined
-                          ? `${Number(testTecnico.calificacion_obtenida).toFixed(1)}`
-                          : '—'}
-                        <span className="text-xs font-normal text-slate-400 ml-1">/ 10</span>
-                      </span>
-                    </div>
-                    {testTecnico?.estado === 'COMPLETADO' && (
-                      <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
-                        <CheckCircle2 className="w-5 h-5" />
-                      </div>
-                    )}
+                  <div className="mt-3 p-2 bg-slate-50 rounded-lg border border-slate-100 text-[11px]">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Calificación Obtenida</span>
+                    <span className="font-extrabold text-slate-900 truncate block mt-0.5">
+                      {testTecnico?.estado === 'COMPLETADO' && testTecnico?.calificacion_obtenida !== null
+                        ? `${Number(testTecnico.calificacion_obtenida).toFixed(1)} / 10.0`
+                        : 'Pendiente de finalización'}
+                    </span>
                   </div>
                 </div>
 
-                <div className="mt-4 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-500 font-medium">
-                  {testTecnico?.estado === 'COMPLETADO'
-                    ? 'Examen finalizado y calificado'
-                    : 'Pendiente de finalización por el aspirante'}
+                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-purple-700 font-bold">
+                  <span>Ver desglose técnico</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </div>
             </div>
 
-            {/* 3. ENTREVISTA GOOGLE MEET & CONCLUSIONES (Minimalista en 2 Columnas) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* Google Meet */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+            {/* ========================================================= */}
+            {/* 3. CARD UNIFICADA DE ENTREVISTA & ANOTACIONES (Punto 3)   */}
+            {/* ========================================================= */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                        <Video className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-sm font-bold text-slate-900">
-                        Entrevista Google Meet
-                      </h3>
-                    </div>
-                    {candidato.entrevista && (
-                      <span className="text-[11px] font-bold uppercase text-indigo-600 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">
-                        {candidato.entrevista.estado}
-                      </span>
-                    )}
-                  </div>
-
-                  {candidato.entrevista ? (
-                    <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 space-y-3">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
-                          Fecha y Hora Programada
-                        </span>
-                        <p className="font-bold text-slate-900 text-sm mt-0.5">
-                          {new Date(candidato.entrevista.fecha_hora_programada).toLocaleDateString(
-                            'es-ES',
-                            {
-                              weekday: 'short',
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            },
-                          )}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Gestor: {candidato.entrevista.gestor?.nombre || 'Equipo de Selección'}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2 border-t border-indigo-100 text-xs">
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(candidato.entrevista.enlace_google_meet);
-                            setCopiadoMeet(true);
-                            setTimeout(() => setCopiadoMeet(false), 2000);
-                          }}
-                          className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold inline-flex items-center space-x-1"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>{copiadoMeet ? '¡Copiado!' : 'Copiar enlace Meet'}</span>
-                        </button>
-
-                        <a
-                          href={candidato.entrevista.enlace_google_meet}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold inline-flex items-center space-x-1 shadow-sm"
-                        >
-                          <Video className="w-3.5 h-3.5" />
-                          <span>Abrir Meet</span>
-                          <ExternalLink className="w-3 h-3 ml-0.5" />
-                        </a>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-slate-50 border border-slate-200 border-dashed rounded-xl p-6 text-center space-y-2.5">
-                      <p className="text-xs text-slate-500 italic">
-                        Sin entrevista programada aún para este aspirante.
-                      </p>
-                      <button
-                        onClick={() => {
-                          generarEnlaceMeet();
-                          setModalEntrevista(true);
-                        }}
-                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm inline-flex items-center space-x-1.5"
-                      >
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>Agendar Google Meet</span>
-                      </button>
-                    </div>
-                  )}
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
+                    <Video className="w-4 h-4 text-blue-600" />
+                    <span>Entrevista de Selección & Anotaciones Cualitativas</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Coordinación de la sesión Google Meet y registro estructurado de observaciones del aspirante.
+                  </p>
                 </div>
 
-                {/* Conclusiones de entrevista si ya existen */}
-                {candidato.entrevista?.anotaciones && candidato.entrevista.anotaciones.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                      Anotaciones de la Entrevista
-                    </span>
-                    {candidato.entrevista.anotaciones.map((anot: any) => (
-                      <div key={anot.id} className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs">
-                        <div className="flex justify-between font-bold text-amber-900 mb-0.5">
-                          <span>{anot.competencia_evaluada}</span>
-                          <span className="bg-amber-100 px-1.5 py-0.5 rounded text-[10px]">
-                            {anot.calificacion_cualitativa}
-                          </span>
-                        </div>
-                        <p className="text-amber-800 text-[11px] italic">{anot.comentario}</p>
-                      </div>
-                    ))}
-                  </div>
+                {candidato.entrevista ? (
+                  <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    Estado: {candidato.entrevista.estado}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      generarEnlaceMeet();
+                      setModalEntrevista(true);
+                    }}
+                    className="px-3.5 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-bold shadow-xs transition-colors inline-flex items-center space-x-1.5"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Agendar Google Meet</span>
+                  </button>
                 )}
               </div>
 
-              {/* Anotaciones del Gestor */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
-                      <MessageSquare className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900">
-                      Conclusiones Cualitativas del Gestor
-                    </h3>
+              {/* Bloque Google Meet */}
+              {candidato.entrevista && (
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                      Sesión Programada en Google Calendar
+                    </span>
+                    <p className="font-bold text-slate-900 text-xs">
+                      {new Date(candidato.entrevista.fecha_hora_programada).toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-mono">
+                      Enlace: {candidato.entrevista.enlace_google_meet}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-500 mb-3">
-                    Anotaciones confidenciales de encaje con el squad y solvencia profesional.
-                  </p>
 
-                  <textarea
-                    rows={4}
-                    value={comentariosEntrevista}
-                    onChange={(e) => setComentariosEntrevista(e.target.value)}
-                    placeholder="Registrar observaciones cualitativas del aspirante..."
-                    className="w-full border border-slate-300 rounded-xl p-3 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => copiarEnlaceMeet(candidato.entrevista.enlace_google_meet)}
+                      className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copiadoMeet ? '¡Copiado!' : 'Copiar'}</span>
+                    </button>
+
+                    <a
+                      href={candidato.entrevista.enlace_google_meet}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold inline-flex items-center space-x-1 shadow-xs"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Unirse a Meet</span>
+                      <ExternalLink className="w-3 h-3 ml-0.5" />
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        generarEnlaceMeet();
+                        setModalEntrevista(true);
+                      }}
+                      className="px-2.5 py-1.5 text-slate-500 hover:text-slate-800 text-xs font-medium"
+                      title="Reprogramar fecha"
+                    >
+                      Reprogramar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Bloque Formulario y Registro de Anotaciones (Estructura oficial de la Plantilla) */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center space-x-2 text-xs font-bold text-slate-800">
+                  <MessageSquare className="w-4 h-4 text-amber-600" />
+                  <span>Anotaciones y Observaciones Técnicas</span>
+                </div>
+
+                {/* Formulario de nueva anotación */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block text-slate-500 font-semibold mb-1">Dimensión / Item Evaluado:</label>
+                      <select
+                        value={itemAnotacion}
+                        onChange={(e: any) => setItemAnotacion(e.target.value)}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="Actitud">Actitud (Comportamiento, Colaboración, Motivación)</option>
+                        <option value="Aptitud">Aptitud (Solvencia Técnica, Análisis Lógico)</option>
+                        <option value="Generalidades">Generalidades (Comunicación, Disponibilidad)</option>
+                        <option value="Recomendaciones">Recomendaciones (Squad idóneo, Integración)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-500 font-semibold mb-1">Calificación Cualitativa:</label>
+                      <select
+                        value={calificacionAnotacion}
+                        onChange={(e: any) => setCalificacionAnotacion(e.target.value)}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="SOBRESALIENTE">Sobresaliente</option>
+                        <option value="COMPETENTE">Competente</option>
+                        <option value="EN_DESARROLLO">En Desarrollo</option>
+                        <option value="NO_IDONEO">No Idóneo</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <textarea
+                      rows={3}
+                      value={comentariosEntrevista}
+                      onChange={(e) => setComentariosEntrevista(e.target.value)}
+                      placeholder="Registrar observaciones cualitativas para el dictamen y plantilla oficial..."
+                      className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => anotacionesMutation.mutate()}
+                      disabled={!comentariosEntrevista.trim() || anotacionesMutation.isPending}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-xs transition-colors"
+                    >
+                      {anotacionesMutation.isPending ? 'Guardando...' : 'Registrar Observación'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Historial de anotaciones registradas */}
+                {candidato.entrevista?.anotaciones && candidato.entrevista.anotaciones.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Observaciones Registradas en el Expediente
+                    </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                      {candidato.entrevista.anotaciones.map((anot: any) => (
+                        <div
+                          key={anot.id}
+                          className="p-3 bg-amber-50/50 border border-amber-200/80 rounded-xl text-xs space-y-1"
+                        >
+                          <div className="flex justify-between items-center font-bold text-amber-900">
+                            <span className="text-xs">{anot.competencia_evaluada}</span>
+                            <span className="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded">
+                              {anot.calificacion_cualitativa}
+                            </span>
+                          </div>
+                          <p className="text-slate-700 text-[11px] leading-relaxed">{anot.comentario}</p>
+                          <span className="text-[9px] text-slate-400 block pt-1 font-mono">
+                            {new Date(anot.creado_en).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* MODAL: ADMITIR ALUMNO & OTORGAR PORCENTAJE ACCESO (Punto 1) */}
+        {/* ========================================================= */}
+        {modalAdmitir && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Dictamen de Admisión PROFER</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Asignar porcentaje de acceso/beca y squad para {candidato.usuario?.nombre} {candidato.usuario?.apellidos}.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setModalAdmitir(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+                >
+                  <UserX className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Selector de Porcentaje de Acceso (50%, 66%, 100% o 0%) */}
+              <div className="space-y-2">
+                <label className="block text-xs font-extrabold uppercase text-slate-600 tracking-wider">
+                  1. Porcentaje de Beca / Acceso Otorgado:
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[100, 66, 50, 0].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => setPorcentajeAcceso(pct)}
+                      className={`py-2.5 px-2 rounded-xl text-xs font-black border transition-all text-center ${
+                        porcentajeAcceso === pct
+                          ? 'bg-[#01579B] text-white border-[#01579B] shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="text-base font-extrabold">{pct}%</div>
+                      <div className="text-[9px] uppercase font-semibold opacity-80">
+                        {pct === 100 ? 'Beca Total' : pct === 66 ? 'Preferente' : pct === 50 ? 'Parcial' : 'Estándar'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selector de Squad */}
+              <div className="space-y-2">
+                <label className="block text-xs font-extrabold uppercase text-slate-600 tracking-wider">
+                  2. Asignación de Squad Oficial:
+                </label>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {(equiposData || []).map((eq: any) => {
+                    const esSugerido = sugerido?.id === eq.id;
+                    const esSeleccionado = equipoSeleccionadoId === eq.id && !asignacionDiferida;
+
+                    return (
+                      <div
+                        key={eq.id}
+                        onClick={() => {
+                          setEquipoSeleccionadoId(eq.id);
+                          setAsignacionDiferida(false);
+                        }}
+                        className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between ${
+                          esSeleccionado
+                            ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-mono text-[10px] text-slate-400 font-bold">{eq.codigo}</span>
+                            <span className="font-bold text-slate-900">{eq.nombre}</span>
+                            {esSugerido && (
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                                Match Sugerido
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-slate-500 block mt-0.5">
+                            Líder: {eq.lider?.nombre || 'Coordinador'} {eq.lider?.apellidos || ''}
+                          </span>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            esSeleccionado ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+                          }`}
+                        >
+                          {esSeleccionado && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-2">
+                  <label className="flex items-center space-x-2 text-xs text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={asignacionDiferida}
+                      onChange={(e) => setAsignacionDiferida(e.target.checked)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Diferir asignación de equipo (asignar squad definitivo durante la incorporación)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Botón de Confirmación */}
+              <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setModalAdmitir(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => admitirMutation.mutate()}
+                  disabled={admitirMutation.isPending || (!asignacionDiferida && !equipoSeleccionadoId)}
+                  className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+                >
+                  {admitirMutation.isPending ? 'Confirmando...' : `Confirmar Admisión (${porcentajeAcceso}% Acceso)`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* MODAL: ABANDONAR CANDIDATURA (Punto 1: Nunca Rechazar)     */}
+        {/* ========================================================= */}
+        {modalAbandonar && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+                <div className="flex items-center space-x-2 text-amber-800">
+                  <UserX className="w-5 h-5 text-amber-600" />
+                  <h3 className="text-base font-black text-slate-900">Registrar Abandono de Candidatura</h3>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Esta acción registra que el aspirante <strong>{candidato.usuario?.nombre} {candidato.usuario?.apellidos}</strong> ha decidido no continuar o no incorporarse al programa PROFER. No se utiliza el término rechazo en su expediente.
+              </p>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">
+                  Motivo de Abandono o No Incorporación:
+                </label>
+                <select
+                  value={motivoAbandono}
+                  onChange={(e) => setMotivoAbandono(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-1 focus:ring-amber-500"
+                >
+                  <option value="">Seleccionar motivo frecuente...</option>
+                  <option value="El candidato decide no incorporarse por motivos laborales o personales">
+                    Decisión personal o compatibilidad laboral
+                  </option>
+                  <option value="Desiste del porcentaje de acceso/beca otorgado">
+                    Desiste del porcentaje de beca otorgado
+                  </option>
+                  <option value="No responde a las convocatorias de entrevista o pruebas">
+                    Sin respuesta en convocatorias de entrevista
+                  </option>
+                  <option value="Incorporación a otra oportunidad académica/profesional">
+                    Incorporación a otra institución
+                  </option>
+                </select>
+
+                <textarea
+                  rows={2}
+                  value={motivoAbandono}
+                  onChange={(e) => setMotivoAbandono(e.target.value)}
+                  placeholder="Detallar observaciones o motivo específico..."
+                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-1 focus:ring-amber-500 mt-2"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setModalAbandonar(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => abandonarMutation.mutate()}
+                  disabled={abandonarMutation.isPending}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+                >
+                  {abandonarMutation.isPending ? 'Archivando...' : 'Confirmar Abandono'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: AGENDAR GOOGLE MEET */}
+        {modalEntrevista && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 className="text-base font-black text-slate-900 flex items-center space-x-2">
+                  <Video className="w-5 h-5 text-blue-600" />
+                  <span>Programar Entrevista Google Meet</span>
+                </h3>
+                <button onClick={() => setModalEntrevista(false)} className="text-slate-400 hover:text-slate-700">
+                  <UserX className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Fecha y Hora de la Sesión:</label>
+                  <input
+                    type="datetime-local"
+                    value={fechaEntrevista}
+                    onChange={(e) => setFechaEntrevista(e.target.value)}
+                    className="w-full border border-slate-300 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
 
-                <div className="flex justify-end mt-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Enlace a Google Meet:</label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="url"
+                      value={enlaceMeet}
+                      onChange={(e) => setEnlaceMeet(e.target.value)}
+                      placeholder="https://meet.google.com/xyz-abcd-uvw"
+                      className="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={generarEnlaceMeet}
+                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold whitespace-nowrap"
+                    >
+                      Generar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={abrirEnGoogleCalendar}
+                  disabled={!fechaEntrevista}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 disabled:opacity-40"
+                >
+                  + Añadir a Google Calendar
+                </button>
+
+                <div className="flex space-x-2">
                   <button
-                    onClick={() => anotacionesMutation.mutate()}
-                    disabled={!comentariosEntrevista.trim() || anotacionesMutation.isPending}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
+                    type="button"
+                    onClick={() => setModalEntrevista(false)}
+                    className="px-3 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold"
                   >
-                    {anotacionesMutation.isPending ? 'Guardando...' : 'Guardar Conclusión'}
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => agendarMutation.mutate()}
+                    disabled={!fechaEntrevista || agendarMutation.isPending}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold"
+                  >
+                    {agendarMutation.isPending ? 'Guardando...' : 'Agendar Sesión'}
                   </button>
                 </div>
               </div>
             </div>
           </div>
         )}
+
+        {/* MODAL: CREDENCIALES E INVITACIÓN */}
+        {modalInvitacion && (
+          <InvitacionCandidatoModal
+            isOpen={modalInvitacion}
+            onClose={() => setModalInvitacion(false)}
+            candidatoId={id!}
+            candidatoNombre={`${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`}
+            candidatoEmail={candidato.usuario?.email || ''}
+          />
+        )}
+
+        {/* MODAL: RESUMEN PDF CON PLANTILLA OFICIAL (Punto 8) */}
+        {showPdfModal && (
+          <ResumenResultadosPdfModal
+            isOpen={showPdfModal}
+            onClose={() => setShowPdfModal(false)}
+            candidato={candidato}
+          />
+        )}
       </main>
-
-      {/* Modal: Agendar Google Meet (Requirement 5) */}
-      {modalEntrevista && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                <Video className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Agendar Entrevista Google Meet</h3>
-                <p className="text-xs text-slate-500">
-                  Programa la sesión con {candidato.usuario?.nombre} {candidato.usuario?.apellidos}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Fecha y Hora de la Entrevista
-              </label>
-              <input
-                type="datetime-local"
-                value={fechaEntrevista}
-                onChange={(e) => setFechaEntrevista(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-medium text-slate-700">Enlace de Google Meet</label>
-                <button
-                  type="button"
-                  onClick={generarEnlaceMeet}
-                  className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
-                >
-                  ⚡ Regenerar Enlace
-                </button>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="url"
-                  value={enlaceMeet}
-                  onChange={(e) => setEnlaceMeet(e.target.value)}
-                  placeholder="https://meet.google.com/xyz-abcd-efg"
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={copiarEnlaceMeet}
-                  className="p-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-600"
-                  title="Copiar enlace"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
-              </div>
-              {copiadoMeet && (
-                <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">
-                  ✓ Enlace copiado al portapapeles
-                </span>
-              )}
-            </div>
-
-            {/* Asistente Google Calendar */}
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-indigo-950">Agendar en Google Calendar</p>
-                <p className="text-[11px] text-indigo-700">
-                  Abre Google Calendar con fecha, candidatos y enlace pre-cargados.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={abrirEnGoogleCalendar}
-                disabled={!fechaEntrevista}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg text-xs font-semibold inline-flex items-center space-x-1"
-              >
-                <span>Abrir Calendar</span>
-                <ExternalLink className="w-3 h-3" />
-              </button>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-              <button
-                onClick={() => setModalEntrevista(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => agendarMutation.mutate()}
-                disabled={!fechaEntrevista || agendarMutation.isPending}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold"
-              >
-                {agendarMutation.isPending ? 'Guardando...' : 'Confirmar Entrevista'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Admitir al Programa PROFER (Requirement 1: Asignación de Squad Diferida) */}
-      {modalAdmitir && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-slate-900">
-              Admitir Aspirante al Programa de Becas PROFER
-            </h3>
-            <p className="text-xs text-slate-500">
-              Formaliza la admisión institucional del estudiante en el Centro Tecnológico CTS.
-            </p>
-
-            {/* Aviso de Corrección de la Interesada: Asignación de Squad Diferida */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex items-start space-x-3 text-blue-950">
-              <Compass className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1">
-                <p className="font-bold">Protocolo de Asignación de Squad Diferida</p>
-                <p className="text-blue-800 leading-relaxed">
-                  Según las directrices de coordinación, al dar el &quot;SÍ&quot; para el programa PROFER no es obligatorio fijar el squad inmediatamente. Puedes formalizar la admisión ahora y definir su asignación definitiva en la ventana temporal hasta su incorporación física.
-                </p>
-              </div>
-            </div>
-
-            {/* Checkbox para diferir la asignación */}
-            <label className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer">
-              <input
-                type="checkbox"
-                checked={asignacionDiferida}
-                onChange={(e) => {
-                  setAsignacionDiferida(e.target.checked);
-                  if (e.target.checked) setEquipoSeleccionadoId('');
-                }}
-                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <span className="text-xs font-semibold text-slate-800">
-                ⏳ Diferir asignación de squad (Asignar cuando el alumno se incorpore formalmente)
-              </span>
-            </label>
-
-            {/* Selector de Squad (si no es diferido) */}
-            {!asignacionDiferida && (
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Equipo de Destino CTS (Squad)
-                </label>
-                <select
-                  value={equipoSeleccionadoId}
-                  onChange={(e) => setEquipoSeleccionadoId(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                >
-                  <option value="">-- Selecciona un equipo --</option>
-                  {equiposData?.map((eq: any) => (
-                    <option key={eq.id} value={eq.id}>
-                      {eq.codigo} - {eq.nombre} ({eq.especialidad})
-                      {sugerido?.codigo === eq.codigo ? ' ⭐ [RECOMENDADO]' : ''}
-                    </option>
-                  ))}
-                </select>
-                {sugerido && (
-                  <button
-                    type="button"
-                    onClick={() => setEquipoSeleccionadoId(sugerido.id)}
-                    className="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold mt-1.5 flex items-center space-x-1"
-                  >
-                    <span>⚡ Aplicar squad recomendado por IA ({sugerido.nombre} - {sugerido.afinidadPorcentaje}% afín)</span>
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Aviso de Acción Irreversible */}
-            <div className="bg-amber-50 border border-amber-300 rounded-xl p-3.5 flex items-start space-x-3 text-amber-900">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1">
-                <p className="font-bold">⚠️ ADVERTENCIA: Acción Irreversible de Admisión</p>
-                <p className="text-amber-800 leading-relaxed">
-                  Al admitir al postulante, su cuenta será promovida formalmente al rol de{' '}
-                  <strong>ALUMNO PROFER</strong> y se formalizará su matrícula activa.
-                </p>
-              </div>
-            </div>
-
-            <label className="flex items-start space-x-2 text-xs text-slate-700 cursor-pointer pt-1">
-              <input
-                type="checkbox"
-                checked={confirmarIrreversibleAdmitir}
-                onChange={(e) => setConfirmarIrreversibleAdmitir(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-              />
-              <span>
-                Confirmo que he verificado los requisitos y autorizo la{' '}
-                <strong>admisión definitiva</strong> del candidato en el programa PROFER.
-              </span>
-            </label>
-
-            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-              <button
-                onClick={() => {
-                  setModalAdmitir(false);
-                  setConfirmarIrreversibleAdmitir(false);
-                }}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => admitirMutation.mutate()}
-                disabled={
-                  (!asignacionDiferida && !equipoSeleccionadoId) ||
-                  !confirmarIrreversibleAdmitir ||
-                  admitirMutation.isPending
-                }
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-colors"
-              >
-                {admitirMutation.isPending
-                  ? 'Formalizando...'
-                  : asignacionDiferida
-                  ? 'Confirmar Admisión (Squad Diferido)'
-                  : 'Confirmar Admisión y Asignar Squad'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Rechazar Candidatura */}
-      {modalRechazar && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-slate-900">Rechazar Candidatura</h3>
-            <p className="text-xs text-slate-500">
-              Indica la justificación de la decisión para registro interno de auditoría.
-            </p>
-
-            <div className="bg-red-50 border border-red-300 rounded-xl p-3.5 flex items-start space-x-3 text-red-900">
-              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1">
-                <p className="font-bold">⚠️ ADVERTENCIA: Acción Irreversible de Rechazo</p>
-                <p className="text-red-800 leading-relaxed">
-                  La postulación será marcada de forma definitiva como <strong>RECHAZADA</strong> en la
-                  convocatoria actual.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Motivo del Rechazo</label>
-              <textarea
-                rows={3}
-                value={motivoRechazo}
-                onChange={(e) => setMotivoRechazo(e.target.value)}
-                placeholder="No alcanza el umbral de conocimientos prácticos en la evaluación..."
-                className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-              />
-            </div>
-
-            <label className="flex items-start space-x-2 text-xs text-slate-700 cursor-pointer pt-1">
-              <input
-                type="checkbox"
-                checked={confirmarIrreversibleRechazar}
-                onChange={(e) => setConfirmarIrreversibleRechazar(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
-              />
-              <span>
-                Confirmo el <strong>rechazo definitivo e irrevocable</strong> de esta postulación.
-              </span>
-            </label>
-
-            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-              <button
-                onClick={() => {
-                  setModalRechazar(false);
-                  setConfirmarIrreversibleRechazar(false);
-                }}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => rechazarMutation.mutate()}
-                disabled={!motivoRechazo.trim() || !confirmarIrreversibleRechazar || rechazarMutation.isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-colors"
-              >
-                {rechazarMutation.isPending ? 'Procesando...' : 'Confirmar Rechazo Definitivo'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Credenciales e Invitación Oficial (Requirement 1) */}
-      <InvitacionCandidatoModal
-        candidatoId={candidato.id}
-        candidatoNombre={`${candidato.usuario?.nombre} ${candidato.usuario?.apellidos}`}
-        candidatoEmail={candidato.usuario?.email || ''}
-        isOpen={modalInvitacion}
-        onClose={() => setModalInvitacion(false)}
-      />
-
-      {/* Modal & Documento de Impresión Horizontal: Resumen Ejecutivo de Resultados */}
-      <ResumenResultadosPdfModal
-        isOpen={showPdfModal}
-        onClose={() => setShowPdfModal(false)}
-        candidato={candidato}
-      />
     </div>
   );
 };

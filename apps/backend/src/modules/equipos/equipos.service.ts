@@ -227,7 +227,8 @@ export class EquiposService {
         testsCompletados: estadoDistribucion[EstadoPostulacion.TESTS_COMPLETADOS] || 0,
         entrevistaAgendada: estadoDistribucion[EstadoPostulacion.ENTREVISTA_AGENDADA] || 0,
         admitidos: estadoDistribucion[EstadoPostulacion.ADMITIDO] || 0,
-        rechazados: estadoDistribucion[EstadoPostulacion.RECHAZADO] || 0,
+        abandonados: (estadoDistribucion[EstadoPostulacion.ABANDONADO] || 0) + (estadoDistribucion[EstadoPostulacion.RECHAZADO] || 0),
+        rechazados: (estadoDistribucion[EstadoPostulacion.ABANDONADO] || 0) + (estadoDistribucion[EstadoPostulacion.RECHAZADO] || 0),
       },
       candidatos: candidatos.map((c) => {
         const perfil = (c.perfil_competencias as any) || {};
@@ -240,6 +241,7 @@ export class EquiposService {
           telefono: c.telefono,
           estadoPostulacion: c.estado_postulacion,
           decisionAdmision: c.decision_admision,
+          porcentajeAcceso: c.porcentaje_acceso ?? perfil.porcentajeAcceso ?? null,
           perfilCompetencias: c.perfil_competencias,
           invitacionEnviada: Boolean(perfil.invitacion?.enviada),
           fechaInvitacion: perfil.invitacion?.fecha || null,
@@ -485,8 +487,10 @@ export class EquiposService {
 
     const totalPostulados = convocatoria.candidatos.length;
     const totalAdmitidos = convocatoria.candidatos.filter((c) => c.estado_postulacion === EstadoPostulacion.ADMITIDO).length;
-    const totalRechazados = convocatoria.candidatos.filter((c) => c.estado_postulacion === EstadoPostulacion.RECHAZADO).length;
-    const totalAbandonos = totalPostulados - totalAdmitidos - totalRechazados;
+    const totalAbandonos = convocatoria.candidatos.filter(
+      (c) => c.estado_postulacion === EstadoPostulacion.ABANDONADO || c.estado_postulacion === EstadoPostulacion.RECHAZADO,
+    ).length;
+    const totalRechazados = totalAbandonos;
 
     const firmaHash = `sha256_${Date.now()}_${convocatoriaId.substring(0, 8)}`;
 

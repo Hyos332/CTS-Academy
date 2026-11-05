@@ -220,7 +220,7 @@ export const AdmisionesPanelPage: React.FC = () => {
     testsCompletados: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'TESTS_COMPLETADOS').length,
     entrevistaAgendada: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ENTREVISTA_AGENDADA').length,
     admitidos: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ADMITIDO').length,
-    rechazados: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'RECHAZADO').length,
+    abandonos: candidatosEnFoco.filter((c: any) => c.estadoPostulacion === 'ABANDONADO' || c.estadoPostulacion === 'RECHAZADO').length,
   };
 
   // Lista consolidada de todos los alumnos asignados en los squads
@@ -241,7 +241,10 @@ export const AdmisionesPanelPage: React.FC = () => {
       cand.email?.toLowerCase().includes(busquedaCandidato.toLowerCase());
 
     const coincideEstado =
-      filtroEstadoCandidato === 'TODOS' || cand.estadoPostulacion === filtroEstadoCandidato;
+      filtroEstadoCandidato === 'TODOS' ||
+      cand.estadoPostulacion === filtroEstadoCandidato ||
+      (filtroEstadoCandidato === 'ABANDONADO' &&
+        (cand.estadoPostulacion === 'ABANDONADO' || cand.estadoPostulacion === 'RECHAZADO'));
 
     const coincideSede =
       filtroSedeCandidato === 'TODAS' || cand.sedeOrigen === filtroSedeCandidato;
@@ -530,9 +533,9 @@ export const AdmisionesPanelPage: React.FC = () => {
                   <span className="text-[11px] font-medium text-emerald-700 block">Admitidos</span>
                   <p className="text-xl font-black text-emerald-900 mt-0.5">{metricasActivas.admitidos}</p>
                 </div>
-                <div className="bg-white p-3.5 rounded-xl border border-red-200/70 shadow-xs bg-red-50/20">
-                  <span className="text-[11px] font-medium text-red-700 block">Rechazados</span>
-                  <p className="text-xl font-black text-red-900 mt-0.5">{metricasActivas.rechazados}</p>
+                <div className="bg-white p-3.5 rounded-xl border border-amber-200/70 shadow-xs bg-amber-50/20">
+                  <span className="text-[11px] font-medium text-amber-700 block">Abandonadas</span>
+                  <p className="text-xl font-black text-amber-900 mt-0.5">{metricasActivas.abandonos}</p>
                 </div>
               </div>
 
@@ -588,7 +591,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                       <option value="TESTS_COMPLETADOS">Tests Listos</option>
                       <option value="ENTREVISTA_AGENDADA">Entrevista Agendada</option>
                       <option value="ADMITIDO">Admitidos</option>
-                      <option value="RECHAZADO">Rechazados</option>
+                      <option value="ABANDONADO">Candidaturas Abandonadas</option>
                     </select>
                   </div>
 
@@ -684,14 +687,20 @@ export const AdmisionesPanelPage: React.FC = () => {
                                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                       : cand.estadoPostulacion === 'TESTS_COMPLETADOS'
                                       ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                      : cand.estadoPostulacion === 'ENTREVISTA_AGENDADA'
+                                      ? 'bg-purple-50 text-purple-700 border-purple-200'
                                       : cand.estadoPostulacion === 'EN_PROCESO'
                                       ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                      : cand.estadoPostulacion === 'RECHAZADO'
-                                      ? 'bg-red-50 text-red-700 border-red-200'
+                                      : cand.estadoPostulacion === 'ABANDONADO' || cand.estadoPostulacion === 'RECHAZADO'
+                                      ? 'bg-amber-50 text-amber-800 border-amber-200'
                                       : 'bg-slate-100 text-slate-700 border-slate-200'
                                   }`}
                                 >
-                                  {cand.estadoPostulacion}
+                                  {cand.estadoPostulacion === 'ADMITIDO'
+                                    ? `Admitido ${cand.porcentajeAcceso !== undefined && cand.porcentajeAcceso !== null ? `(${cand.porcentajeAcceso}%)` : ''}`
+                                    : cand.estadoPostulacion === 'ABANDONADO' || cand.estadoPostulacion === 'RECHAZADO'
+                                    ? 'Abandonada'
+                                    : cand.estadoPostulacion}
                                 </span>
                               </td>
 

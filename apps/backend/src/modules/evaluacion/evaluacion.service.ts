@@ -9,6 +9,7 @@ import {
   AgendarEntrevistaDto,
   RegistrarAnotacionesEntrevistaDto,
   AdmitirAlumnoDto,
+  AbandonarCandidaturaDto,
   RechazarCandidaturaDto,
 } from './dto/evaluacion.dto';
 import {
@@ -937,12 +938,19 @@ export class EvaluacionService {
         },
       });
 
-      // 3. Actualizar estado de postulación
+      // 3. Actualizar estado de postulación y registrar porcentaje de acceso/beca
+      const perfilActual = (candidato.perfil_competencias as any) || {};
+      const porcentaje = dto.porcentajeAcceso !== undefined ? Number(dto.porcentajeAcceso) : 100;
       const candidatoActualizado = await tx.candidato.update({
         where: { id: candidatoId },
         data: {
           estado_postulacion: EstadoPostulacion.ADMITIDO,
           decision_admision: DecisionAdmision.ADMITIDO,
+          porcentaje_acceso: porcentaje,
+          perfil_competencias: {
+            ...perfilActual,
+            porcentajeAcceso: porcentaje,
+          },
         },
       });
 
@@ -950,7 +958,7 @@ export class EvaluacionService {
     });
 
     this.logger.log(
-      `Candidato ${candidato.usuario.nombre} ADMITIDO al programa PROFER ${
+      `Candidato ${candidato.usuario.nombre} ADMITIDO con ${dto.porcentajeAcceso ?? 100}% de acceso al programa PROFER ${
         equipo ? `asignado a ${equipo.nombre}` : '(asignación de squad diferida)'
       } por gestor ${admitidoPorId}`,
     );
@@ -958,13 +966,13 @@ export class EvaluacionService {
     return {
       success: true,
       mensaje: equipo
-        ? `Candidato promovido a ALUMNO y asignado al equipo ${equipo.nombre}.`
-        : `Candidato promovido a ALUMNO en el programa PROFER. La asignación de squad queda pendiente para su incorporación.`,
+        ? `Candidato promovido a ALUMNO con ${dto.porcentajeAcceso ?? 100}% de acceso y asignado al equipo ${equipo.nombre}.`
+        : `Candidato promovido a ALUMNO en el programa PROFER (${dto.porcentajeAcceso ?? 100}% de acceso). La asignación de squad queda pendiente para su incorporación.`,
       resultado,
     };
   }
 
-  async rechazarCandidatura(candidatoId: string, dto: RechazarCandidaturaDto) {
+  async abandonarCandidatura(candidatoId: string, dto: AbandonarCandidaturaDto) {
     const candidato = await this.prisma.candidato.findUnique({
       where: { id: candidatoId },
     });
@@ -973,22 +981,28 @@ export class EvaluacionService {
       throw new NotFoundException(`Candidato ${candidatoId} no encontrado.`);
     }
 
+    const motivo = dto.motivo || dto.motivoRechazo || 'El candidato decide no incorporarse al programa';
+
     const candidatoActualizado = await this.prisma.candidato.update({
       where: { id: candidatoId },
       data: {
-        estado_postulacion: EstadoPostulacion.RECHAZADO,
-        decision_admision: DecisionAdmision.RECHAZADO,
-        motivo_rechazo: dto.motivoRechazo,
+        estado_postulacion: EstadoPostulacion.ABANDONADO,
+        decision_admision: DecisionAdmision.ABANDONADO,
+        motivo_rechazo: motivo,
       },
     });
 
-    this.logger.log(`Candidatura ${candidatoId} rechazada. Motivo: ${dto.motivoRechazo}`);
+    this.logger.log(`Candidatura ${candidatoId} marcada como ABANDONADO. Motivo: ${motivo}`);
 
     return {
       success: true,
-      mensaje: 'Candidatura marcada como no admitida.',
+      mensaje: 'Candidatura archivada como abandonada.',
       candidato: candidatoActualizado,
     };
+  }
+
+  async rechazarCandidatura(candidatoId: string, dto: RechazarCandidaturaDto) {
+    return this.abandonarCandidatura(candidatoId, { motivo: dto.motivoRechazo });
   }
 
   async registrarCandidato(dto: RegistrarCandidatoDto) {

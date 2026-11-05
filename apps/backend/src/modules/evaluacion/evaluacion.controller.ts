@@ -9,6 +9,7 @@ import {
   AgendarEntrevistaDto,
   RegistrarAnotacionesEntrevistaDto,
   AdmitirAlumnoDto,
+  AbandonarCandidaturaDto,
   RechazarCandidaturaDto,
 } from './dto/evaluacion.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -188,6 +189,22 @@ export class EvaluacionController {
     @Body() dto: AdmitirAlumnoDto,
   ) {
     return this.evaluacionService.admitirAlumnoProfer(candidatoId, admitidoPorId, dto);
+  }
+
+  @Post('candidatos/:id/abandonar')
+  @Roles(RolUsuario.GESTOR, RolUsuario.LIDER_EQUIPO)
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'UUID del candidato' })
+  @ApiOperation({
+    summary: 'Registrar abandono de candidatura',
+    description: 'Marca al candidato como ABANDONADO y archiva el motivo con fines de auditoría.',
+  })
+  @ApiResponse({ status: 200, description: 'Candidatura archivada como abandonada' })
+  async abandonarCandidatura(
+    @Param('id') candidatoId: string,
+    @Body() dto: AbandonarCandidaturaDto,
+  ) {
+    return this.evaluacionService.abandonarCandidatura(candidatoId, dto);
   }
 
   @Post('candidatos/:id/rechazar')

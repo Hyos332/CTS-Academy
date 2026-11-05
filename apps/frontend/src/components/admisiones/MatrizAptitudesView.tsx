@@ -7,7 +7,19 @@ import {
   AlertTriangle,
   X,
   FileDown,
+  Radar as RadarIcon,
+  Table as TableIcon,
+  Sparkles,
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Tooltip,
+} from 'recharts';
 
 export interface HabilidadAptitudItem {
   habilidad: string;
@@ -38,12 +50,31 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
   matriz,
 }) => {
   const [modalImprimir, setModalImprimir] = useState(false);
+  const [modoVisualizacion, setModoVisualizacion] = useState<'radar' | 'tabla'>('radar');
 
   const handlePrint = () => {
     window.print();
   };
 
   const categorias = matriz.categorias || [];
+
+  // Datos para el Radar Global Multidimensional (promedio por categoría técnica)
+  const radarGlobalData = categorias.map((cat) => {
+    const avg =
+      cat.items.length > 0
+        ? Number(
+            (cat.items.reduce((acc, it) => acc + it.nivelActual, 0) / cat.items.length).toFixed(1),
+          )
+        : 0;
+    const shortLabel =
+      cat.nombre.length > 18 ? cat.nombre.slice(0, 16) + '…' : cat.nombre;
+    return {
+      dimension: shortLabel,
+      nombreCompleto: cat.nombre,
+      evaluado: avg,
+      deseado: 5,
+    };
+  });
 
   const renderDocumentoImprimible = () => (
     <div className="w-full bg-white text-slate-900 p-6 print:p-0">
@@ -130,7 +161,7 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
         </div>
       </div>
 
-      {/* 4. TODAS LAS 8 CATEGORÍAS Y 43 HABILIDADES EN GRID LANDSCAPE */}
+      {/* 4. TODAS LAS CATEGORÍAS Y HABILIDADES */}
       <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
         {categorias.map((cat, idx) => (
           <div
@@ -220,28 +251,56 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
               <span className="text-xs text-slate-400 font-mono">43 Habilidades Evaluadas</span>
             </div>
             <h2 className="text-xl font-black text-slate-900 mt-1">
-              Test Aptitud • Nivel Actual vs Nivel Deseado (0 - 5)
+              Test Aptitud • Diagramas de Radar de Competencias (0 - 5)
             </h2>
           </div>
         </div>
 
-        <button
-          onClick={() => setModalImprimir(true)}
-          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors inline-flex items-center space-x-2"
-        >
-          <FileDown className="w-4 h-4 text-blue-300" />
-          <span>Descargar / Imprimir Matriz Aptitudes (PDF)</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {/* Selector de modo Visual (Radar) vs Tabular */}
+          <div className="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200">
+            <button
+              onClick={() => setModoVisualizacion('radar')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                modoVisualizacion === 'radar'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <RadarIcon className="w-3.5 h-3.5" />
+              <span>Diagramas Radar</span>
+            </button>
+            <button
+              onClick={() => setModoVisualizacion('tabla')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                modoVisualizacion === 'tabla'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>Vista Tabular</span>
+            </button>
+          </div>
+
+          <button
+            onClick={() => setModalImprimir(true)}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors inline-flex items-center space-x-2"
+          >
+            <FileDown className="w-4 h-4 text-blue-300" />
+            <span>Descargar PDF</span>
+          </button>
+        </div>
       </div>
 
-      {/* Ficha encabezado idéntica al PDF oficial */}
+      {/* Ficha encabezado */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <span className="text-[11px] font-bold uppercase text-slate-400 block tracking-wider">
             Nombre / Email Evaluado
           </span>
           <span className="text-base font-black text-slate-900 font-mono">
-            {matriz.nombreCandidato || 'billy.ordores@alumnos.uneatlantico.es'}
+            {matriz.nombreCandidato || 'candidato@alumnos.uneatlantico.es'}
           </span>
           <p className="text-xs text-slate-500 mt-0.5">
             Escala Oficial: <strong className="text-slate-700 font-medium">{matriz.escala || '0: Conocimiento Nulo. 5: Conocimiento Muy Alto'}</strong>
@@ -307,94 +366,232 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
         </div>
       </div>
 
-      {/* Las 8 Tablas Oficiales en un Grid Responsivo */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {categorias.map((cat, idx) => (
-          <div
-            key={cat.codigo || idx}
-            className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between"
-          >
-            <div>
-              <div className="px-5 py-3.5 bg-slate-100/80 border-b border-slate-200 flex justify-between items-center">
-                <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
-                  <span className="w-2 h-2 rounded-full bg-brand-600" />
-                  <span>{cat.nombre}</span>
+      {/* MODO VISUAL: DIAGRAMAS DE RADAR POR COMPETENCIA (Requerimiento de UX) */}
+      {modoVisualizacion === 'radar' && (
+        <div className="space-y-6">
+          {/* Radar Macro-Global de Dimensiones Técnicas */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <span>Radar Global de Aptitudes por Categoría Técnica</span>
                 </h3>
-                <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                  {cat.items.length} items
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Promedio ponderado del candidato en cada una de las {categorias.length} dimensiones técnicas evaluadas (Escala 0 - 5).
+                </p>
+              </div>
+              <div className="flex items-center space-x-3 text-xs">
+                <span className="inline-flex items-center space-x-1">
+                  <span className="w-3 h-3 rounded-full bg-blue-600 inline-block" />
+                  <span className="font-semibold text-slate-700">Nivel Candidato</span>
+                </span>
+                <span className="inline-flex items-center space-x-1">
+                  <span className="w-3 h-3 rounded-full bg-slate-300 inline-block" />
+                  <span className="font-medium text-slate-400">Objetivo (5.0)</span>
                 </span>
               </div>
+            </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/60 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                      <th className="px-5 py-2.5">Habilidad</th>
-                      <th className="px-3 py-2.5 text-center w-16">Nivel Actual</th>
-                      <th className="px-3 py-2.5 text-center w-16">Nivel Deseado</th>
-                      <th className="px-4 py-2.5 text-center w-28">Brecha</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {cat.items.map((item, i) => {
-                      const actual = item.nivelActual;
-                      const deseado = item.nivelDeseado || 5;
-                      const esAlto = actual >= 4;
-                      const esBajo = actual <= 1;
-
-                      return (
-                        <tr
-                          key={i}
-                          className="hover:bg-slate-50/60 transition-colors"
-                        >
-                          <td className="px-5 py-2.5 font-medium text-slate-800">
-                            {item.habilidad}
-                          </td>
-
-                          <td className="px-3 py-2.5 text-center font-mono font-bold">
-                            <span
-                              className={`inline-block px-2 py-0.5 rounded ${
-                                esAlto
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : esBajo
-                                  ? 'bg-slate-100 text-slate-600'
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}
-                            >
-                              {actual}
-                            </span>
-                          </td>
-
-                          <td className="px-3 py-2.5 text-center font-mono text-slate-500">
-                            {deseado}
-                          </td>
-
-                          <td className="px-4 py-2.5 text-center">
-                            <div className="flex items-center justify-center space-x-1">
-                              {[1, 2, 3, 4, 5].map((bloque) => (
-                                <div
-                                  key={bloque}
-                                  className={`w-3.5 h-2 rounded-xs transition-all ${
-                                    bloque <= actual
-                                      ? esAlto
-                                        ? 'bg-emerald-500'
-                                        : 'bg-indigo-600'
-                                      : 'bg-slate-200'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarGlobalData}>
+                  <PolarGrid stroke="#E2E8F0" />
+                  <PolarAngleAxis
+                    dataKey="dimension"
+                    tick={{ fill: '#334155', fontSize: 11, fontWeight: 600 }}
+                  />
+                  <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#CBD5E1" tickCount={6} />
+                  <Tooltip
+                    formatter={(val: any, name: any) => [`${val} / 5.0`, name === 'evaluado' ? 'Nivel Evaluado' : 'Objetivo']}
+                  />
+                  <Radar
+                    name="evaluado"
+                    dataKey="evaluado"
+                    stroke="#0266CC"
+                    fill="#0266CC"
+                    fillOpacity={0.4}
+                  />
+                  <Radar
+                    name="deseado"
+                    dataKey="deseado"
+                    stroke="#CBD5E1"
+                    strokeDasharray="3 3"
+                    fill="transparent"
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        ))}
-      </div>
+
+          {/* Radars Específicos por Cada Categoría de Competencias */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {categorias.map((cat, idx) => {
+              const catRadarData = cat.items.map((item) => {
+                const shortHab =
+                  item.habilidad.length > 14 ? item.habilidad.slice(0, 12) + '…' : item.habilidad;
+                return {
+                  habilidad: shortHab,
+                  nombreCompleto: item.habilidad,
+                  nivel: item.nivelActual,
+                  deseado: item.nivelDeseado || 5,
+                };
+              });
+
+              const catAvg =
+                cat.items.length > 0
+                  ? (
+                      cat.items.reduce((acc, it) => acc + it.nivelActual, 0) / cat.items.length
+                    ).toFixed(1)
+                  : '0';
+
+              return (
+                <div
+                  key={cat.codigo || idx}
+                  className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-slate-900 text-xs truncate max-w-[200px]" title={cat.nombre}>
+                        {cat.nombre}
+                      </h4>
+                      <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                        {catAvg} / 5.0
+                      </span>
+                    </div>
+
+                    <div className="h-56 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={catRadarData}>
+                          <PolarGrid stroke="#F1F5F9" />
+                          <PolarAngleAxis
+                            dataKey="habilidad"
+                            tick={{ fill: '#475569', fontSize: 9, fontWeight: 500 }}
+                          />
+                          <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#E2E8F0" tickCount={6} />
+                          <Tooltip
+                            formatter={(val: any) => [`${val} / 5`, 'Nivel']}
+                            labelFormatter={(label) => {
+                              const found = catRadarData.find((d) => d.habilidad === label);
+                              return found?.nombreCompleto || label;
+                            }}
+                          />
+                          <Radar
+                            name="Nivel"
+                            dataKey="nivel"
+                            stroke="#0266CC"
+                            fill="#0266CC"
+                            fillOpacity={0.45}
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Resumen de habilidades destacadas */}
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>{cat.items.length} habilidades evaluadas</span>
+                    <span className="font-medium text-slate-700">
+                      {cat.items.filter((i) => i.nivelActual >= 4).length} dominadas (≥4)
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* MODO TABULAR: TABLAS DETALLADAS DE BRECHAS */}
+      {modoVisualizacion === 'tabla' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {categorias.map((cat, idx) => (
+            <div
+              key={cat.codigo || idx}
+              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between"
+            >
+              <div>
+                <div className="px-5 py-3.5 bg-slate-100/80 border-b border-slate-200 flex justify-between items-center">
+                  <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-brand-600" />
+                    <span>{cat.nombre}</span>
+                  </h3>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                    {cat.items.length} items
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/60 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                        <th className="px-5 py-2.5">Habilidad</th>
+                        <th className="px-3 py-2.5 text-center w-16">Nivel Actual</th>
+                        <th className="px-3 py-2.5 text-center w-16">Nivel Deseado</th>
+                        <th className="px-4 py-2.5 text-center w-28">Brecha</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {cat.items.map((item, i) => {
+                        const actual = item.nivelActual;
+                        const deseado = item.nivelDeseado || 5;
+                        const esAlto = actual >= 4;
+                        const esBajo = actual <= 1;
+
+                        return (
+                          <tr
+                            key={i}
+                            className="hover:bg-slate-50/60 transition-colors"
+                          >
+                            <td className="px-5 py-2.5 font-medium text-slate-800">
+                              {item.habilidad}
+                            </td>
+
+                            <td className="px-3 py-2.5 text-center font-mono font-bold">
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded ${
+                                  esAlto
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : esBajo
+                                    ? 'bg-slate-100 text-slate-600'
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}
+                              >
+                                {actual}
+                              </span>
+                            </td>
+
+                            <td className="px-3 py-2.5 text-center font-mono text-slate-500">
+                              {deseado}
+                            </td>
+
+                            <td className="px-4 py-2.5 text-center">
+                              <div className="flex items-center justify-center space-x-1">
+                                {[1, 2, 3, 4, 5].map((bloque) => (
+                                  <div
+                                    key={bloque}
+                                    className={`w-3.5 h-2 rounded-xs transition-all ${
+                                      bloque <= actual
+                                        ? esAlto
+                                          ? 'bg-emerald-500'
+                                          : 'bg-indigo-600'
+                                        : 'bg-slate-200'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal de Vista Previa A4 Horizontal / Landscape */}
       {modalImprimir && (
@@ -412,7 +609,7 @@ export const MatrizAptitudesView: React.FC<MatrizAptitudesViewProps> = ({
                   </span>
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Desglose completo de las 8 categorías, 43 competencias, fortalezas y brechas.
+                  Desglose completo de las {categorias.length} categorías, competencias, fortalezas y brechas.
                 </p>
               </div>
             </div>

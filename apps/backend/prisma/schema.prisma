@@ -159,8 +159,9 @@ model Candidato {
   telefono            String?      @db.VarChar(30)
   estado_postulacion  String       @db.VarChar(40) // REGISTRADO, EN_PROCESO, TESTS_COMPLETADOS, ENTREVISTA_AGENDADA, ADMITIDO, RECHAZADO
   perfil_competencias Json?        @db.JsonB
-  decision_admision   String?      @db.VarChar(30) // PENDIENTE, ADMITIDO, RECHAZADO
+  decision_admision   String?      @db.VarChar(30) // PENDIENTE, ADMITIDO, ABANDONADO, RECHAZADO
   motivo_rechazo      String?      @db.Text
+  porcentaje_acceso   Int?         @default(0)
   creado_en           DateTime     @default(now()) @db.Timestamptz(6)
   actualizado_en      DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
 

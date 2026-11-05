@@ -143,15 +143,31 @@ export class AdmitirAlumnoDto {
   @IsOptional()
   equipoId?: string;
 
+  @ApiPropertyOptional({ example: 100, description: 'Porcentaje de acceso o beca (0, 50, 66, 100)' })
+  @IsOptional()
+  porcentajeAcceso?: number;
+
   @ApiPropertyOptional({ example: 'Perfil asignado al equipo TEAM-01 Fénix.' })
   @IsString()
   @IsOptional()
   observaciones?: string;
 }
 
+export class AbandonarCandidaturaDto {
+  @ApiPropertyOptional({ example: 'Candidato desiste de incorporarse al programa.' })
+  @IsOptional()
+  @IsString()
+  motivo?: string;
+
+  @ApiPropertyOptional({ example: 'Candidato desiste de incorporarse al programa.' })
+  @IsOptional()
+  @IsString()
+  motivoRechazo?: string;
+}
+
 export class RechazarCandidaturaDto {
   @ApiProperty({ example: 'No alcanza el umbral de conocimientos en la dimensión técnica.' })
   @IsString()
-  @IsNotEmpty({ message: 'El motivo de rechazo es obligatorio para trazabilidad' })
+  @IsNotEmpty({ message: 'El motivo es obligatorio para trazabilidad' })
   motivoRechazo: string;
 }

@@ -1,13 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Printer,
   X,
   FileText,
-  ShieldCheck,
-  Cpu,
-  HeartPulse,
-  Building2,
-  Video,
+  Edit3,
+  Check,
 } from 'lucide-react';
 
 interface ResumenResultadosPdfModalProps {
@@ -15,6 +12,50 @@ interface ResumenResultadosPdfModalProps {
   onClose: () => void;
   candidato: any;
 }
+
+// Logo oficial squircle CTS con cristal geométrico facetado y letras CTS
+const CtsLogoSquircle: React.FC<{ size?: number; className?: string }> = ({ size = 96, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <rect width="100" height="100" rx="22" fill="#0266CC" />
+    {/* Cristal de diamante facetado */}
+    <polygon points="50,18 28,45 50,45" fill="#93C5FD" />
+    <polygon points="50,18 72,45 50,45" fill="#60A5FA" />
+    <polygon points="28,45 50,72 50,45" fill="#3B82F6" />
+    <polygon points="72,45 50,72 50,45" fill="#2563EB" />
+    <polygon points="50,30 38,45 50,60 62,45" fill="#1D4ED8" />
+    {/* Tipografía CTS */}
+    <text
+      x="50"
+      y="88"
+      textAnchor="middle"
+      fill="#FFFFFF"
+      fontSize="13"
+      fontWeight="900"
+      letterSpacing="5"
+      fontFamily="system-ui, -apple-system, sans-serif"
+    >
+      CTS
+    </text>
+  </svg>
+);
+
+const CtsLogoMini: React.FC<{ size?: number }> = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="24" fill="#FFFFFF" />
+    <polygon points="50,18 28,45 50,45" fill="#93C5FD" />
+    <polygon points="50,18 72,45 50,45" fill="#60A5FA" />
+    <polygon points="28,45 50,72 50,45" fill="#3B82F6" />
+    <polygon points="72,45 50,72 50,45" fill="#2563EB" />
+    <polygon points="50,30 38,45 50,60 62,45" fill="#1D4ED8" />
+  </svg>
+);
 
 export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps> = ({
   isOpen,
@@ -29,409 +70,292 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
 
   const usuario = candidato.usuario || {};
   const nombreCompleto =
-    `${usuario.nombre || ''} ${usuario.apellidos || ''}`.trim() || 'Candidato PROFER';
+    `${usuario.nombre || ''} ${usuario.apellidos || ''}`.trim() || 'Postulante';
   const email = usuario.email || '—';
-  const sede = candidato.sede_origen || 'Santander (España)';
-  const telefono = candidato.telefono || '—';
-  const convocatoria = candidato.convocatoria?.denominacion || 'Convocatoria Admisión Febrero 2026';
-  const estadoPostulacion = candidato.estado_postulacion || 'EN_PROCESO';
+  const sede = candidato.sede_origen || 'Santander, España';
 
-  // Detección del estado real de los tests
-  const testActitud = candidato.tests?.find((t: any) => t.tipo_bateria === 'ACTITUD');
-  const testAptitud = candidato.tests?.find((t: any) => t.tipo_bateria === 'APTITUD');
   const testTecnico = candidato.tests?.find((t: any) => t.tipo_bateria === 'TECNICO');
 
-  const tieneInforme16PF =
-    testActitud?.estado === 'COMPLETADO' && !!candidato.perfil_competencias?.informe16PF;
-  const tieneAptitud =
-    testAptitud?.estado === 'COMPLETADO' && !!candidato.perfil_competencias?.matrizAptitudes;
-  const tieneTecnico =
-    testTecnico?.estado === 'COMPLETADO' &&
-    testTecnico?.calificacion_obtenida !== null &&
-    testTecnico?.calificacion_obtenida !== undefined;
-
-  // Datos del Squad Recomendado (Solo si tiene test técnico completado)
-  const recomendacion = candidato.recomendacionSquad;
-  const squadSugerido = tieneTecnico && recomendacion?.equipoSugerido ? recomendacion.equipoSugerido : null;
-
-  // Datos psicométricos (Test de Actitud 16PF)
   const perfilCompetencias = candidato.perfil_competencias || {};
-  const informe16PF = tieneInforme16PF ? perfilCompetencias.informe16PF : null;
-  const distorsion = informe16PF?.distorsion || null;
+  const informe16PF = perfilCompetencias.informe16PF;
+  const matrizAptitudes = perfilCompetencias.matrizAptitudes;
+  const recomendacion = candidato.recomendacionSquad;
+  const sugerido = recomendacion?.equipoSugerido;
 
-  // Datos de Aptitud & Espectro
-  const espectro = perfilCompetencias.espectro || {};
-  const espectroActitud = tieneInforme16PF ? espectro.actitud || {} : null;
-  const espectroAptitud = tieneAptitud ? espectro.aptitud || {} : null;
+  // Porcentaje de acceso (0%, 50%, 66%, 100%)
+  const porcentajeAcceso =
+    candidato.porcentaje_acceso !== null && candidato.porcentaje_acceso !== undefined
+      ? candidato.porcentaje_acceso
+      : perfilCompetencias.porcentajeAcceso ?? (sugerido ? 100 : '-');
 
-  // Test Técnico
-  const calificacionTecnica = tieneTecnico
-    ? Number(testTecnico.calificacion_obtenida).toFixed(1)
-    : null;
+  // Observaciones predeterminadas (calculadas a partir de la deliberación real)
+  const defaultObsActitud = informe16PF
+    ? `Candidato con perfil predominante colaborativo (${informe16PF.factoresPrincipales?.find((f: any) => f.factor === 'A')?.etiqueta || 'Afinidad interpersonal'}). Buena adaptabilidad y disposición al trabajo en equipo.`
+    : (candidato.entrevista?.anotaciones?.find((a: any) => a.competencia_evaluada.toLowerCase().includes('actitud'))?.comentario ||
+      'Demuestra actitud receptiva, motivación por el aprendizaje y clara orientación al trabajo en equipo en dinámicas de squad.');
 
-  // Entrevista
-  const entrevista = candidato.entrevista;
+  const defaultObsAptitud = matrizAptitudes
+    ? `Promedio de autoevaluación técnica de ${matrizAptitudes.promedioNivelActual || '2.8'}/5.0. Destaca en: ${matrizAptitudes.areasFortaleza?.slice(0, 3).join(', ') || 'Desarrollo web y backend'}.`
+    : (testTecnico?.calificacion_obtenida
+      ? `Calificación técnica obtenida de ${Number(testTecnico.calificacion_obtenida).toFixed(1)}/10.0 en el cuestionario oficial CTS.`
+      : 'Evaluación técnica y aptitudinal en proceso de consolidación.');
 
-  // Componente que renderiza el contenido del documento horizontal
-  const renderContenidoDocumento = () => (
-    <div className="w-full bg-white text-slate-800 rounded-2xl shadow-xl p-6 sm:p-8 border border-slate-200 print:border-none print:shadow-none print:rounded-none print:p-0 flex flex-col justify-between h-full">
-      {/* 1. ENCABEZADO INSTITUCIONAL HORIZONTAL */}
-      <div>
-        <div className="flex justify-between items-start border-b-2 border-slate-900 pb-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm tracking-wider shadow-xs">
-              CTS
-            </div>
-            <div>
-              <h1 className="text-base font-black tracking-tight text-slate-900 uppercase">
-                CTS Academy • Centro Tecnológico de Software
-              </h1>
-              <p className="text-[11px] text-slate-500 font-medium">
-                Universidad Europea del Atlántico • Programa de Formación y Empleo PROFER
-              </p>
-            </div>
+  const defaultObsGeneral =
+    candidato.entrevista?.anotaciones?.find((a: any) => a.competencia_evaluada.toLowerCase().includes('general'))?.comentario ||
+    `Aspirante que cumple con el perfil de ingreso al programa PROFER. Comunicación fluida y adecuada disposición horaria para incorporación.`;
+
+  const defaultObsRecomendaciones = sugerido
+    ? `Se recomienda su incorporación prioritaria a ${sugerido.nombre} (${sugerido.codigo}) bajo el liderazgo técnico de ${sugerido.lider}.`
+    : 'Incorporación recomendada sujeta a asignación de squad definitivo.';
+
+  const defaultObsLucia =
+    'El aspirante cumple satisfactoriamente con los criterios de idoneidad formativa y profesional requeridos por la coordinación CWO.';
+
+  const [obsActitud, setObsActitud] = useState(defaultObsActitud);
+  const [obsAptitud, setObsAptitud] = useState(defaultObsAptitud);
+  const [obsGeneral, setObsGeneral] = useState(defaultObsGeneral);
+  const [obsRecomendaciones, setObsRecomendaciones] = useState(defaultObsRecomendaciones);
+  const [obsLucia, setObsLucia] = useState(defaultObsLucia);
+  const [responsable, setResponsable] = useState('Loyda Alas');
+  const [fechaLlegada, setFechaLlegada] = useState('Septiembre 2026 - Febrero 2027');
+  const [modoEdicion, setModoEdicion] = useState(false);
+
+  // Formato de mes y año actual
+  const fechaHoy = new Date();
+  const mesAnio = fechaHoy.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  const mesAnioCapitalizado = mesAnio.charAt(0).toUpperCase() + mesAnio.slice(1);
+
+  const renderDocumento = () => (
+    <div className="bg-white text-slate-800 font-sans print:m-0 print:p-0">
+      {/* ======================================================== */}
+      {/* PÁGINA 1: PORTADA OFICIAL (Plantilla Informe Entrevistas) */}
+      {/* ======================================================== */}
+      <div
+        className="w-[8.5in] min-h-[11in] mx-auto p-16 flex flex-col justify-between bg-white relative page-break-after-always print:w-full print:h-[11in] print:min-h-[11in] print:p-14"
+        style={{ pageBreakAfter: 'always' }}
+      >
+        {/* Espaciador superior */}
+        <div className="h-12" />
+
+        {/* Bloque Central de Portada */}
+        <div className="flex flex-col items-center text-center space-y-8 my-auto">
+          {/* Logo Squircle CTS */}
+          <div className="drop-shadow-sm">
+            <CtsLogoSquircle size={110} />
           </div>
 
-          <div className="text-right">
-            <div className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-300">
-              Dictamen Ejecutivo de Admisión
-            </div>
-            <p className="text-[10px] text-slate-400 mt-1 font-mono">
-              Expediente: <strong className="text-slate-700">CTS-{candidato.id?.slice(0, 8).toUpperCase()}</strong> • Emisión:{' '}
-              {new Date().toLocaleDateString()}
+          {/* Título Principal */}
+          <div className="space-y-4 w-full">
+            <h1
+              className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#0B4EA2]"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
+              Informe de Entrevistas
+            </h1>
+
+            {/* Línea horizontal divisora exacta de la plantilla */}
+            <div className="w-full max-w-lg mx-auto border-t border-slate-300 my-4" />
+
+            {/* Fecha (Mes Año) */}
+            <p className="text-sm text-slate-600 font-medium tracking-wide">
+              {mesAnioCapitalizado}
+            </p>
+          </div>
+
+          {/* Datos del Postulante */}
+          <div className="space-y-2 pt-6">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1976D2]">
+              {nombreCompleto}
+            </h2>
+            <p className="text-base text-slate-600 font-medium">
+              {sede}
+            </p>
+            <p className="text-sm text-slate-600 pt-2 font-medium">
+              Responsable: <span className="font-semibold text-slate-800">{responsable}</span>
             </p>
           </div>
         </div>
 
-        {/* Franja de Identificación del Candidato */}
-        <div className="grid grid-cols-5 gap-2 py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 mt-2.5 text-xs">
-          <div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Candidato</span>
-            <strong className="text-slate-900 font-bold block truncate">{nombreCompleto}</strong>
-          </div>
-          <div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Correo Electrónico</span>
-            <span className="text-slate-700 font-mono text-[11px] block truncate">{email}</span>
-          </div>
-          <div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Sede & Teléfono</span>
-            <span className="text-slate-700 block truncate">{sede} • {telefono}</span>
-          </div>
-          <div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Convocatoria</span>
-            <span className="text-slate-700 block truncate">{convocatoria}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Estado Postulación</span>
-            <span
-              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                estadoPostulacion === 'ADMITIDO'
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                  : estadoPostulacion === 'RECHAZADO'
-                  ? 'bg-red-50 text-red-800 border-red-300'
-                  : 'bg-indigo-50 text-indigo-800 border-indigo-300'
-              }`}
-            >
-              {estadoPostulacion}
-            </span>
-          </div>
+        {/* Pie de página de Portada */}
+        <div className="text-right text-xs text-slate-500 font-medium pt-8">
+          Santander, España
         </div>
       </div>
 
-      {/* 2. CUERPO EN 3 COLUMNAS HORIZONTALES (LANDSCAPE) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-3 my-3 flex-1">
-        {/* COLUMNA 1: ASIGNACIÓN A SQUAD CTS */}
-        <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-3 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-700 flex items-center space-x-1">
-                <Building2 className="w-3.5 h-3.5 text-brand-600" />
-                <span>1. Squad CTS Recomendado</span>
-              </span>
-              {squadSugerido ? (
-                <span className="text-xs font-black text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
-                  {squadSugerido.afinidadPorcentaje}% Match
-                </span>
-              ) : (
-                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  Pendiente
-                </span>
-              )}
+      {/* ======================================================== */}
+      {/* PÁGINA 2: INFORME DE ENTREVISTAS & RESULTADOS TESTS      */}
+      {/* ======================================================== */}
+      <div
+        className="w-[8.5in] min-h-[11in] mx-auto flex flex-col justify-between bg-white relative print:w-full print:h-[11in] print:min-h-[11in]"
+        style={{ pageBreakInside: 'avoid' }}
+      >
+        <div>
+          {/* Barra Superior Azul Oficial con Logo Mini y Número de Página */}
+          <div className="w-full bg-[#1565C0] h-11 px-8 flex items-center justify-between text-white print:bg-[#1565C0] print:text-white">
+            <div className="flex items-center space-x-2">
+              <CtsLogoMini size={20} />
             </div>
-
-            {squadSugerido ? (
-              <>
-                <div className="mt-2">
-                  <span className="text-[9px] font-mono font-bold text-brand-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">
-                    {squadSugerido.codigo}
-                  </span>
-                  <h3 className="text-sm font-black text-slate-900 mt-0.5">{squadSugerido.nombre}</h3>
-                  <p className="text-[10px] text-slate-500">{squadSugerido.especialidad}</p>
-                  <p className="text-[10px] text-slate-600 mt-0.5">
-                    Tech Leader: <strong>{squadSugerido.lider}</strong>
-                  </p>
-                </div>
-
-                <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200">
-                  <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">
-                    Justificación de Encaje Técnico:
-                  </span>
-                  <p className="text-[10px] text-slate-700 leading-snug line-clamp-3">
-                    {squadSugerido.justificacion}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="mt-3 p-3 bg-white rounded-lg border border-dashed border-slate-200 text-center space-y-1.5">
-                <span className="text-xs font-bold text-slate-700 block">Evaluación en Curso</span>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
-                  La asignación de Squad CTS requiere completar la prueba técnica oficial para ponderar el stack, arquitectura y afinidad del aspirante.
-                </p>
-                <div className="inline-block px-2 py-0.5 bg-amber-50 text-amber-800 rounded border border-amber-200 text-[9px] font-semibold">
-                  Requiere Test Técnico
-                </div>
-              </div>
-            )}
+            <span className="text-xs font-bold tracking-wider">1</span>
           </div>
 
-          <div className="mt-2 pt-1.5 border-t border-slate-200">
-            <span className="text-[9px] font-bold uppercase text-slate-400 block mb-1">
-              Competencias Clave para el Squad:
-            </span>
-            <div className="flex flex-wrap gap-1">
-              {squadSugerido && squadSugerido.fortalezasClave?.length > 0 ? (
-                squadSugerido.fortalezasClave.map((f: string, idx: number) => (
-                  <span
-                    key={idx}
-                    className="px-1.5 py-0.5 bg-white text-slate-700 border border-slate-200 rounded text-[9px] font-medium"
-                  >
-                    {f}
-                  </span>
-                ))
-              ) : (
-                <span className="text-[9px] text-slate-400 italic">
-                  Pendiente de determinar tras completar evaluaciones
+          {/* Cuerpo del Informe */}
+          <div className="p-8 sm:p-10 space-y-6">
+            {/* Metadatos Superiores */}
+            <div className="space-y-1.5 text-xs text-slate-800">
+              <p>
+                <strong className="font-bold">Sugerencia de porcentaje de Acceso: </strong>
+                <span className="font-extrabold text-[#1565C0] text-sm">
+                  {porcentajeAcceso !== '-' ? `${porcentajeAcceso}%` : '-%'}
                 </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* COLUMNA 2: RESULTADOS TEST DE ACTITUD (16PF) */}
-        <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-3 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 flex items-center space-x-1">
-                <HeartPulse className="w-3.5 h-3.5 text-rose-600" />
-                <span>2. Batería Actitud (16PF)</span>
-              </span>
-              {tieneInforme16PF && distorsion ? (
-                <span className="text-[10px] font-bold text-slate-500 font-mono">
-                  Sinceridad: {distorsion.decatipo}/10
-                </span>
-              ) : (
-                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  {testActitud?.estado || 'NO_INICIADO'}
-                </span>
-              )}
+              </p>
+              <p>
+                <strong className="font-bold">Correo electrónico: </strong>
+                <span className="font-mono text-slate-700">{email}</span>
+              </p>
+              <p>
+                <strong className="font-bold">Fecha de llegada: </strong>
+                <span className="text-slate-700">{fechaLlegada}</span>
+              </p>
             </div>
 
-            {tieneInforme16PF ? (
-              <div className="mt-2 space-y-1.5">
-                <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                  <div className="flex justify-between items-center font-bold text-slate-800">
-                    <span>Estilo de Trabajo</span>
-                    <span className="text-rose-600">
-                      {espectroActitud?.estiloTrabajo?.etiqueta || 'Colaborativo en Squad'}
-                    </span>
-                  </div>
-                  <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
-                    {espectroActitud?.estiloTrabajo?.descripcion ||
-                      'Disposición notable para el pair programming, comunicación asertiva y objetivos de sprint.'}
-                  </p>
-                </div>
-
-                <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                  <div className="flex justify-between items-center font-bold text-slate-800">
-                    <span>Enfoque de Resolución</span>
-                    <span className="text-indigo-600">
-                      {espectroActitud?.enfoqueResolucion?.etiqueta || 'Rigor Arquitectónico'}
-                    </span>
-                  </div>
-                  <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
-                    {espectroActitud?.enfoqueResolucion?.descripcion ||
-                      'Prioriza la solidez de diseño y desacoplamiento con entregas ágiles continuas.'}
-                  </p>
-                </div>
-
-                <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                  <div className="flex justify-between items-center font-bold text-slate-800">
-                    <span>Adaptabilidad al Cambio</span>
-                    <span className="text-emerald-600">
-                      {espectroActitud?.adaptabilidad?.etiqueta || 'Alta Resiliencia'}
-                    </span>
-                  </div>
-                  <p className="text-[9px] text-slate-500 mt-0.5 line-clamp-2">
-                    {espectroActitud?.adaptabilidad?.descripcion ||
-                      'Afronta con solvencia los cambios de contexto e incertidumbre de requisitos.'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-3 p-3 bg-white rounded-lg border border-dashed border-slate-200 text-center space-y-1.5">
-                <span className="text-xs font-bold text-slate-700 block">Test de Actitud Pendiente</span>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
-                  El postulante aún no ha respondido el cuestionario psicométrico 16PF (102 preguntas). No se calculan factores ni distorsión hasta finalizarlo.
-                </p>
-                <div className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-semibold">
-                  102 reactivos pendientes
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-2 pt-1.5 border-t border-slate-200 text-[9px] text-slate-500 flex items-center justify-between">
-            <span>Batería: 102 reactivos conductuales</span>
-            <span className={tieneInforme16PF ? 'text-emerald-700 font-bold' : 'text-slate-400'}>
-              {tieneInforme16PF ? 'Perfil Registrado' : 'Pendiente de realización'}
-            </span>
-          </div>
-        </div>
-
-        {/* COLUMNA 3: TEST TÉCNICO & APTITUD */}
-        <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-3 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 flex items-center space-x-1">
-                <Cpu className="w-3.5 h-3.5 text-indigo-600" />
-                <span>3. Aptitud & Test Técnico</span>
-              </span>
-              {tieneTecnico ? (
-                <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                  {calificacionTecnica} / 10
-                </span>
-              ) : (
-                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  Pendiente
-                </span>
-              )}
+            {/* TABLA 1: Observaciones (Loyda Alas - Gestión PROFER GII) */}
+            <div className="border border-slate-300 rounded-xs overflow-hidden">
+              <table className="w-full border-collapse text-xs">
+                <thead>
+                  <tr className="bg-[#1565C0] text-white">
+                    <th className="py-2 px-3 text-left font-bold w-[22%] border-r border-[#0D47A1]">
+                      Item
+                    </th>
+                    <th className="py-2 px-3 text-left font-bold">
+                      Observaciones ({responsable} - Gestión PROFER GII)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  <tr>
+                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                      Actitud
+                    </td>
+                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                      {obsActitud}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                      Aptitud
+                    </td>
+                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                      {obsAptitud}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                      Generalidades
+                    </td>
+                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                      {obsGeneral}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                      Recomendaciones
+                    </td>
+                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                      {obsRecomendaciones}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div className="mt-2 space-y-1.5">
-              {tieneAptitud ? (
-                <>
-                  <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-800">Razonamiento Deductivo</span>
-                      <span className="font-mono text-brand-600 font-bold">
-                        {espectroAptitud?.razonamiento?.nivel || 'Aptitud Evaluada'}
+            {/* TABLA 2: Observaciones (Lucía Terán - CWO) */}
+            <div className="border border-slate-300 rounded-xs overflow-hidden">
+              <table className="w-full border-collapse text-xs">
+                <thead>
+                  <tr className="bg-[#1565C0] text-white">
+                    <th className="py-2 px-3 text-left font-bold w-[22%] border-r border-[#0D47A1]">
+                      Item
+                    </th>
+                    <th className="py-2 px-3 text-left font-bold">
+                      Observaciones (Lucía Terán - CWO)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  <tr>
+                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                      Generalidades
+                    </td>
+                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                      {obsLucia}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* SECCIÓN: Resultados Tests */}
+            <div className="pt-2 space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 tracking-wide uppercase border-b border-slate-200 pb-1">
+                Resultados Tests
+              </h3>
+
+              {/* Bloque Aptitud */}
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-black tracking-widest text-slate-700 text-center uppercase">
+                  APTITUD
+                </h4>
+                {matrizAptitudes ? (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs flex justify-between items-center">
+                    <div>
+                      <span className="font-bold text-slate-800">
+                        Autoevaluación de Habilidades Técnicas:
+                      </span>{' '}
+                      <span className="text-slate-600">
+                        {matrizAptitudes.areasFortaleza?.length || 0} fortalezas registradas • {matrizAptitudes.areasMejora?.length || 0} áreas prioritarias
                       </span>
                     </div>
-                    <p className="text-[9px] text-slate-500 mt-0.5">
-                      {espectroAptitud?.razonamiento?.descripcion ||
-                        'Capacidad demostrada para descomponer lógica compleja en componentes sencillos.'}
-                    </p>
+                    <span className="font-extrabold text-[#1565C0] text-sm">
+                      {matrizAptitudes.promedioNivelActual || '2.8'} / 5.0
+                    </span>
                   </div>
+                ) : (
+                  <p className="text-[11px] text-slate-500 text-center italic">
+                    Batería de aptitud pendiente o en curso.
+                  </p>
+                )}
+              </div>
 
-                  <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
+              {/* Bloque Actitud */}
+              <div className="space-y-1.5 pt-2">
+                <h4 className="text-xs font-black tracking-widest text-slate-700 text-center uppercase">
+                  ACTITUD
+                </h4>
+                {informe16PF ? (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-800">Abstracción de Software</span>
-                      <span className="font-mono text-indigo-600 font-bold">
-                        {espectroAptitud?.abstraccion?.nivel || 'Aptitud Evaluada'}
+                      <span className="font-bold text-slate-800">Cuestionario Oficial 16PF:</span>
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                        Completado ({informe16PF.distorsion?.consistencia || 'Consistente'})
                       </span>
                     </div>
-                    <p className="text-[9px] text-slate-500 mt-0.5">
-                      {espectroAptitud?.abstraccion?.descripcion ||
-                        'Alineado con Clean Architecture, inyección de dependencias y modelos de dominio.'}
+                    <p className="text-[11px] text-slate-600">
+                      Rasgo dominante: <strong className="text-slate-800">{informe16PF.factoresPrincipales?.[0]?.etiqueta || 'Colaboración Squad'}</strong>. Dinámica colaborativa alineada a metodologías ágiles.
                     </p>
                   </div>
-                </>
-              ) : (
-                <div className="bg-white p-2 rounded-lg border border-dashed border-slate-200 text-[10px]">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700">Matriz de Aptitudes (43 Habilidades)</span>
-                    <span className="text-[9px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                      {testAptitud?.estado || 'NO_INICIADO'}
-                    </span>
-                  </div>
-                  <p className="text-[9px] text-slate-400 mt-0.5">
-                    Autoevaluación de competencias técnicas y habilidades blandas pendiente de realización.
+                ) : (
+                  <p className="text-[11px] text-slate-500 text-center italic">
+                    Batería de actitud 16PF pendiente o en curso.
                   </p>
-                </div>
-              )}
-
-              {/* Test Técnico CTS */}
-              {!tieneTecnico && (
-                <div className="bg-white p-2 rounded-lg border border-dashed border-slate-200 text-[10px]">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700">Prueba Técnica Oficial CTS (148 Preguntas)</span>
-                    <span className="text-[9px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                      {testTecnico?.estado || 'NO_INICIADO'}
-                    </span>
-                  </div>
-                  <p className="text-[9px] text-slate-400 mt-0.5">
-                    El examen técnico no ha sido completado. Se requiere para emitir nota final sobre 10.
-                  </p>
-                </div>
-              )}
-
-              {/* Entrevista Técnica */}
-              <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px]">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-800 flex items-center space-x-1">
-                    <Video className="w-3 h-3 text-indigo-600" />
-                    <span>Entrevista Técnica Meet</span>
-                  </span>
-                  <span className={`font-bold ${entrevista?.estado === 'COMPLETADA' ? 'text-emerald-700' : 'text-slate-600'}`}>
-                    {entrevista?.fecha_hora_programada
-                      ? `${new Date(entrevista.fecha_hora_programada).toLocaleDateString()} (${entrevista.estado || 'PROGRAMADA'})`
-                      : entrevista?.estado === 'COMPLETADA'
-                      ? 'Realizada'
-                      : 'Pendiente de Agendar'}
-                  </span>
-                </div>
-                <p className="text-[9px] text-slate-500 mt-0.5">
-                  {entrevista?.estado === 'COMPLETADA'
-                    ? 'Comprobada la competencia y motivación del aspirante por los evaluadores.'
-                    : 'Entrevista individual con el comité evaluador y Tech Leads.'}
-                </p>
+                )}
               </div>
             </div>
           </div>
-
-          <div className="mt-2 pt-1.5 border-t border-slate-200 flex justify-between items-center text-[10px]">
-            <span className="text-slate-500">Dictamen Final:</span>
-            <strong
-              className={`font-bold uppercase tracking-wider ${
-                estadoPostulacion === 'ADMITIDO'
-                  ? 'text-emerald-700'
-                  : estadoPostulacion === 'RECHAZADO'
-                  ? 'text-red-700'
-                  : 'text-indigo-700'
-              }`}
-            >
-              {estadoPostulacion === 'ADMITIDO'
-                ? 'APROBADO PARA INCORPORACIÓN'
-                : estadoPostulacion === 'RECHAZADO'
-                ? 'NO SELECCIONADO'
-                : 'EN EVALUACIÓN'}
-            </strong>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. PIE DE PÁGINA INSTITUCIONAL & SELLO DE AUTENTICIDAD */}
-      <div className="pt-2 border-t border-slate-200 text-[9px] text-slate-500 flex justify-between items-center">
-        <div className="flex items-center space-x-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          <span>
-            Documento oficial generado por CTS Academy Engine v2.0 • Proceso de Selección PROFER. Datos inmutables.
-          </span>
         </div>
 
-        <div className="flex items-center space-x-3 text-slate-400 font-mono text-[9px]">
-          <span>HASH: {candidato.id?.replace(/-/g, '').slice(0, 24).toUpperCase() || '7A9F32BC44D1'}</span>
-          <span>CTS-ACADEMY</span>
+        {/* Pie de página Página 2 */}
+        <div className="p-8 text-right text-[11px] text-slate-400 font-medium">
+          Página 1 de 2
         </div>
       </div>
     </div>
@@ -439,43 +363,25 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
 
   return (
     <>
-      {/* Estilos específicos de impresión */}
       <style>{`
         @media print {
           @page {
-            size: landscape;
-            margin: 6mm 8mm;
+            size: letter portrait;
+            margin: 0;
           }
           body {
             background: white !important;
-          }
-          /* Ocultar toda la interfaz web */
-          body * {
-            visibility: hidden !important;
-          }
-          /* Mostrar únicamente el contenedor de resumen de resultados */
-          #pdf-resumen-impresion,
-          #pdf-resumen-impresion * {
-            visibility: visible !important;
-          }
-          #pdf-resumen-impresion {
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
             margin: 0 !important;
-            padding: 8mm 10mm !important;
-            box-sizing: border-box !important;
-            background: white !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
+            padding: 0 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           .no-print {
             display: none !important;
+          }
+          .page-break-after-always {
+            page-break-after: always !important;
+            break-after: page !important;
           }
         }
       `}</style>
@@ -483,32 +389,45 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
       {/* Modal de Vista Previa en Pantalla */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs overflow-y-auto p-3 sm:p-6 flex flex-col items-center no-print">
-          <div className="w-full max-w-[1050px] mb-3 flex items-center justify-between bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-700">
+          <div className="w-full max-w-[850px] mb-3 flex items-center justify-between bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-700">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-brand-500/20 text-brand-400 rounded-xl">
+              <div className="p-2 bg-blue-500/20 text-blue-400 rounded-xl">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-                  <span>Resumen Ejecutivo de Resultados</span>
-                  <span className="text-[10px] font-mono uppercase bg-brand-900/60 text-brand-300 border border-brand-700 px-2 py-0.5 rounded-full">
-                    A4 Horizontal / Landscape
+                  <span>Plantilla Oficial de Informe de Entrevistas</span>
+                  <span className="text-[10px] font-mono uppercase bg-blue-900/60 text-blue-300 border border-blue-700 px-2 py-0.5 rounded-full">
+                    Letter Portrait (2 Páginas)
                   </span>
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Ficha sintetizada de resultados: Squad recomendado, 16PF, aptitud y prueba técnica.
+                  Generado siguiendo la plantilla oficial de entrevistas (Loyda Alas / Lucía Terán).
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
               <button
+                onClick={() => setModoEdicion(!modoEdicion)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center space-x-1.5 ${
+                  modoEdicion
+                    ? 'bg-amber-500 text-slate-950 font-black'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                }`}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>{modoEdicion ? 'Vista Documento' : 'Editar Notas'}</span>
+              </button>
+
+              <button
                 onClick={handlePrint}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
               >
                 <Printer className="w-4 h-4" />
                 <span>Imprimir / Guardar PDF</span>
               </button>
+
               <button
                 onClick={onClose}
                 className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
@@ -519,19 +438,104 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
             </div>
           </div>
 
+          {/* Formulario de edición rápida si se activa */}
+          {modoEdicion && (
+            <div className="w-full max-w-[850px] bg-slate-800 text-white rounded-2xl p-5 mb-4 border border-slate-700 space-y-3 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">
+                  Personalizar Observaciones del Informe Oficial
+                </span>
+                <button
+                  onClick={() => setModoEdicion(false)}
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold inline-flex items-center space-x-1"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Aplicar Cambios</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Responsable:</label>
+                  <input
+                    type="text"
+                    value={responsable}
+                    onChange={(e) => setResponsable(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Fecha de llegada:</label>
+                  <input
+                    type="text"
+                    value={fechaLlegada}
+                    onChange={(e) => setFechaLlegada(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-slate-400 font-semibold mb-1">Obs. Actitud (Loyda Alas):</label>
+                  <textarea
+                    rows={2}
+                    value={obsActitud}
+                    onChange={(e) => setObsActitud(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-slate-400 font-semibold mb-1">Obs. Aptitud (Loyda Alas):</label>
+                  <textarea
+                    rows={2}
+                    value={obsAptitud}
+                    onChange={(e) => setObsAptitud(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-slate-400 font-semibold mb-1">Obs. Generalidades (Loyda Alas):</label>
+                  <textarea
+                    rows={2}
+                    value={obsGeneral}
+                    onChange={(e) => setObsGeneral(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-slate-400 font-semibold mb-1">Recomendaciones (Loyda Alas):</label>
+                  <textarea
+                    rows={2}
+                    value={obsRecomendaciones}
+                    onChange={(e) => setObsRecomendaciones(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-slate-400 font-semibold mb-1">Observaciones (Lucía Terán - CWO):</label>
+                  <textarea
+                    rows={2}
+                    value={obsLucia}
+                    onChange={(e) => setObsLucia(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Visualizador en Pantalla */}
-          <div className="w-full max-w-[1050px] overflow-x-auto pb-4">
-            <div className="min-w-[850px] aspect-[297/210] flex flex-col">
-              {renderContenidoDocumento()}
+          <div className="w-full max-w-[850px] overflow-x-auto pb-6 space-y-6">
+            <div className="border border-slate-200 shadow-2xl rounded-xl overflow-hidden bg-white">
+              {renderDocumento()}
             </div>
           </div>
         </div>
       )}
 
-      {/* Contenedor Estricto de Impresión */}
+      {/* Contenedor Estricto de Impresión para Navegador */}
       <div id="pdf-resumen-impresion" className="hidden print:block documento-imprimible-activo">
-        {renderContenidoDocumento()}
+        {renderDocumento()}
       </div>
     </>
   );
 };
+
+export default ResumenResultadosPdfModal;
