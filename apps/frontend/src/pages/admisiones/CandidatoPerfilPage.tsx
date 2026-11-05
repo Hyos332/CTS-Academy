@@ -565,7 +565,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
                       Afinidad en los demás Squads CTS
                     </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {recomendacion.rankingEquipos.map((eq: any) => {
                         const esTop = eq.codigo === sugerido.codigo;
                         return (

@@ -550,56 +550,108 @@ export class EvaluacionService {
     const abstrac = espectro.aptitud?.abstraccion?.posicionPorcentaje ?? 88;
     const detalle = espectro.aptitud?.atencionDetalle?.posicionPorcentaje ?? 76;
 
-    // 3. Analizar respuestas técnicas para bonificaciones directas
+    // 3. Analizar respuestas técnicas por área y habilidades de la matriz de aptitudes
     const respuestas = testTecnico?.respuestas || [];
-    let bonifHexagonal = 0;
-    let bonifNest = 0;
-    let bonifPostgres = 0;
+    let correctasFront = 0;
+    let totalFront = 0;
+    let correctasBack = 0;
+    let totalBack = 0;
+    let correctasSys = 0;
+    let totalSys = 0;
 
     for (const r of respuestas) {
-      const enunciado = (r.pregunta?.enunciado || '').toLowerCase();
-      if (r.es_correcta) {
-        if (enunciado.includes('hexagonal') || enunciado.includes('puertos')) bonifHexagonal = 8;
-        if (enunciado.includes('nestjs') || enunciado.includes('inyección')) bonifNest = 7;
-        if (enunciado.includes('postgres') || enunciado.includes('schema')) bonifPostgres = 6;
+      const cat = (r.pregunta?.categoria || '').toUpperCase();
+      const esCorrecta = Boolean(r.es_correcta);
+      if (cat.includes('FRONT')) {
+        totalFront++;
+        if (esCorrecta) correctasFront++;
+      } else if (cat.includes('BACK')) {
+        totalBack++;
+        if (esCorrecta) correctasBack++;
+      } else if (cat.includes('SYS')) {
+        totalSys++;
+        if (esCorrecta) correctasSys++;
       }
     }
 
-    // 4. Ponderación algorítmica por Squad
-    // TEAM-01 (Fénix): Fullstack TS & Arquitectura Cloud -> NestJS, Clean Arch, abstracción alta, colaboración
+    const pctFront = totalFront > 0 ? (correctasFront / totalFront) * 100 : 50;
+    const pctBack = totalBack > 0 ? (correctasBack / totalBack) * 100 : 50;
+    const pctSys = totalSys > 0 ? (correctasSys / totalSys) * 100 : 50;
+
+    // Analizar habilidades autoevaluadas en la matriz de aptitud
+    const matrizCategorias = perfilComp.matrizAptitudes?.categorias || [];
+    const skillLevel = (skillName: string): number => {
+      const target = skillName.toLowerCase();
+      for (const cat of matrizCategorias) {
+        for (const it of cat.items || []) {
+          if (it.habilidad.toLowerCase().includes(target)) {
+            return it.nivelActual || 0;
+          }
+        }
+      }
+      return 0;
+    };
+
+    const nivelPhp = Math.max(skillLevel('php'), skillLevel('laravel'));
+    const nivelReactVue = Math.max(skillLevel('react'), skillLevel('vue'), skillLevel('javascript'));
+    const nivelSql = Math.max(skillLevel('relacionales'), skillLevel('sql'));
+    const nivelCms = Math.max(skillLevel('wordpress'), skillLevel('drupal'));
+    const nivelMoodle = skillLevel('moodle');
+    const nivelSys = Math.max(skillLevel('redes'), skillLevel('seguridad'), skillLevel('docker'));
+    const nivelTs = skillLevel('typescript');
+
+    // 4. Ponderación algorítmica por los 4 Squads Oficiales
+
+    // TEAM-01: Fénix (React, Vue, PHP, Laravel, MySQL, PostgreSQL)
     const scoreFenix = Math.min(
       98,
-      Math.round(notaTecnica * 5.2 + abstrac * 0.28 + colab * 0.20 + bonifHexagonal + bonifNest),
+      Math.round(
+        notaTecnica * 3.5 +
+        pctBack * 0.25 +
+        pctFront * 0.15 +
+        nivelPhp * 3 +
+        nivelReactVue * 2.5 +
+        nivelSql * 2 +
+        colab * 0.10,
+      ),
     );
 
-    // TEAM-02 (Vulcano): Backend & Microservicios DevOps -> Rigor, razonamiento lógico, backend
-    const scoreVulcano = Math.min(
-      95,
-      Math.round(notaTecnica * 4.8 + rigor * 0.26 + razon * 0.24 + bonifPostgres),
+    // TEAM-02: Departamento de Sistemas (Express, JS, TS, NodeJS, React, Fortinet, Windows Server, Active Directory, Redes, Hardware)
+    const scoreSistemas = Math.min(
+      98,
+      Math.round(
+        notaTecnica * 3.0 +
+        pctSys * 0.40 +
+        nivelSys * 4.5 +
+        detalle * 0.18 +
+        adapt * 0.12,
+      ),
     );
 
-    // TEAM-03 (Titán): Frontend React, Mobile & UX -> Adaptabilidad, colaboración, interfaces
-    const scoreTitan = Math.min(
-      95,
-      Math.round(notaTecnica * 4.5 + adapt * 0.30 + colab * 0.22),
+    // TEAM-03: Presencia Web (WordPress, Drupal, NextJS, Strapi, Squidex, TypeScript, PHP, Golang)
+    const scorePresencia = Math.min(
+      98,
+      Math.round(
+        notaTecnica * 3.2 +
+        pctFront * 0.35 +
+        nivelCms * 4 +
+        nivelTs * 2.5 +
+        adapt * 0.15 +
+        colab * 0.10,
+      ),
     );
 
-    // TEAM-04 (Orión): Data Engineering, IA & Analytics -> Razonamiento deductivo y abstracción
-    const scoreOrion = Math.min(
-      95,
-      Math.round(notaTecnica * 4.8 + razon * 0.32 + abstrac * 0.18 + bonifPostgres),
-    );
-
-    // TEAM-05 (Atlas): QA Automatizado & Ciberseguridad -> Detalle de casos borde, rigor técnico
-    const scoreAtlas = Math.min(
-      95,
-      Math.round(notaTecnica * 4.4 + detalle * 0.35 + rigor * 0.20),
-    );
-
-    // TEAM-06 (Hydra): Integraciones & Modernización de Software -> Adaptabilidad, resiliencia ante código legacy
-    const scoreHydra = Math.min(
-      95,
-      Math.round(notaTecnica * 4.6 + adapt * 0.32 + razon * 0.20),
+    // TEAM-04: Acción Docente (PHP, JS/DOM/React, Node/TS, RabbitMQ, SQL/NoSQL, TDD, Moodle)
+    const scoreDocente = Math.min(
+      98,
+      Math.round(
+        notaTecnica * 3.4 +
+        pctBack * 0.25 +
+        nivelMoodle * 4.5 +
+        nivelTs * 2.5 +
+        abstrac * 0.18 +
+        rigor * 0.12,
+      ),
     );
 
     const scoresMap: Record<
@@ -607,40 +659,28 @@ export class EvaluacionService {
       { afinidad: number; justificacion: string; fortalezas: string[] }
     > = {
       'TEAM-01': {
-        afinidad: Math.max(65, scoreFenix),
+        afinidad: Math.max(55, scoreFenix),
         justificacion:
-          'Alineación sobresaliente con Arquitectura Hexagonal, NestJS y modelado de dominio en TypeScript. Su espectro muestra elevada abstracción sistémica y trabajo sinérgico en squad, encajando de forma óptima con Team Fénix.',
-        fortalezas: ['Clean Architecture & NestJS', 'Tipado Estricto TypeScript', 'Pensamiento Sistémico Modular'],
+          'Excelente encaje con el desarrollo de aplicaciones web internas y proyectos europeos de Fénix. Destaca en arquitectura MVC con PHP/Laravel, interfaces reactivas (React/Vue) y modelado relacional en MySQL y PostgreSQL.',
+        fortalezas: ['PHP & Laravel', 'React & Vue', 'MySQL / PostgreSQL'],
       },
       'TEAM-02': {
-        afinidad: Math.max(60, scoreVulcano),
+        afinidad: Math.max(55, scoreSistemas),
         justificacion:
-          'Capacidad para abordar servicios backend distribuidos, contenedores y automatización. Su perfil metódico favorece la estabilidad operativa.',
-        fortalezas: ['Servicios Backend', 'Contenedores y DevOps', 'Rigor de Implementación'],
+          'Perfil idóneo para el Departamento de Sistemas: soporte tecnológico resolutivo a incidencias, administración de redes e infraestructura, servidores Windows/Linux, seguridad perimetral Fortinet y herramientas operativas en Node/Express.',
+        fortalezas: ['Redes & Infraestructura', 'Windows Server & Active Directory', 'Hardware & Fortinet'],
       },
       'TEAM-03': {
-        afinidad: Math.max(55, scoreTitan),
+        afinidad: Math.max(55, scorePresencia),
         justificacion:
-          'Apto para ciclo rápido de maquetación en React, design systems e interfaces de usuario reactivas con alta adaptabilidad visual.',
-        fortalezas: ['Desarrollo Web React', 'Experiencia de Usuario (UX)', 'Adaptabilidad Dinámica'],
+          'Alineación óptima para la imagen pública web de FUNIBER y universidades asociadas. Demuestra solidez en CMS desacoplados (WordPress, Drupal, Strapi), maquetación moderna con Next.js/TypeScript y automatización con Go.',
+        fortalezas: ['NextJS & TypeScript', 'WordPress & Drupal', 'CMS Headless & PHP'],
       },
       'TEAM-04': {
-        afinidad: Math.max(55, scoreOrion),
+        afinidad: Math.max(55, scoreDocente),
         justificacion:
-          'Fuerte razonamiento lógico analítico, apto para pipelines de procesamiento de datos, modelos de IA y consultas analíticas.',
-        fortalezas: ['Razonamiento Lógico Analítico', 'Estructuras de Datos Complejas', 'Potencial en IA'],
-      },
-      'TEAM-05': {
-        afinidad: Math.max(55, scoreAtlas),
-        justificacion:
-          'Atención al detalle y anticipación de casos borde, ideal para testing automatizado E2E, seguridad OWASP y control de regresiones.',
-        fortalezas: ['Testing Automatizado', 'Detección de Casos Borde', 'Sensibilidad a la Calidad'],
-      },
-      'TEAM-06': {
-        afinidad: Math.max(55, scoreHydra),
-        justificacion:
-          'Capacidad de resiliencia ante código heterogéneo o legacy, modernización gradual de aplicaciones y protocolos de interoperabilidad.',
-        fortalezas: ['Resiliencia ante Código Legacy', 'Integración de Servicios', 'Adaptabilidad Técnica'],
+          'Afinidad sobresaliente para los campus virtuales de Acción Docente: administración y extensión de Moodle con PHP/plugins, microservicios orientados a eventos con RabbitMQ, librerías en TypeScript y disciplina TDD.',
+        fortalezas: ['Moodle & PHP', 'RabbitMQ & Microservicios', 'TypeScript & TDD'],
       },
     };
 

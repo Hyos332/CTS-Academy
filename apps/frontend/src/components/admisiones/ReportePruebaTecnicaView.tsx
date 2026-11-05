@@ -75,13 +75,13 @@ export const ReportePruebaTecnicaView: React.FC<ReportePruebaTecnicaViewProps> =
   const preguntas = informe.preguntas || [];
   const squad = informe.squadRecomendado || {
     codigo: 'TEAM-01',
-    nombre: 'Team Fénix',
-    especialidad: 'Fullstack TypeScript & Arquitectura Cloud',
+    nombre: 'Fénix',
+    especialidad: 'Desarrollo de aplicaciones web internas y proyectos europeos',
     lider: 'Diego Moys (Tech Lead)',
     afinidadPorcentaje: 88,
     justificacion:
-      'Solidez destacada en POO, capas backend y asincronía. Encaja de forma óptima en el stack de Team Fénix.',
-    fortalezasClave: ['Arquitectura Limpia & NestJS', 'POO & Patrones', 'Asincronía & APIs'],
+      'Solidez destacada en desarrollo de aplicaciones web, APIs RESTful con PHP/Laravel y frontend con React/Vue. Encaja de forma óptima en el stack de Fénix.',
+    fortalezasClave: ['Laravel & PHP', 'React & Vue', 'MySQL / PostgreSQL'],
   };
 
   const puntuaciones = informe.puntuacionesPorArea || {

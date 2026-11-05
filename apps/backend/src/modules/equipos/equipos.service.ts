@@ -270,6 +270,8 @@ export class EquiposService {
         codigo: eq.codigo,
         nombre: eq.nombre,
         especialidad: eq.especialidad,
+        descripcion: eq.descripcion,
+        tecnologias: eq.tecnologias || [],
         lider: `${eq.lider.nombre} ${eq.lider.apellidos}`,
         alumnosActivos: eq.alumnos.length,
         miembros: eq.alumnos.map((a) => ({

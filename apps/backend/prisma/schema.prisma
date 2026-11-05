@@ -66,9 +66,11 @@ model Sesion {
 model Equipo {
   id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   lider_usuario_id String         @unique @db.Uuid
-  codigo           String         @unique @db.VarChar(20) // TEAM-01 a TEAM-06
+  codigo           String         @unique @db.VarChar(20) // TEAM-01 a TEAM-04
   nombre           String         @db.VarChar(100)
-  especialidad     String         @db.VarChar(50)
+  especialidad     String         @db.VarChar(255)
+  descripcion      String?        @db.Text
+  tecnologias      String[]       @default([])
   creado_en        DateTime       @default(now()) @db.Timestamptz(6)
 
   lider            Usuario        @relation("LiderEquipo", fields: [lider_usuario_id], references: [id])

@@ -158,71 +158,77 @@ async function main() {
     },
   });
 
-  // 2. Los 6 Equipos de Desarrollo CTS (TEAM-01 a TEAM-06)
-  console.log('🛡️ Creando los 6 squads permanentes de desarrollo CTS...');
+  // 2. Los 4 Equipos Oficiales de Desarrollo CTS (TEAM-01 a TEAM-04)
+  console.log('🛡️ Creando los 4 squads oficiales de desarrollo CTS...');
   const equipoFenix = await prisma.equipo.upsert({
     where: { codigo: 'TEAM-01' },
-    update: {},
+    update: {
+      nombre: 'Fénix',
+      especialidad: 'Desarrollo de aplicaciones web internas y proyectos europeos',
+      descripcion: 'Equipo encargado de proyectos internos de FUNIBER y europeos, meramente desarrollo de aplicaciones web.',
+      tecnologias: ['React', 'Vue', 'PHP', 'Laravel', 'MySQL', 'PostgreSQL'],
+    },
     create: {
       codigo: 'TEAM-01',
-      nombre: 'Team Fénix',
-      especialidad: 'Fullstack TypeScript & Arquitectura Cloud',
+      nombre: 'Fénix',
+      especialidad: 'Desarrollo de aplicaciones web internas y proyectos europeos',
+      descripcion: 'Equipo encargado de proyectos internos de FUNIBER y europeos, meramente desarrollo de aplicaciones web.',
+      tecnologias: ['React', 'Vue', 'PHP', 'Laravel', 'MySQL', 'PostgreSQL'],
       lider_usuario_id: liderUser.id,
     },
   });
 
-  const equipoVulcano = await prisma.equipo.upsert({
+  const equipoSistemas = await prisma.equipo.upsert({
     where: { codigo: 'TEAM-02' },
-    update: {},
+    update: {
+      nombre: 'Departamento de Sistemas',
+      especialidad: 'Soporte tecnológico, infraestructura de redes y mantenimiento',
+      descripcion: 'Equipo encargado de dar soporte y ayuda a diferentes incidencias de la parte tecnológica.',
+      tecnologias: ['Express', 'JavaScript', 'TypeScript', 'NodeJS', 'React', 'Fortinet', 'Windows Server', 'Active Directory', 'Redes e Infraestructura', 'Mantenimiento de Hardware / PCs'],
+    },
     create: {
       codigo: 'TEAM-02',
-      nombre: 'Team Vulcano',
-      especialidad: 'Backend & Microservicios DevOps',
+      nombre: 'Departamento de Sistemas',
+      especialidad: 'Soporte tecnológico, infraestructura de redes y mantenimiento',
+      descripcion: 'Equipo encargado de dar soporte y ayuda a diferentes incidencias de la parte tecnológica.',
+      tecnologias: ['Express', 'JavaScript', 'TypeScript', 'NodeJS', 'React', 'Fortinet', 'Windows Server', 'Active Directory', 'Redes e Infraestructura', 'Mantenimiento de Hardware / PCs'],
       lider_usuario_id: liderVulcano.id,
     },
   });
 
-  const equipoTitan = await prisma.equipo.upsert({
+  const equipoPresencia = await prisma.equipo.upsert({
     where: { codigo: 'TEAM-03' },
-    update: {},
+    update: {
+      nombre: 'Presencia Web',
+      especialidad: 'Imagen pública web FUNIBER, universidades asociadas y proyectos europeos',
+      descripcion: 'Equipo encargado de manejar la imagen pública de la web de FUNIBER y universidades asociadas así como los proyectos europeos.',
+      tecnologias: ['WordPress', 'Drupal', 'NextJS', 'Strapi', 'Squidex', 'TypeScript', 'PHP', 'Golang'],
+    },
     create: {
       codigo: 'TEAM-03',
-      nombre: 'Team Titán',
-      especialidad: 'Frontend React, Mobile & UX',
+      nombre: 'Presencia Web',
+      especialidad: 'Imagen pública web FUNIBER, universidades asociadas y proyectos europeos',
+      descripcion: 'Equipo encargado de manejar la imagen pública de la web de FUNIBER y universidades asociadas así como los proyectos europeos.',
+      tecnologias: ['WordPress', 'Drupal', 'NextJS', 'Strapi', 'Squidex', 'TypeScript', 'PHP', 'Golang'],
       lider_usuario_id: liderTitan.id,
     },
   });
 
-  const equipoOrion = await prisma.equipo.upsert({
+  const equipoDocente = await prisma.equipo.upsert({
     where: { codigo: 'TEAM-04' },
-    update: {},
+    update: {
+      nombre: 'Acción Docente',
+      especialidad: 'Campus virtuales Moodle, microservicios orientados a eventos y librerías TypeScript',
+      descripcion: 'Equipo encargado de los campus virtuales de la red universitaria FUNIBER. Gestionamos y administramos las instancias de Moodle (servidores, actualizaciones de versión, configuración) y desarrollamos plugins y temas a medida. Además, construyen microservicios orientados a eventos que integran los sistemas de otros dominios con los campus, y también desarrollamos librerías propias en TypeScript.',
+      tecnologias: ['PHP', 'JavaScript', 'DOM', 'React', 'NodeJS', 'TypeScript', 'RabbitMQ', 'Bases de Datos Relacionales', 'Bases de Datos No Relacionales', 'TDD'],
+    },
     create: {
       codigo: 'TEAM-04',
-      nombre: 'Team Orión',
-      especialidad: 'Data Engineering, IA & Analytics',
+      nombre: 'Acción Docente',
+      especialidad: 'Campus virtuales Moodle, microservicios orientados a eventos y librerías TypeScript',
+      descripcion: 'Equipo encargado de los campus virtuales de la red universitaria FUNIBER. Gestionamos y administramos las instancias de Moodle (servidores, actualizaciones de versión, configuración) y desarrollamos plugins y temas a medida. Además, construyen microservicios orientados a eventos que integran los sistemas de otros dominios con los campus, y también desarrollamos librerías propias en TypeScript.',
+      tecnologias: ['PHP', 'JavaScript', 'DOM', 'React', 'NodeJS', 'TypeScript', 'RabbitMQ', 'Bases de Datos Relacionales', 'Bases de Datos No Relacionales', 'TDD'],
       lider_usuario_id: liderOrion.id,
-    },
-  });
-
-  const equipoAtlas = await prisma.equipo.upsert({
-    where: { codigo: 'TEAM-05' },
-    update: {},
-    create: {
-      codigo: 'TEAM-05',
-      nombre: 'Team Atlas',
-      especialidad: 'QA Automatizado & Ciberseguridad',
-      lider_usuario_id: liderAtlas.id,
-    },
-  });
-
-  const equipoHydra = await prisma.equipo.upsert({
-    where: { codigo: 'TEAM-06' },
-    update: {},
-    create: {
-      codigo: 'TEAM-06',
-      nombre: 'Team Hydra',
-      especialidad: 'Integraciones & Modernización de Software',
-      lider_usuario_id: liderHydra.id,
     },
   });
 
