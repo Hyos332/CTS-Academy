@@ -5,6 +5,7 @@ import { apiClient } from '../../api/client';
 import { Navbar } from '../../components/common/Navbar';
 import {
   ArrowLeft,
+  Menu,
   Calendar,
   Video,
   UserCheck,
@@ -22,6 +23,8 @@ import {
   Terminal,
   Sparkles,
   Users,
+  Building2,
+  GraduationCap,
   X,
 } from 'lucide-react';
 import {
@@ -63,6 +66,7 @@ export const CandidatoPerfilPage: React.FC = () => {
   const [modalInvitacion, setModalInvitacion] = useState(false);
 
   // Vista activa: 'resumen' (página única sintetizada) o desglose individual
+  const [sidebarAbierto, setSidebarAbierto] = useState(true);
   const [vistaDetallada, setVistaDetallada] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz' | 'tecnicoCts'>('resumen');
   // Pestaña activa en el expediente: 'entrevista' | 'afinidad' | 'tests'
   const [tabActivo, setTabActivo] = useState<'entrevista' | 'afinidad' | 'tests'>('entrevista');
@@ -266,9 +270,105 @@ export const CandidatoPerfilPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans text-[#212121]">
-      <Navbar />
+      <Navbar onToggleSidebar={() => setSidebarAbierto((prev) => !prev)} isSidebarOpen={sidebarAbierto} />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
+      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-[calc(100vh-64px)]">
+        
+        {/* ========================================================= */}
+        {/* SIDEBAR DE NAVEGACIÓN (SIEMPRE ACCESIBLE EN CANDIDATO)   */}
+        {/* ========================================================= */}
+        {sidebarAbierto && (
+          <aside className="w-full lg:w-72 xl:w-80 shrink-0 bg-white border-r border-[#E0E0E0] lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:overflow-y-auto flex flex-col justify-between p-4 space-y-4 z-20">
+            <div className="space-y-4">
+              {/* Tarjeta de Contexto del Candidato en Foco */}
+              <div className="bg-[#E6EFF5] border border-[#CCDDEB] rounded-lg p-3.5 space-y-2">
+                <span className="text-[10px] font-bold text-[#01579B] uppercase tracking-wider block">
+                  Expediente en Foco
+                </span>
+                <p className="text-xs font-bold text-[#212121] truncate" title={candidato?.nombreCompleto}>
+                  {candidato?.nombreCompleto}
+                </p>
+                <div className="pt-1 border-t border-[#CCDDEB] flex items-center justify-between text-[11px] text-[#616161]">
+                  <span className="truncate max-w-[130px]">{candidato?.convocatoriaNombre || 'Convocatoria'}</span>
+                  <span className="font-semibold text-[#01579B] shrink-0">{candidato?.estado_postulacion}</span>
+                </div>
+              </div>
+
+              {/* Menú de Navegación Vertical */}
+              <nav className="space-y-1">
+                <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#757575]">
+                  Módulos de Admisión
+                </div>
+
+                <button
+                  onClick={() => navigate('/admisiones/panel?seccion=candidatos')}
+                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Users className="w-4 h-4 text-[#757575]" />
+                    <span className="truncate">Aspirantes & Selección</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => navigate('/admisiones/panel?seccion=equipos')}
+                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Building2 className="w-4 h-4 text-[#757575]" />
+                    <span className="truncate">Equipos CTS (Squads)</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => navigate('/admisiones/panel?seccion=alumnos')}
+                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <GraduationCap className="w-4 h-4 text-[#757575]" />
+                    <span className="truncate">Alumnos PROFER</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => navigate('/admisiones/panel?seccion=convocatoria')}
+                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Calendar className="w-4 h-4 text-[#757575]" />
+                    <span className="truncate">Convocatoria & Periodo</span>
+                  </div>
+                </button>
+              </nav>
+            </div>
+
+            {/* Retorno al Panel */}
+            <div className="pt-3 border-t border-[#EEEEEE]">
+              <button
+                onClick={() => navigate('/admisiones/panel')}
+                className="w-full py-2 px-3 border border-[#E0E0E0] text-[#424242] hover:bg-[#F5F5F5] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#616161]" />
+                <span>Volver al Panel General</span>
+              </button>
+            </div>
+          </aside>
+        )}
+
+        {/* Botón Flotante para reabrir Sidebar */}
+        {!sidebarAbierto && (
+          <button
+            type="button"
+            onClick={() => setSidebarAbierto(true)}
+            className="fixed left-0 top-20 z-40 bg-[#01579B] text-white p-2.5 rounded-r-lg shadow-md hover:bg-[#004174] transition-all flex items-center space-x-1.5 text-xs font-semibold cursor-pointer"
+            title="Abrir menú lateral de navegación"
+          >
+            <Menu className="w-4 h-4" />
+            <span className="hidden sm:inline">Menú</span>
+          </button>
+        )}
+
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 space-y-6 overflow-y-auto">
         
         {/* ========================================================= */}
         {/* ENCABEZADO PRINCIPAL DE EXPEDIENTE + ACCIONES DE DICTAMEN */}
@@ -576,21 +676,23 @@ export const CandidatoPerfilPage: React.FC = () => {
         {vistaDetallada === 'resumen' && (
           <div className="space-y-6">
             
-                        {/* Pestañas de Navegación del Expediente */}
+                        {/* Pestañas de Navegación del Expediente con Colores Distintivos */}
             <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs p-1.5 flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setTabActivo('entrevista')}
-                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-xs transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-xs transition-all cursor-pointer ${
                   tabActivo === 'entrevista'
-                    ? 'bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] shadow-2xs font-bold'
+                    ? 'bg-[#01579B] text-white shadow-2xs font-bold'
                     : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
                 }`}
               >
-                <Video className={`w-3.5 h-3.5 ${tabActivo === 'entrevista' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                <Video className={`w-3.5 h-3.5 ${tabActivo === 'entrevista' ? 'text-white' : 'text-[#757575]'}`} />
                 <span>1. Entrevista & Deliberación</span>
                 {candidato?.entrevista && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#CCDDEB] text-[#01579B] font-bold">
+                  <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    tabActivo === 'entrevista' ? 'bg-white/20 text-white' : 'bg-[#E6EFF5] text-[#01579B]'
+                  }`}>
                     ✓
                   </span>
                 )}
@@ -599,16 +701,18 @@ export const CandidatoPerfilPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTabActivo('afinidad')}
-                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-xs transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-xs transition-all cursor-pointer ${
                   tabActivo === 'afinidad'
-                    ? 'bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] shadow-2xs font-bold'
+                    ? 'bg-[#00695C] text-white shadow-2xs font-bold'
                     : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
                 }`}
               >
-                <Users className={`w-3.5 h-3.5 ${tabActivo === 'afinidad' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                <Users className={`w-3.5 h-3.5 ${tabActivo === 'afinidad' ? 'text-white' : 'text-[#757575]'}`} />
                 <span>2. Afinidad de Equipos (Squads)</span>
                 {sugerido && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#CCDDEB] text-[#01579B] font-bold">
+                  <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    tabActivo === 'afinidad' ? 'bg-white/20 text-white' : 'bg-[#E0F2F1] text-[#00695C]'
+                  }`}>
                     {sugerido.afinidadPorcentaje}%
                   </span>
                 )}
@@ -617,13 +721,13 @@ export const CandidatoPerfilPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTabActivo('tests')}
-                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-xs transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-xs transition-all cursor-pointer ${
                   tabActivo === 'tests'
-                    ? 'bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] shadow-2xs font-bold'
+                    ? 'bg-[#37474F] text-white shadow-2xs font-bold'
                     : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
                 }`}
               >
-                <Sparkles className={`w-3.5 h-3.5 ${tabActivo === 'tests' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                <Sparkles className={`w-3.5 h-3.5 ${tabActivo === 'tests' ? 'text-white' : 'text-[#757575]'}`} />
                 <span>3. Resultados de los Tests</span>
               </button>
             </div>
@@ -631,34 +735,33 @@ export const CandidatoPerfilPage: React.FC = () => {
             {/* 1. SECCIÓN ENTREVISTA & ANOTACIONES */}
             {tabActivo === 'entrevista' && (
               <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
-                    <Video className="w-4 h-4 text-[#01579B]" />
-                    <span>Entrevista de Selección & Deliberación Cualitativa</span>
-                  </h3>
-                  <p className="text-[11px] text-[#757575] mt-0.5">
-                    Coordinación Google Meet y registro formal de observaciones según la plantilla oficial.
-                  </p>
-                </div>
+                <div className="px-6 py-3.5 bg-[#01579B] text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-1.5 bg-white/15 rounded-md text-white">
+                      <Video className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                      1. Entrevista de Selección & Deliberación Cualitativa
+                    </h3>
+                  </div>
 
-                {candidato.entrevista ? (
-                  <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded bg-[#E8F0FE] text-[#084DC4] border border-[#C4D9FD]">
-                    Estado: {candidato.entrevista.estado}
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => {
-                      generarEnlaceMeet();
-                      setModalEntrevista(true);
-                    }}
-                    className="px-3.5 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
-                  >
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Agendar Google Meet</span>
-                  </button>
-                )}
-              </div>
+                  {candidato.entrevista ? (
+                    <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-white/20 text-white border border-white/30">
+                      Estado: {candidato.entrevista.estado}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        generarEnlaceMeet();
+                        setModalEntrevista(true);
+                      }}
+                      className="px-3.5 py-1.5 bg-white text-[#01579B] hover:bg-[#FAFAFA] rounded-lg text-xs font-bold shadow-2xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Agendar Google Meet</span>
+                    </button>
+                  )}
+                </div>
 
               <div className="p-6 space-y-6">
                 {/* Bloque Google Meet Activo */}
@@ -819,23 +922,22 @@ export const CandidatoPerfilPage: React.FC = () => {
             {/* 2. SECCIÓN AFINIDAD CON SQUADS OFICIALES */}
             {tabActivo === 'afinidad' && (
               <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div>
-                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-[#01579B]" />
-                    <span>Afinidad Algorítmica con Squads CTS Oficiales</span>
-                  </h3>
-                  <p className="text-[11px] text-[#757575] mt-0.5">
-                    Evaluación tecnológica en los 4 equipos y sus respectivos líderes técnicos.
-                  </p>
-                </div>
+                <div className="px-6 py-3.5 bg-[#00695C] text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-1.5 bg-white/15 rounded-md text-white">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                      2. Afinidad Algorítmica con Squads CTS Oficiales
+                    </h3>
+                  </div>
 
-                {sugerido && (
-                  <span className="text-[11px] font-bold px-3 py-1 bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9] rounded-full">
-                    Top Match Recomendado: {sugerido.nombre} ({sugerido.afinidadPorcentaje}%)
-                  </span>
-                )}
-              </div>
+                  {sugerido && (
+                    <span className="text-[11px] font-bold px-3 py-1 bg-white/20 text-white border border-white/30 rounded-full">
+                      Top Match Recomendado: {sugerido.nombre} ({sugerido.afinidadPorcentaje}%)
+                    </span>
+                  )}
+                </div>
 
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(recomendacion?.rankingEquipos || [
@@ -916,17 +1018,19 @@ export const CandidatoPerfilPage: React.FC = () => {
             {/* 3. SECCIÓN RESULTADOS DE TESTS */}
             {tabActivo === 'tests' && (
               <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex justify-between items-center">
-                <div>
-                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-[#01579B]" />
-                    <span>Resultados de las Baterías de Admisión</span>
-                  </h3>
-                  <p className="text-[11px] text-[#757575] mt-0.5">
-                    Capturas visuales directas: Diagrama de radar para Aptitud y Tabla oficial de decatipos para Actitud.
-                  </p>
+                <div className="px-6 py-3.5 bg-[#37474F] text-white flex justify-between items-center">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-1.5 bg-white/15 rounded-md text-white">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                      3. Resultados de las Baterías de Admisión
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-white/20 text-white border border-white/30">
+                    Baterías Oficiales
+                  </span>
                 </div>
-              </div>
 
               <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
@@ -1450,6 +1554,7 @@ export const CandidatoPerfilPage: React.FC = () => {
         )}
 
       </main>
+      </div>
     </div>
   );
 };

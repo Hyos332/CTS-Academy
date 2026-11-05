@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
 import { Navbar } from '../../components/common/Navbar';
 import {
   Users,
+  Menu,
   Lock,
   ChevronRight,
   ChevronLeft,
@@ -35,10 +36,22 @@ export const AdmisionesPanelPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Sección activa en el sidebar de navegación
+  const [searchParams] = useSearchParams();
+  const seccionUrl = searchParams.get('seccion');
+  // Sección activa en el sidebar de navegación (soporta sincronización vía URL)
   const [seccionActiva, setSeccionActiva] = useState<
     'candidatos' | 'equipos' | 'alumnos' | 'convocatoria'
-  >('candidatos');
+  >(
+    seccionUrl && ['candidatos', 'equipos', 'alumnos', 'convocatoria'].includes(seccionUrl)
+      ? (seccionUrl as any)
+      : 'candidatos'
+  );
+
+  React.useEffect(() => {
+    if (seccionUrl && ['candidatos', 'equipos', 'alumnos', 'convocatoria'].includes(seccionUrl)) {
+      setSeccionActiva(seccionUrl as any);
+    }
+  }, [seccionUrl]);
 
   // Filtros de búsqueda
   const [filtroConvocatoria, setFiltroConvocatoria] = useState<string>('TODAS');
@@ -264,7 +277,7 @@ export const AdmisionesPanelPage: React.FC = () => {
         {/* SIDEBAR DE NAVEGACIÓN UNIFICADO AL LATERAL (FUNIBER SD)   */}
         {/* ========================================================= */}
         {sidebarAbierto && (
-          <aside className="w-full lg:w-72 xl:w-80 shrink-0 bg-white border-r border-[#E0E0E0] min-h-[calc(100vh-64px)] flex flex-col justify-between p-4 space-y-4 z-20">
+          <aside className="w-full lg:w-72 xl:w-80 shrink-0 bg-white border-r border-[#E0E0E0] lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:overflow-y-auto flex flex-col justify-between p-4 space-y-4 z-20">
             <div className="space-y-4">
               {/* Tarjeta de Contexto de la Convocatoria */}
               <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-3.5 space-y-2.5">
@@ -451,6 +464,19 @@ export const AdmisionesPanelPage: React.FC = () => {
           </aside>
         )}
 
+        {/* Botón Flotante para reabrir Sidebar si está oculto (Siempre Accesible) */}
+        {!sidebarAbierto && (
+          <button
+            type="button"
+            onClick={() => setSidebarAbierto(true)}
+            className="fixed left-0 top-20 z-40 bg-[#01579B] text-white p-2.5 rounded-r-lg shadow-md hover:bg-[#004174] transition-all flex items-center space-x-1.5 text-xs font-semibold cursor-pointer"
+            title="Abrir menú lateral de navegación"
+          >
+            <Menu className="w-4 h-4" />
+            <span className="hidden sm:inline">Menú</span>
+          </button>
+        )}
+
         {/* ========================================================= */}
         {/* ÁREA DE CONTENIDO PRINCIPAL SEGÚN VENTANA ACTIVA          */}
         {/* ========================================================= */}
@@ -461,28 +487,28 @@ export const AdmisionesPanelPage: React.FC = () => {
           {/* ========================================================= */}
           {seccionActiva === 'candidatos' && (
             <div className="space-y-6">
-              {/* Cabecera de la Sección */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Cabecera con Color Identificativo (Azul Primario FUNIBER) */}
+              <div className="bg-[#01579B] text-white rounded-lg px-6 py-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-[#01579B]" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#CCDDEB] block">
+                    Gestión de Postulantes
+                  </span>
+                  <h1 className="text-lg font-bold text-white flex items-center space-x-2 mt-0.5">
+                    <Users className="w-5 h-5 text-white" />
                     <span>Aspirantes & Embudo de Admisión</span>
                   </h1>
-                  <p className="text-xs text-[#757575] mt-0.5">
-                    Seguimiento individual de postulantes, credenciales enviadas y convocatorias a entrevista.
-                  </p>
                 </div>
                 <div className="flex items-center space-x-2 self-start sm:self-auto">
                   <button
                     onClick={() => setShowImportSedeModal(true)}
-                    className="px-3.5 py-2 border border-[#E0E0E0] bg-white hover:bg-[#F5F5F5] text-[#424242] text-xs font-semibold rounded-lg shadow-2xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
+                    className="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
                   >
-                    <UploadCloud className="w-3.5 h-3.5 text-[#616161]" />
+                    <UploadCloud className="w-3.5 h-3.5" />
                     <span>Importar Nómina Sede</span>
                   </button>
                   <button
                     onClick={() => setShowRegisterModal(true)}
-                    className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
+                    className="px-4 py-2 bg-white text-[#01579B] hover:bg-[#FAFAFA] text-xs font-bold rounded-lg shadow-xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>Nuevo Aspirante</span>
@@ -587,8 +613,16 @@ export const AdmisionesPanelPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Tabla de Postulantes Activos (Estilo Oficial FUNIBER SD) */}
+              {/* Tabla de Postulantes Activos */}
               <div className="bg-white border border-[#E0E0E0] rounded-lg shadow-xs overflow-hidden">
+                <div className="px-5 py-3 bg-[#E6EFF5] border-b border-[#CCDDEB] border-l-4 border-l-[#01579B] flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-4 h-4 text-[#01579B]" />
+                    <span className="text-xs font-bold text-[#01579B] uppercase tracking-wider">
+                      Listado de Postulantes ({totalCandidatosFiltrados} registros)
+                    </span>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs text-[#424242]">
                     <thead className="bg-[#FAFAFA] text-[11px] font-bold uppercase tracking-wider text-[#616161] border-b border-[#E0E0E0]">
@@ -822,16 +856,20 @@ export const AdmisionesPanelPage: React.FC = () => {
           {/* ========================================================= */}
           {seccionActiva === 'equipos' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Cabecera con Color Identificativo (Teal / Verde Azulado) */}
+              <div className="bg-[#00695C] text-white rounded-lg px-6 py-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
-                    <Building2 className="w-5 h-5 text-[#01579B]" />
-                    <span>Equipos de Desarrollo & Squads CTS</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#B2DFDB] block">
+                    Estructura Tecnológica
+                  </span>
+                  <h1 className="text-lg font-bold text-white flex items-center space-x-2 mt-0.5">
+                    <Building2 className="w-5 h-5 text-white" />
+                    <span>Equipos de Desarrollo CTS (Squads)</span>
                   </h1>
-                  <p className="text-xs text-[#757575] mt-0.5">
-                    Coordinación de especialidades técnicas, capacidad de acogida y supervisión de los 4 líderes de squad.
-                  </p>
                 </div>
+                <span className="text-xs font-bold bg-white/15 px-3 py-1.5 rounded-md border border-white/20 text-white self-start sm:self-auto">
+                  4 Squads Oficiales FUNIBER
+                </span>
               </div>
 
               {/* Grid 2x2 de los 4 Squads Oficiales FUNIBER */}
@@ -847,10 +885,27 @@ export const AdmisionesPanelPage: React.FC = () => {
                   else if (eq.nombre?.includes('Sistemas') || eq.codigo === 'TEAM-02') techLeader = 'Lucía Vargas';
                   else if (eq.nombre?.includes('Docente') || eq.codigo === 'TEAM-04') techLeader = 'Marcos Navarro';
 
+                  // Map color accent per squad
+                  let squadBorder = 'border-t-[#01579B]';
+                  let squadBadge = 'bg-[#E6EFF5] text-[#01579B] border-[#CCDDEB]';
+                  if (eq.nombre?.includes('Presencia') || eq.codigo === 'TEAM-03') {
+                    squadBorder = 'border-t-[#0288D1]';
+                    squadBadge = 'bg-[#E1F5FE] text-[#0277BD] border-[#B3E5FC]';
+                  } else if (eq.nombre?.includes('Fénix') || eq.codigo === 'TEAM-01') {
+                    squadBorder = 'border-t-[#E65100]';
+                    squadBadge = 'bg-[#FBE9E7] text-[#D84315] border-[#FFCCBC]';
+                  } else if (eq.nombre?.includes('Sistemas') || eq.codigo === 'TEAM-02') {
+                    squadBorder = 'border-t-[#5E35B1]';
+                    squadBadge = 'bg-[#EDE7F6] text-[#512DA8] border-[#D1C4E9]';
+                  } else if (eq.nombre?.includes('Docente') || eq.codigo === 'TEAM-04') {
+                    squadBorder = 'border-t-[#2E7D32]';
+                    squadBadge = 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]';
+                  }
+
                   return (
                     <div
                       key={eq.id}
-                      className="bg-white border border-[#E0E0E0] rounded-lg shadow-xs hover:border-[#CCDDEB] transition-all flex flex-col justify-between overflow-hidden"
+                      className={`bg-white border border-[#E0E0E0] border-t-4 ${squadBorder} rounded-lg shadow-xs hover:border-[#CCDDEB] transition-all flex flex-col justify-between overflow-hidden`}
                     >
                       <div className="p-5 space-y-3">
                         <div className="flex items-start justify-between">
@@ -862,7 +917,7 @@ export const AdmisionesPanelPage: React.FC = () => {
                               {eq.nombre}
                             </h3>
                           </div>
-                          <span className="bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] text-[11px] font-bold px-2.5 py-1 rounded-md">
+                          <span className={`${squadBadge} text-[11px] font-bold px-2.5 py-1 rounded-md border`}>
                             Líder: {techLeader}
                           </span>
                         </div>
@@ -955,16 +1010,20 @@ export const AdmisionesPanelPage: React.FC = () => {
           {/* ========================================================= */}
           {seccionActiva === 'alumnos' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Cabecera con Color Identificativo (Verde Esmeralda) */}
+              <div className="bg-[#1B5E20] text-white rounded-lg px-6 py-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
-                    <GraduationCap className="w-5 h-5 text-[#01579B]" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#C8E6C9] block">
+                    Alumnado Oficial PROFER
+                  </span>
+                  <h1 className="text-lg font-bold text-white flex items-center space-x-2 mt-0.5">
+                    <GraduationCap className="w-5 h-5 text-white" />
                     <span>Nómina de Alumnos Admitidos PROFER</span>
                   </h1>
-                  <p className="text-xs text-[#757575] mt-0.5">
-                    Estudiantes incorporados al programa de alto rendimiento, asignación a squads y becas otorgadas.
-                  </p>
                 </div>
+                <span className="text-xs font-bold bg-white/15 px-3 py-1.5 rounded-md border border-white/20 text-white self-start sm:self-auto">
+                  {totalAlumnosFiltrados} Alumnos Activos
+                </span>
               </div>
 
               {/* Barra de Filtro de Alumnos */}
@@ -986,6 +1045,14 @@ export const AdmisionesPanelPage: React.FC = () => {
 
               {/* Tabla de Alumnos */}
               <div className="bg-white border border-[#E0E0E0] rounded-lg shadow-xs overflow-hidden">
+                <div className="px-5 py-3 bg-[#E8F5E9] border-b border-[#C8E6C9] border-l-4 border-l-[#2E7D32] flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <GraduationCap className="w-4 h-4 text-[#1B5E20]" />
+                    <span className="text-xs font-bold text-[#1B5E20] uppercase tracking-wider">
+                      Alumnos PROFER ({totalAlumnosFiltrados} registros)
+                    </span>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs text-[#424242]">
                     <thead className="bg-[#FAFAFA] text-[11px] font-bold uppercase tracking-wider text-[#616161] border-b border-[#E0E0E0]">
@@ -1130,19 +1197,20 @@ export const AdmisionesPanelPage: React.FC = () => {
           {/* ========================================================= */}
           {seccionActiva === 'convocatoria' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Cabecera con Color Identificativo (Índigo) */}
+              <div className="bg-[#283593] text-white rounded-lg px-6 py-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-[#212121] flex items-center space-x-2">
-                    <Calendar className="w-5 h-5 text-[#01579B]" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#C5CAE9] block">
+                    Ciclo Lectivo Oficial
+                  </span>
+                  <h1 className="text-lg font-bold text-white flex items-center space-x-2 mt-0.5">
+                    <Calendar className="w-5 h-5 text-white" />
                     <span>Convocatorias & Periodos de Ingreso</span>
                   </h1>
-                  <p className="text-xs text-[#757575] mt-0.5">
-                    Historial de convocatorias semestrales, parámetros del modelo de admisión y estados de apertura.
-                  </p>
                 </div>
                 <button
                   onClick={() => setShowAperturarModal(true)}
-                  className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
+                  className="px-4 py-2 bg-white text-[#283593] hover:bg-[#FAFAFA] text-xs font-bold rounded-lg shadow-xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   <span>Aperturar Nueva Convocatoria</span>
