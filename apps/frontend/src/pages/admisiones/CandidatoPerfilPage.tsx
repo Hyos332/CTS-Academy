@@ -280,19 +280,6 @@ export const CandidatoPerfilPage: React.FC = () => {
           <AdmisionesSidebar seccionActiva="candidatos" />
         )}
 
-        {/* Botón Flotante para reabrir Sidebar */}
-        {!sidebarAbierto && (
-          <button
-            type="button"
-            onClick={() => setSidebarAbierto(true)}
-            className="fixed left-0 top-20 z-40 bg-[#01579B] text-white p-2.5 rounded-r-lg shadow-md hover:bg-[#004174] transition-all flex items-center space-x-1.5 text-xs font-semibold cursor-pointer"
-            title="Abrir menú lateral de navegación"
-          >
-            <Menu className="w-4 h-4" />
-            <span className="hidden sm:inline">Menú</span>
-          </button>
-        )}
-
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 space-y-6 overflow-y-auto">
         
         {/* ========================================================= */}

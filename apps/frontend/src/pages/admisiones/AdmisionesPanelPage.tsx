@@ -306,17 +306,6 @@ export const AdmisionesPanelPage: React.FC = () => {
         )}
 
         {/* Botón Flotante para reabrir Sidebar si está oculto (Siempre Accesible) */}
-        {!sidebarAbierto && (
-          <button
-            type="button"
-            onClick={() => setSidebarAbierto(true)}
-            className="fixed left-0 top-20 z-40 bg-[#01579B] text-white p-2.5 rounded-r-lg shadow-md hover:bg-[#004174] transition-all flex items-center space-x-1.5 text-xs font-semibold cursor-pointer"
-            title="Abrir menú lateral de navegación"
-          >
-            <Menu className="w-4 h-4" />
-            <span className="hidden sm:inline">Menú</span>
-          </button>
-        )}
 
         {/* ========================================================= */}
         {/* ÁREA DE CONTENIDO PRINCIPAL SEGÚN VENTANA ACTIVA          */}
