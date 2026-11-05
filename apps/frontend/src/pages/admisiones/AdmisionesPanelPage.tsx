@@ -258,150 +258,151 @@ export const AdmisionesPanelPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans text-[#212121]">
       <Navbar onToggleSidebar={() => setSidebarAbierto((prev) => !prev)} isSidebarOpen={sidebarAbierto} />
 
-      <div className="flex-1 flex flex-col lg:flex-row w-full px-4 sm:px-6 lg:px-8 py-6 gap-6">
+      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-[calc(100vh-64px)]">
         
         {/* ========================================================= */}
-        {/* SIDEBAR DE NAVEGACIÓN (Lateral Navigation FUNIBER SD)     */}
+        {/* SIDEBAR DE NAVEGACIÓN UNIFICADO AL LATERAL (FUNIBER SD)   */}
         {/* ========================================================= */}
         {sidebarAbierto && (
-          <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4">
-            
-            {/* Tarjeta de Contexto de la Convocatoria */}
-            <div className="bg-white border border-[#E0E0E0] rounded-lg p-4 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-[#757575] uppercase tracking-wider">
-                  Periodo en Foco
-                </span>
-                <div className="flex items-center space-x-1.5">
-                  {convocatoriaMostrar && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setConvocatoriaAEditar({
-                          id: convocatoriaMostrar.id,
-                          denominacion: convocatoriaMostrar.denominacion,
-                          fechaApertura: convocatoriaMostrar.fechaApertura || convocatoriaMostrar.fecha_apertura,
-                          fechaCierre: convocatoriaMostrar.fechaCierre || convocatoriaMostrar.fecha_cierre,
-                          modeloAdmision: convocatoriaMostrar.modeloAdmision || convocatoriaMostrar.modelo_admision,
-                          estado: convocatoriaMostrar.estado,
-                          semestre: convocatoriaMostrar.semestre,
-                        });
-                        setShowEditarModal(true);
-                      }}
-                      title="Editar parámetros de esta convocatoria"
-                      className="p-1 rounded text-[#757575] hover:text-[#01579B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+          <aside className="w-full lg:w-72 xl:w-80 shrink-0 bg-white border-r border-[#E0E0E0] min-h-[calc(100vh-64px)] flex flex-col justify-between p-4 space-y-4 z-20">
+            <div className="space-y-4">
+              {/* Tarjeta de Contexto de la Convocatoria */}
+              <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-[#757575] uppercase tracking-wider">
+                    Periodo en Foco
+                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    {convocatoriaMostrar && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConvocatoriaAEditar({
+                            id: convocatoriaMostrar.id,
+                            denominacion: convocatoriaMostrar.denominacion,
+                            fechaApertura: convocatoriaMostrar.fechaApertura || convocatoriaMostrar.fecha_apertura,
+                            fechaCierre: convocatoriaMostrar.fechaCierre || convocatoriaMostrar.fecha_cierre,
+                            modeloAdmision: convocatoriaMostrar.modeloAdmision || convocatoriaMostrar.modelo_admision,
+                            estado: convocatoriaMostrar.estado,
+                            semestre: convocatoriaMostrar.semestre,
+                          });
+                          setShowEditarModal(true);
+                        }}
+                        title="Editar parámetros de esta convocatoria"
+                        className="p-1 rounded text-[#757575] hover:text-[#01579B] hover:bg-white transition-colors cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                        convocatoriaMostrar?.estado === 'ABIERTA'
+                          ? 'text-[#1B5E20] bg-[#E8F5E9] border-[#C8E6C9]'
+                          : 'text-[#616161] bg-[#F5F5F5] border-[#E0E0E0]'
+                      }`}
                     >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
-                      convocatoriaMostrar?.estado === 'ABIERTA'
-                        ? 'text-[#1B5E20] bg-[#E8F5E9] border-[#C8E6C9]'
-                        : 'text-[#616161] bg-[#F5F5F5] border-[#E0E0E0]'
-                    }`}
+                      {filtroConvocatoria === 'TODAS'
+                        ? 'Todas'
+                        : convocatoriaMostrar?.estado || 'CERRADA'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#616161] mb-1">
+                    Cambiar Periodo / Convocatoria:
+                  </label>
+                  <select
+                    value={filtroConvocatoria}
+                    onChange={(e) => {
+                      setFiltroConvocatoria(e.target.value);
+                      setPaginaCandidatos(1);
+                    }}
+                    className="w-full text-xs font-semibold text-[#212121] bg-white border border-[#E0E0E0] rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-[#01579B] focus:border-[#01579B] focus:outline-none cursor-pointer"
                   >
-                    {filtroConvocatoria === 'TODAS'
-                      ? 'Todas'
-                      : convocatoriaMostrar?.estado || 'CERRADA'}
+                    <option value="TODAS">🌐 Todas las Convocatorias ({candidatos?.length || 0})</option>
+                    {listaConvocatorias.map((c: any) => (
+                      <option key={c.id} value={c.id}>
+                        {c.estado === 'ABIERTA' ? '🟢' : '⚪'} {c.denominacion} ({c.totalCandidatos} post.)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-[#757575] pt-2 border-t border-[#E0E0E0]">
+                  <span className="truncate">Semestre: <strong className="text-[#424242]">{convocatoriaMostrar?.semestre || 'General'}</strong></span>
+                  <span className="text-[11px] font-mono font-bold text-[#01579B]">
+                    {metricasActivas.totalCandidatos} post.
                   </span>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-semibold text-[#616161] mb-1">
-                  Cambiar Periodo / Convocatoria:
-                </label>
-                <select
-                  value={filtroConvocatoria}
-                  onChange={(e) => {
-                    setFiltroConvocatoria(e.target.value);
-                    setPaginaCandidatos(1);
-                  }}
-                  className="w-full text-xs font-semibold text-[#212121] bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg px-2.5 py-2 focus:ring-2 focus:ring-[#01579B] focus:border-[#01579B] focus:outline-none cursor-pointer"
-                >
-                  <option value="TODAS">🌐 Todas las Convocatorias ({candidatos?.length || 0})</option>
-                  {listaConvocatorias.map((c: any) => (
-                    <option key={c.id} value={c.id}>
-                      {c.estado === 'ABIERTA' ? '🟢' : '⚪'} {c.denominacion} ({c.totalCandidatos} post.)
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Menú de Navegación Vertical (Lateral Navigation Grupo FUNIBER SD) */}
+              <nav className="space-y-1">
+                <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#757575]">
+                  Gestión de Convocatoria
+                </div>
 
-              <div className="flex items-center justify-between text-xs text-[#757575] pt-2 border-t border-[#EEEEEE]">
-                <span className="truncate">Semestre: <strong className="text-[#424242]">{convocatoriaMostrar?.semestre || 'General'}</strong></span>
-                <span className="text-[11px] font-mono font-bold text-[#01579B]">
-                  {metricasActivas.totalCandidatos} post.
-                </span>
-              </div>
+                <button
+                  onClick={() => setSeccionActiva('candidatos')}
+                  className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                    seccionActiva === 'candidatos'
+                      ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                      : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Users className={`w-4 h-4 ${seccionActiva === 'candidatos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                    <span className="truncate">Aspirantes & Selección</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSeccionActiva('equipos')}
+                  className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                    seccionActiva === 'equipos'
+                      ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                      : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Building2 className={`w-4 h-4 ${seccionActiva === 'equipos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                    <span className="truncate">Equipos CTS (Squads)</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSeccionActiva('alumnos')}
+                  className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                    seccionActiva === 'alumnos'
+                      ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                      : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <GraduationCap className={`w-4 h-4 ${seccionActiva === 'alumnos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                    <span className="truncate">Alumnos PROFER</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSeccionActiva('convocatoria')}
+                  className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                    seccionActiva === 'convocatoria'
+                      ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
+                      : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Calendar className={`w-4 h-4 ${seccionActiva === 'convocatoria' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                    <span className="truncate">Convocatoria & Periodo</span>
+                  </div>
+                </button>
+              </nav>
             </div>
 
-            {/* Menú de Navegación Vertical (Estilo Oficial Lateral Navigation Grupo FUNIBER SD) */}
-            <nav className="bg-white border border-[#E0E0E0] rounded-lg p-2 shadow-xs space-y-1">
-              <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#757575]">
-                Gestión de Convocatoria
-              </div>
-
-              <button
-                onClick={() => setSeccionActiva('candidatos')}
-                className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
-                  seccionActiva === 'candidatos'
-                    ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
-                    : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Users className={`w-4 h-4 ${seccionActiva === 'candidatos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
-                  <span className="truncate">Aspirantes & Selección</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setSeccionActiva('equipos')}
-                className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
-                  seccionActiva === 'equipos'
-                    ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
-                    : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Building2 className={`w-4 h-4 ${seccionActiva === 'equipos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
-                  <span className="truncate">Equipos CTS (Squads)</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setSeccionActiva('alumnos')}
-                className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
-                  seccionActiva === 'alumnos'
-                    ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
-                    : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <GraduationCap className={`w-4 h-4 ${seccionActiva === 'alumnos' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
-                  <span className="truncate">Alumnos PROFER</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setSeccionActiva('convocatoria')}
-                className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
-                  seccionActiva === 'convocatoria'
-                    ? 'bg-[#E6EFF5] text-[#01579B] border-l-4 border-[#01579B] font-bold rounded-r-lg shadow-2xs'
-                    : 'text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Calendar className={`w-4 h-4 ${seccionActiva === 'convocatoria' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
-                  <span className="truncate">Convocatoria & Periodo</span>
-                </div>
-              </button>
-            </nav>
-
             {/* Botones de Acción Rápida en Sidebar (Estilo Button Grupo FUNIBER SD) */}
-            <div className="bg-white border border-[#E0E0E0] rounded-lg p-3.5 shadow-xs space-y-2">
+            <div className="pt-3 border-t border-[#EEEEEE] space-y-2">
               <button
                 onClick={() => setShowAperturarModal(true)}
                 className="w-full py-2 px-3 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
@@ -453,7 +454,7 @@ export const AdmisionesPanelPage: React.FC = () => {
         {/* ========================================================= */}
         {/* ÁREA DE CONTENIDO PRINCIPAL SEGÚN VENTANA ACTIVA          */}
         {/* ========================================================= */}
-        <main className="flex-1 min-w-0 space-y-6">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 space-y-6 overflow-y-auto">
           
           {/* ========================================================= */}
           {/* 1. VENTANA: ASPIRANTES & SELECCIÓN                        */}

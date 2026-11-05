@@ -64,6 +64,8 @@ export const CandidatoPerfilPage: React.FC = () => {
 
   // Vista activa: 'resumen' (página única sintetizada) o desglose individual
   const [vistaDetallada, setVistaDetallada] = useState<'resumen' | 'actitud16pf' | 'aptitudMatriz' | 'tecnicoCts'>('resumen');
+  // Pestaña activa en el expediente: 'entrevista' | 'afinidad' | 'tests'
+  const [tabActivo, setTabActivo] = useState<'entrevista' | 'afinidad' | 'tests'>('entrevista');
 
   // Obtener perfil detallado del candidato
   const { data: candidato, isLoading, error } = useQuery({
@@ -393,133 +395,103 @@ export const CandidatoPerfilPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Stepper del Proceso (4 Pasos con Círculos y Línea Conectora) */}
-          <div className="p-6 bg-[#FAFAFA]">
-            <div className="flex items-center justify-between mb-3 px-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#757575]">
-                Flujo del Proceso de Admisión PROFER
-              </span>
-              <span className="text-xs font-semibold text-[#616161]">
-                {yaAdmitido
-                  ? 'Proceso Concluido: Alumno Admitido'
-                  : yaAbandonado
-                  ? 'Proceso Concluido: Candidatura Archivada'
-                  : `Etapa ${etapaActual} de 4 en Curso`}
-              </span>
-            </div>
+          {/* Stepper del Proceso (Diseño Angosto y Compacto) */}
+          <div className="px-6 py-2.5 bg-[#FAFAFA] border-t border-[#EEEEEE] flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center space-x-1 sm:space-x-4 w-full md:w-auto overflow-x-auto py-1">
+              
+              {/* Paso 1: Registro */}
+              <div className="flex items-center space-x-1.5 shrink-0">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] bg-[#01579B] text-white">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="text-xs font-semibold text-[#212121]">1. Registro</span>
+              </div>
 
-            <div className="relative py-2 px-4">
-              {/* Línea conectora horizontal */}
-              <div className="absolute top-6 left-12 right-12 h-1 bg-[#E0E0E0] -translate-y-1/2 z-0 hidden sm:block">
+              <div className="w-6 sm:w-10 h-0.5 bg-[#01579B] shrink-0" />
+
+              {/* Paso 2: Tests */}
+              <div className="flex items-center space-x-1.5 shrink-0">
                 <div
-                  className="h-full bg-[#01579B] transition-all duration-300"
-                  style={{
-                    width:
-                      etapaActual === 1
-                        ? '0%'
-                        : etapaActual === 2
-                        ? '33%'
-                        : etapaActual === 3
-                        ? '66%'
-                        : '100%',
-                  }}
-                />
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] transition-all ${
+                    testsCompletadosCount === 3 || etapaActual > 2
+                      ? 'bg-[#01579B] text-white'
+                      : etapaActual === 2
+                      ? 'bg-[#01579B] text-white ring-2 ring-[#CCDDEB]'
+                      : 'bg-white border border-[#BDBDBD] text-[#757575]'
+                  }`}
+                >
+                  {testsCompletadosCount === 3 || etapaActual > 2 ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                  ) : (
+                    <span>2</span>
+                  )}
+                </div>
+                <span className={`text-xs ${etapaActual === 2 ? 'font-bold text-[#01579B]' : 'font-semibold text-[#212121]'}`}>
+                  2. Tests ({testsCompletadosCount}/3)
+                </span>
               </div>
 
-              {/* 4 Círculos Numerados */}
-              <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                
-                {/* Paso 1: Registro */}
-                <div className="flex flex-col items-center">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs bg-[#01579B] text-white shadow-xs">
-                    <CheckCircle2 className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xs font-bold text-[#212121] mt-2">1. Registro Inicial</span>
-                  <span className="text-[11px] text-[#757575]">Credenciales emitidas</span>
-                </div>
+              <div className={`w-6 sm:w-10 h-0.5 shrink-0 ${etapaActual >= 3 ? 'bg-[#01579B]' : 'bg-[#E0E0E0]'}`} />
 
-                {/* Paso 2: Tests */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
-                      testsCompletadosCount === 3 || etapaActual > 2
-                        ? 'bg-[#01579B] text-white'
-                        : etapaActual === 2
-                        ? 'bg-[#01579B] text-white ring-4 ring-[#CCDDEB]'
-                        : 'bg-white border-2 border-[#E0E0E0] text-[#9E9E9E]'
-                    }`}
-                  >
-                    {testsCompletadosCount === 3 || etapaActual > 2 ? (
-                      <CheckCircle2 className="w-5 h-5 text-white" />
-                    ) : (
-                      <span>2</span>
-                    )}
-                  </div>
-                  <span className="text-xs font-bold text-[#212121] mt-2">2. Tests de Admisión</span>
-                  <span className="text-[11px] text-[#757575]">
-                    {testsCompletadosCount === 3 ? '3/3 completados' : `${testsCompletadosCount}/3 completados`}
-                  </span>
+              {/* Paso 3: Entrevista */}
+              <div className="flex items-center space-x-1.5 shrink-0">
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] transition-all ${
+                    entrevistaRealizada || etapaActual > 3
+                      ? 'bg-[#01579B] text-white'
+                      : etapaActual === 3
+                      ? 'bg-[#01579B] text-white ring-2 ring-[#CCDDEB]'
+                      : 'bg-white border border-[#BDBDBD] text-[#757575]'
+                  }`}
+                >
+                  {entrevistaRealizada || etapaActual > 3 ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                  ) : (
+                    <span>3</span>
+                  )}
                 </div>
+                <span className={`text-xs ${etapaActual === 3 ? 'font-bold text-[#01579B]' : 'font-semibold text-[#212121]'}`}>
+                  3. Entrevista
+                </span>
+              </div>
 
-                {/* Paso 3: Entrevista */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
-                      entrevistaRealizada || etapaActual > 3
-                        ? 'bg-[#01579B] text-white'
-                        : etapaActual === 3
-                        ? 'bg-[#01579B] text-white ring-4 ring-[#CCDDEB]'
-                        : 'bg-white border-2 border-[#E0E0E0] text-[#9E9E9E]'
-                    }`}
-                  >
-                    {entrevistaRealizada || etapaActual > 3 ? (
-                      <CheckCircle2 className="w-5 h-5 text-white" />
-                    ) : (
-                      <span>3</span>
-                    )}
-                  </div>
-                  <span className="text-xs font-bold text-[#212121] mt-2">3. Entrevista Técnica</span>
-                  <span className="text-[11px] text-[#757575]">
-                    {entrevistaRealizada
-                      ? 'Conclusiones listas'
-                      : candidato.entrevista
-                      ? 'Sesión agendada'
-                      : 'Pendiente agendar'}
-                  </span>
-                </div>
+              <div className={`w-6 sm:w-10 h-0.5 shrink-0 ${etapaActual >= 4 ? 'bg-[#01579B]' : 'bg-[#E0E0E0]'}`} />
 
-                {/* Paso 4: Dictamen */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
-                      yaAdmitido
-                        ? 'bg-[#2E7D32] text-white'
-                        : yaAbandonado
-                        ? 'bg-[#D32F2F] text-white'
-                        : etapaActual === 4
-                        ? 'bg-[#01579B] text-white ring-4 ring-[#CCDDEB]'
-                        : 'bg-white border-2 border-[#E0E0E0] text-[#9E9E9E]'
-                    }`}
-                  >
-                    {yaAdmitido ? (
-                      <CheckCircle2 className="w-5 h-5 text-white" />
-                    ) : yaAbandonado ? (
-                      <UserX className="w-4 h-4 text-white" />
-                    ) : (
-                      <span>4</span>
-                    )}
-                  </div>
-                  <span className="text-xs font-bold text-[#212121] mt-2">4. Dictamen Final</span>
-                  <span className="text-[11px] text-[#757575]">
-                    {yaAdmitido
-                      ? `${porcentajeOtorgado ?? 100}% Beca & Squad`
+              {/* Paso 4: Dictamen */}
+              <div className="flex items-center space-x-1.5 shrink-0">
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] transition-all ${
+                    yaAdmitido
+                      ? 'bg-[#2E7D32] text-white'
                       : yaAbandonado
-                      ? 'Candidatura archivada'
-                      : 'Porcentaje de acceso'}
-                  </span>
+                      ? 'bg-[#D32F2F] text-white'
+                      : etapaActual === 4
+                      ? 'bg-[#01579B] text-white ring-2 ring-[#CCDDEB]'
+                      : 'bg-white border border-[#BDBDBD] text-[#757575]'
+                  }`}
+                >
+                  {yaAdmitido ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                  ) : yaAbandonado ? (
+                    <UserX className="w-3 h-3 text-white" />
+                  ) : (
+                    <span>4</span>
+                  )}
                 </div>
+                <span className={`text-xs ${yaAdmitido ? 'font-bold text-[#2E7D32]' : yaAbandonado ? 'font-bold text-[#D32F2F]' : etapaActual === 4 ? 'font-bold text-[#01579B]' : 'font-semibold text-[#212121]'}`}>
+                  4. Dictamen {yaAdmitido ? `(${porcentajeOtorgado ?? 100}%)` : ''}
+                </span>
               </div>
+
             </div>
+
+            <span className="text-[11px] font-semibold text-[#757575] shrink-0">
+              {yaAdmitido
+                ? 'Proceso Concluido: Admitido'
+                : yaAbandonado
+                ? 'Proceso Concluido: Archivado'
+                : `Etapa ${etapaActual} de 4 en Curso`}
+            </span>
           </div>
         </div>
 
@@ -530,10 +502,13 @@ export const CandidatoPerfilPage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-[#E0E0E0] shadow-xs">
               <button
-                onClick={() => setVistaDetallada('resumen')}
+                onClick={() => {
+                  setVistaDetallada('resumen');
+                  setTabActivo('tests');
+                }}
                 className="text-xs font-semibold text-[#01579B] hover:text-[#004174] flex items-center space-x-1 cursor-pointer"
               >
-                <span>← Volver al Expediente Principal</span>
+                <span>← Volver a Resultados de Tests</span>
               </button>
               <span className="text-xs font-bold text-[#212121]">Informe Psicométrico 16PF Oficial</span>
             </div>
@@ -551,10 +526,13 @@ export const CandidatoPerfilPage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-[#E0E0E0] shadow-xs">
               <button
-                onClick={() => setVistaDetallada('resumen')}
+                onClick={() => {
+                  setVistaDetallada('resumen');
+                  setTabActivo('tests');
+                }}
                 className="text-xs font-semibold text-[#01579B] hover:text-[#004174] flex items-center space-x-1 cursor-pointer"
               >
-                <span>← Volver al Expediente Principal</span>
+                <span>← Volver a Resultados de Tests</span>
               </button>
               <span className="text-xs font-bold text-[#212121]">Matriz Oficial de Aptitudes & Diagramas de Radar</span>
             </div>
@@ -572,10 +550,13 @@ export const CandidatoPerfilPage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-[#E0E0E0] shadow-xs">
               <button
-                onClick={() => setVistaDetallada('resumen')}
+                onClick={() => {
+                  setVistaDetallada('resumen');
+                  setTabActivo('tests');
+                }}
                 className="text-xs font-semibold text-[#01579B] hover:text-[#004174] flex items-center space-x-1 cursor-pointer"
               >
-                <span>← Volver al Expediente Principal</span>
+                <span>← Volver a Resultados de Tests</span>
               </button>
               <span className="text-xs font-bold text-[#212121]">Auditoría de Prueba Técnica CTS</span>
             </div>
@@ -595,10 +576,346 @@ export const CandidatoPerfilPage: React.FC = () => {
         {vistaDetallada === 'resumen' && (
           <div className="space-y-6">
             
-            {/* ----------------------------------------------------- */}
-            {/* CARD 1: DIAGNÓSTICO & CAPTURAS DE BATERÍAS            */}
-            {/* ----------------------------------------------------- */}
-            <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
+                        {/* Pestañas de Navegación del Expediente */}
+            <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs p-1.5 flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setTabActivo('entrevista')}
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-xs transition-all cursor-pointer ${
+                  tabActivo === 'entrevista'
+                    ? 'bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] shadow-2xs font-bold'
+                    : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
+                }`}
+              >
+                <Video className={`w-3.5 h-3.5 ${tabActivo === 'entrevista' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                <span>1. Entrevista & Deliberación</span>
+                {candidato?.entrevista && (
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#CCDDEB] text-[#01579B] font-bold">
+                    ✓
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTabActivo('afinidad')}
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-xs transition-all cursor-pointer ${
+                  tabActivo === 'afinidad'
+                    ? 'bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] shadow-2xs font-bold'
+                    : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
+                }`}
+              >
+                <Users className={`w-3.5 h-3.5 ${tabActivo === 'afinidad' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                <span>2. Afinidad de Equipos (Squads)</span>
+                {sugerido && (
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#CCDDEB] text-[#01579B] font-bold">
+                    {sugerido.afinidadPorcentaje}%
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTabActivo('tests')}
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-xs transition-all cursor-pointer ${
+                  tabActivo === 'tests'
+                    ? 'bg-[#E6EFF5] text-[#01579B] border border-[#CCDDEB] shadow-2xs font-bold'
+                    : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
+                }`}
+              >
+                <Sparkles className={`w-3.5 h-3.5 ${tabActivo === 'tests' ? 'text-[#01579B]' : 'text-[#757575]'}`} />
+                <span>3. Resultados de los Tests</span>
+              </button>
+            </div>
+
+            {/* 1. SECCIÓN ENTREVISTA & ANOTACIONES */}
+            {tabActivo === 'entrevista' && (
+              <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
+              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
+                    <Video className="w-4 h-4 text-[#01579B]" />
+                    <span>Entrevista de Selección & Deliberación Cualitativa</span>
+                  </h3>
+                  <p className="text-[11px] text-[#757575] mt-0.5">
+                    Coordinación Google Meet y registro formal de observaciones según la plantilla oficial.
+                  </p>
+                </div>
+
+                {candidato.entrevista ? (
+                  <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded bg-[#E8F0FE] text-[#084DC4] border border-[#C4D9FD]">
+                    Estado: {candidato.entrevista.estado}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      generarEnlaceMeet();
+                      setModalEntrevista(true);
+                    }}
+                    className="px-3.5 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Agendar Google Meet</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Bloque Google Meet Activo */}
+                {candidato.entrevista && (
+                  <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#757575] block">
+                        Sesión Programada en Google Calendar
+                      </span>
+                      <p className="font-bold text-[#212121] text-xs">
+                        {new Date(candidato.entrevista.fecha_hora_programada).toLocaleDateString('es-ES', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                      <p className="text-[11px] text-[#757575] font-mono">
+                        Enlace: {candidato.entrevista.enlace_google_meet}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => copiarEnlaceMeet(candidato.entrevista.enlace_google_meet)}
+                        className="px-3 py-1.5 bg-white border border-[#E0E0E0] text-[#424242] hover:bg-[#F5F5F5] rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-[#616161]" />
+                        <span>{copiadoMeet ? '¡Copiado!' : 'Copiar'}</span>
+                      </button>
+
+                      <a
+                        href={candidato.entrevista.enlace_google_meet}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs cursor-pointer"
+                      >
+                        <Video className="w-3.5 h-3.5" />
+                        <span>Unirse a Meet</span>
+                        <ExternalLink className="w-3 h-3 ml-0.5" />
+                      </a>
+
+                      <button
+                        onClick={() => {
+                          generarEnlaceMeet();
+                          setModalEntrevista(true);
+                        }}
+                        className="px-2.5 py-1.5 text-[#616161] hover:text-[#212121] text-xs font-semibold cursor-pointer"
+                      >
+                        Reprogramar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulario y Registro de Anotaciones */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-[#212121]">
+                    <MessageSquare className="w-4 h-4 text-[#01579B]" />
+                    <span>Registro de Observaciones para la Plantilla Oficial de Entrevista</span>
+                  </div>
+
+                  <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="block text-[#616161] font-semibold mb-1">Dimensión / Item Evaluado:</label>
+                        <select
+                          value={itemAnotacion}
+                          onChange={(e: any) => setItemAnotacion(e.target.value)}
+                          className="w-full bg-white border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs font-medium text-[#212121] focus:ring-1 focus:ring-[#01579B]"
+                        >
+                          <option value="Actitud">Actitud (Comportamiento, Colaboración, Motivación)</option>
+                          <option value="Aptitud">Aptitud (Solvencia Técnica, Análisis Lógico)</option>
+                          <option value="Generalidades">Generalidades (Comunicación, Disponibilidad)</option>
+                          <option value="Recomendaciones">Recomendaciones (Squad idóneo, Integración)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[#616161] font-semibold mb-1">Calificación Cualitativa:</label>
+                        <select
+                          value={calificacionAnotacion}
+                          onChange={(e: any) => setCalificacionAnotacion(e.target.value)}
+                          className="w-full bg-white border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs font-medium text-[#212121] focus:ring-1 focus:ring-[#01579B]"
+                        >
+                          <option value="SOBRESALIENTE">Sobresaliente</option>
+                          <option value="COMPETENTE">Competente</option>
+                          <option value="EN_DESARROLLO">En Desarrollo</option>
+                          <option value="NO_IDONEO">No Idóneo</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <textarea
+                        rows={3}
+                        value={comentariosEntrevista}
+                        onChange={(e) => setComentariosEntrevista(e.target.value)}
+                        placeholder="Registrar observaciones cualitativas del aspirante..."
+                        className="w-full bg-white border border-[#E0E0E0] rounded-lg p-3 text-xs text-[#212121] focus:ring-1 focus:ring-[#01579B] focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => anotacionesMutation.mutate()}
+                        disabled={!comentariosEntrevista.trim() || anotacionesMutation.isPending}
+                        className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {anotacionesMutation.isPending ? 'Guardando...' : 'Guardar Observación'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Listado de Anotaciones Registradas */}
+                  {candidato.entrevista?.anotaciones && candidato.entrevista.anotaciones.length > 0 && (
+                    <div className="space-y-2 pt-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#757575] block">
+                        Observaciones Registradas por el Comité
+                      </span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {candidato.entrevista.anotaciones.map((anot: any) => (
+                          <div
+                            key={anot.id}
+                            className="p-3 bg-white border border-[#E0E0E0] rounded-lg space-y-1.5 shadow-2xs"
+                          >
+                            <div className="flex items-center justify-between text-xs font-bold text-[#212121]">
+                              <span>{anot.competencia_evaluada}</span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                anot.calificacion_cualitativa === 'SOBRESALIENTE'
+                                  ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]'
+                                  : anot.calificacion_cualitativa === 'COMPETENTE'
+                                  ? 'bg-[#E6EFF5] text-[#01579B] border-[#CCDDEB]'
+                                  : anot.calificacion_cualitativa === 'EN_DESARROLLO'
+                                  ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2]'
+                                  : 'bg-[#FFEBEE] text-[#B71C1C] border-[#FFCDD2]'
+                              }`}>
+                                {anot.calificacion_cualitativa}
+                              </span>
+                            </div>
+                            <p className="text-[#424242] text-[11px] leading-relaxed">{anot.comentario}</p>
+                            <span className="text-[10px] text-[#757575] block pt-1 font-mono">
+                              {new Date(anot.creado_en).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* 2. SECCIÓN AFINIDAD CON SQUADS OFICIALES */}
+            {tabActivo === 'afinidad' && (
+              <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
+              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
+                    <Users className="w-4 h-4 text-[#01579B]" />
+                    <span>Afinidad Algorítmica con Squads CTS Oficiales</span>
+                  </h3>
+                  <p className="text-[11px] text-[#757575] mt-0.5">
+                    Evaluación tecnológica en los 4 equipos y sus respectivos líderes técnicos.
+                  </p>
+                </div>
+
+                {sugerido && (
+                  <span className="text-[11px] font-bold px-3 py-1 bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9] rounded-full">
+                    Top Match Recomendado: {sugerido.nombre} ({sugerido.afinidadPorcentaje}%)
+                  </span>
+                )}
+              </div>
+
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {(recomendacion?.rankingEquipos || [
+                  { id: '1', codigo: 'TEAM-03', nombre: 'Presencia Web', afinidadPorcentaje: 0, lider: 'Diego Moys' },
+                  { id: '2', codigo: 'TEAM-01', nombre: 'Fénix', afinidadPorcentaje: 0, lider: 'Alejandro Ruiz' },
+                  { id: '3', codigo: 'TEAM-02', nombre: 'Departamento de Sistemas', afinidadPorcentaje: 0, lider: 'Lucía Vargas' },
+                  { id: '4', codigo: 'TEAM-04', nombre: 'Acción Docente', afinidadPorcentaje: 0, lider: 'Marcos Navarro' },
+                ]).map((eq: any) => {
+                  const esTop = sugerido && eq.codigo === sugerido.codigo;
+                  
+                  // Ensure correct official technical leader
+                  let leaderName = eq.lider;
+                  if (eq.nombre?.includes('Presencia') || eq.codigo === 'TEAM-03') leaderName = 'Diego Moys';
+                  else if (eq.nombre?.includes('Fénix') || eq.codigo === 'TEAM-01') leaderName = 'Alejandro Ruiz';
+                  else if (eq.nombre?.includes('Sistemas') || eq.codigo === 'TEAM-02') leaderName = 'Lucía Vargas';
+                  else if (eq.nombre?.includes('Docente') || eq.codigo === 'TEAM-04') leaderName = 'Marcos Navarro';
+
+                  return (
+                    <div
+                      key={eq.id}
+                      onClick={() => {
+                        if (!yaAdmitido && !yaAbandonado) {
+                          setEquipoSeleccionadoId(eq.id);
+                          setModalAdmitir(true);
+                        }
+                      }}
+                      className={`p-4 rounded-lg border transition-all cursor-pointer flex flex-col justify-between ${
+                        esTop
+                          ? 'bg-[#E6EFF5]/60 border-[#01579B] shadow-2xs'
+                          : 'bg-[#FAFAFA] border-[#E0E0E0] hover:border-[#CCDDEB] hover:bg-white'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-mono font-bold text-[#757575] uppercase">
+                            {eq.codigo}
+                          </span>
+                          {esTop && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9]">
+                              Recomendado
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="font-bold text-xs text-[#212121] truncate" title={eq.nombre}>
+                          {eq.nombre}
+                        </h4>
+
+                        <div className="flex items-center space-x-1.5 text-[11px] text-[#616161] mt-1.5">
+                          <Users className="w-3.5 h-3.5 text-[#757575] shrink-0" />
+                          <span className="truncate">
+                            Líder: <strong className="text-[#212121]">{leaderName}</strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 pt-2.5 border-t border-[#E0E0E0]">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-[#757575] font-medium">Afinidad</span>
+                          <span className={`text-xs font-bold ${esTop ? 'text-[#01579B]' : 'text-[#424242]'}`}>
+                            {eq.afinidadPorcentaje || 0}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-[#E0E0E0] h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${esTop ? 'bg-[#01579B]' : 'bg-[#9E9E9E]'}`}
+                            style={{ width: `${eq.afinidadPorcentaje || 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            )}
+
+            {/* 3. SECCIÓN RESULTADOS DE TESTS */}
+            {tabActivo === 'tests' && (
+              <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
               <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex justify-between items-center">
                 <div>
                   <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
@@ -802,291 +1119,8 @@ export const CandidatoPerfilPage: React.FC = () => {
 
               </div>
             </div>
+            )}
 
-            {/* ----------------------------------------------------- */}
-            {/* CARD 2: AFINIDAD CON SQUADS OFICIALES GRUPO FUNIBER   */}
-            {/* ----------------------------------------------------- */}
-            <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div>
-                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-[#01579B]" />
-                    <span>Afinidad Algorítmica con Squads CTS Oficiales</span>
-                  </h3>
-                  <p className="text-[11px] text-[#757575] mt-0.5">
-                    Evaluación tecnológica en los 4 equipos y sus respectivos líderes técnicos.
-                  </p>
-                </div>
-
-                {sugerido && (
-                  <span className="text-[11px] font-bold px-3 py-1 bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9] rounded-full">
-                    Top Match Recomendado: {sugerido.nombre} ({sugerido.afinidadPorcentaje}%)
-                  </span>
-                )}
-              </div>
-
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {(recomendacion?.rankingEquipos || [
-                  { id: '1', codigo: 'TEAM-03', nombre: 'Presencia Web', afinidadPorcentaje: 0, lider: 'Diego Moys' },
-                  { id: '2', codigo: 'TEAM-01', nombre: 'Fénix', afinidadPorcentaje: 0, lider: 'Alejandro Ruiz' },
-                  { id: '3', codigo: 'TEAM-02', nombre: 'Departamento de Sistemas', afinidadPorcentaje: 0, lider: 'Lucía Vargas' },
-                  { id: '4', codigo: 'TEAM-04', nombre: 'Acción Docente', afinidadPorcentaje: 0, lider: 'Marcos Navarro' },
-                ]).map((eq: any) => {
-                  const esTop = sugerido && eq.codigo === sugerido.codigo;
-                  
-                  // Ensure correct official technical leader
-                  let leaderName = eq.lider;
-                  if (eq.nombre?.includes('Presencia') || eq.codigo === 'TEAM-03') leaderName = 'Diego Moys';
-                  else if (eq.nombre?.includes('Fénix') || eq.codigo === 'TEAM-01') leaderName = 'Alejandro Ruiz';
-                  else if (eq.nombre?.includes('Sistemas') || eq.codigo === 'TEAM-02') leaderName = 'Lucía Vargas';
-                  else if (eq.nombre?.includes('Docente') || eq.codigo === 'TEAM-04') leaderName = 'Marcos Navarro';
-
-                  return (
-                    <div
-                      key={eq.id}
-                      onClick={() => {
-                        if (!yaAdmitido && !yaAbandonado) {
-                          setEquipoSeleccionadoId(eq.id);
-                          setModalAdmitir(true);
-                        }
-                      }}
-                      className={`p-4 rounded-lg border transition-all cursor-pointer flex flex-col justify-between ${
-                        esTop
-                          ? 'bg-[#E6EFF5]/60 border-[#01579B] shadow-2xs'
-                          : 'bg-[#FAFAFA] border-[#E0E0E0] hover:border-[#CCDDEB] hover:bg-white'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-mono font-bold text-[#757575] uppercase">
-                            {eq.codigo}
-                          </span>
-                          {esTop && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9]">
-                              Recomendado
-                            </span>
-                          )}
-                        </div>
-
-                        <h4 className="font-bold text-xs text-[#212121] truncate" title={eq.nombre}>
-                          {eq.nombre}
-                        </h4>
-
-                        <div className="flex items-center space-x-1.5 text-[11px] text-[#616161] mt-1.5">
-                          <Users className="w-3.5 h-3.5 text-[#757575] shrink-0" />
-                          <span className="truncate">
-                            Líder: <strong className="text-[#212121]">{leaderName}</strong>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 pt-2.5 border-t border-[#E0E0E0]">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] text-[#757575] font-medium">Afinidad</span>
-                          <span className={`text-xs font-bold ${esTop ? 'text-[#01579B]' : 'text-[#424242]'}`}>
-                            {eq.afinidadPorcentaje || 0}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-[#E0E0E0] h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${esTop ? 'bg-[#01579B]' : 'bg-[#9E9E9E]'}`}
-                            style={{ width: `${eq.afinidadPorcentaje || 0}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ----------------------------------------------------- */}
-            {/* CARD 3: ENTREVISTA & ANOTACIONES TÉCNICAS (Unificada) */}
-            {/* ----------------------------------------------------- */}
-            <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
-              <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E0E0E0] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <h3 className="text-xs font-bold text-[#212121] uppercase tracking-wider flex items-center space-x-2">
-                    <Video className="w-4 h-4 text-[#01579B]" />
-                    <span>Entrevista de Selección & Deliberación Cualitativa</span>
-                  </h3>
-                  <p className="text-[11px] text-[#757575] mt-0.5">
-                    Coordinación Google Meet y registro formal de observaciones según la plantilla oficial.
-                  </p>
-                </div>
-
-                {candidato.entrevista ? (
-                  <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded bg-[#E8F0FE] text-[#084DC4] border border-[#C4D9FD]">
-                    Estado: {candidato.entrevista.estado}
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => {
-                      generarEnlaceMeet();
-                      setModalEntrevista(true);
-                    }}
-                    className="px-3.5 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
-                  >
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Agendar Google Meet</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="p-6 space-y-6">
-                {/* Bloque Google Meet Activo */}
-                {candidato.entrevista && (
-                  <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#757575] block">
-                        Sesión Programada en Google Calendar
-                      </span>
-                      <p className="font-bold text-[#212121] text-xs">
-                        {new Date(candidato.entrevista.fecha_hora_programada).toLocaleDateString('es-ES', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                      <p className="text-[11px] text-[#757575] font-mono">
-                        Enlace: {candidato.entrevista.enlace_google_meet}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => copiarEnlaceMeet(candidato.entrevista.enlace_google_meet)}
-                        className="px-3 py-1.5 bg-white border border-[#E0E0E0] text-[#424242] hover:bg-[#F5F5F5] rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs cursor-pointer"
-                      >
-                        <Copy className="w-3.5 h-3.5 text-[#616161]" />
-                        <span>{copiadoMeet ? '¡Copiado!' : 'Copiar'}</span>
-                      </button>
-
-                      <a
-                        href={candidato.entrevista.enlace_google_meet}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-[#01579B] hover:bg-[#004174] text-white rounded-lg text-xs font-semibold inline-flex items-center space-x-1 shadow-2xs cursor-pointer"
-                      >
-                        <Video className="w-3.5 h-3.5" />
-                        <span>Unirse a Meet</span>
-                        <ExternalLink className="w-3 h-3 ml-0.5" />
-                      </a>
-
-                      <button
-                        onClick={() => {
-                          generarEnlaceMeet();
-                          setModalEntrevista(true);
-                        }}
-                        className="px-2.5 py-1.5 text-[#616161] hover:text-[#212121] text-xs font-semibold cursor-pointer"
-                      >
-                        Reprogramar
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Formulario y Registro de Anotaciones */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 text-xs font-bold text-[#212121]">
-                    <MessageSquare className="w-4 h-4 text-[#01579B]" />
-                    <span>Registro de Observaciones para la Plantilla Oficial de Entrevista</span>
-                  </div>
-
-                  <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-4 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <label className="block text-[#616161] font-semibold mb-1">Dimensión / Item Evaluado:</label>
-                        <select
-                          value={itemAnotacion}
-                          onChange={(e: any) => setItemAnotacion(e.target.value)}
-                          className="w-full bg-white border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs font-medium text-[#212121] focus:ring-1 focus:ring-[#01579B]"
-                        >
-                          <option value="Actitud">Actitud (Comportamiento, Colaboración, Motivación)</option>
-                          <option value="Aptitud">Aptitud (Solvencia Técnica, Análisis Lógico)</option>
-                          <option value="Generalidades">Generalidades (Comunicación, Disponibilidad)</option>
-                          <option value="Recomendaciones">Recomendaciones (Squad idóneo, Integración)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[#616161] font-semibold mb-1">Calificación Cualitativa:</label>
-                        <select
-                          value={calificacionAnotacion}
-                          onChange={(e: any) => setCalificacionAnotacion(e.target.value)}
-                          className="w-full bg-white border border-[#E0E0E0] rounded-lg px-3 py-2 text-xs font-medium text-[#212121] focus:ring-1 focus:ring-[#01579B]"
-                        >
-                          <option value="SOBRESALIENTE">Sobresaliente</option>
-                          <option value="COMPETENTE">Competente</option>
-                          <option value="EN_DESARROLLO">En Desarrollo</option>
-                          <option value="NO_IDONEO">No Idóneo</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <textarea
-                        rows={3}
-                        value={comentariosEntrevista}
-                        onChange={(e) => setComentariosEntrevista(e.target.value)}
-                        placeholder="Registrar observaciones cualitativas del aspirante..."
-                        className="w-full bg-white border border-[#E0E0E0] rounded-lg p-3 text-xs text-[#212121] focus:ring-1 focus:ring-[#01579B] focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => anotacionesMutation.mutate()}
-                        disabled={!comentariosEntrevista.trim() || anotacionesMutation.isPending}
-                        className="px-4 py-2 bg-[#01579B] hover:bg-[#004174] text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
-                      >
-                        {anotacionesMutation.isPending ? 'Guardando...' : 'Guardar Observación'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Listado de Anotaciones Registradas */}
-                  {candidato.entrevista?.anotaciones && candidato.entrevista.anotaciones.length > 0 && (
-                    <div className="space-y-2 pt-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#757575] block">
-                        Observaciones Registradas por el Comité
-                      </span>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {candidato.entrevista.anotaciones.map((anot: any) => (
-                          <div
-                            key={anot.id}
-                            className="p-3 bg-white border border-[#E0E0E0] rounded-lg space-y-1.5 shadow-2xs"
-                          >
-                            <div className="flex items-center justify-between text-xs font-bold text-[#212121]">
-                              <span>{anot.competencia_evaluada}</span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                anot.calificacion_cualitativa === 'SOBRESALIENTE'
-                                  ? 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]'
-                                  : anot.calificacion_cualitativa === 'COMPETENTE'
-                                  ? 'bg-[#E6EFF5] text-[#01579B] border-[#CCDDEB]'
-                                  : anot.calificacion_cualitativa === 'EN_DESARROLLO'
-                                  ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2]'
-                                  : 'bg-[#FFEBEE] text-[#B71C1C] border-[#FFCDD2]'
-                              }`}>
-                                {anot.calificacion_cualitativa}
-                              </span>
-                            </div>
-                            <p className="text-[#424242] text-[11px] leading-relaxed">{anot.comentario}</p>
-                            <span className="text-[10px] text-[#757575] block pt-1 font-mono">
-                              {new Date(anot.creado_en).toLocaleDateString()}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
 
           </div>
         )}
