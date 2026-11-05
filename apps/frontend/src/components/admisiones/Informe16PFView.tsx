@@ -572,7 +572,12 @@ export const Informe16PFView: React.FC<Informe16PFProps> = ({ informe }) => {
 
       {/* Modal de Vista Previa A4 Horizontal / Landscape */}
       {modalImprimir && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs overflow-y-auto p-3 sm:p-6 flex flex-col items-center no-print">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setModalImprimir(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs overflow-y-auto p-3 sm:p-6 flex flex-col items-center no-print"
+        >
           <div className="w-full max-w-[1100px] mb-3 flex items-center justify-between bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-700">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-rose-500/20 text-rose-400 rounded-xl">

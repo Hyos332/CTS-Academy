@@ -57,6 +57,94 @@ const CtsLogoMini: React.FC<{ size?: number }> = ({ size = 22 }) => (
   </svg>
 );
 
+// Componente SVG puro para Radar de Aptitud (imprimible de forma 100% determinista)
+const SvgRadarAptitud: React.FC<{ categorias: any[] }> = ({ categorias }) => {
+  if (!categorias || categorias.length === 0) return null;
+  const cx = 200;
+  const cy = 110;
+  const rMax = 80;
+  const total = categorias.length;
+
+  const pointsGrid = [1, 2, 3, 4, 5].map((lvl) => {
+    const r = (rMax * lvl) / 5;
+    return Array.from({ length: total }, (_, i) => {
+      const angle = -Math.PI / 2 + (2 * Math.PI * i) / total;
+      return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+    }).join(' ');
+  });
+
+  const candPoints = categorias.map((cat, i) => {
+    const avg =
+      cat.items && cat.items.length > 0
+        ? cat.items.reduce((acc: number, it: any) => acc + it.nivelActual, 0) / cat.items.length
+        : 2.5;
+    const r = (rMax * Math.min(5, Math.max(0, avg))) / 5;
+    const angle = -Math.PI / 2 + (2 * Math.PI * i) / total;
+    return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+  }).join(' ');
+
+  return (
+    <div className="flex justify-center items-center py-1">
+      <svg width="400" height="220" viewBox="0 0 400 220" className="max-w-full">
+        {/* Grids concentricos */}
+        {pointsGrid.map((pts, idx) => (
+          <polygon
+            key={idx}
+            points={pts}
+            fill={idx === 4 ? '#F8FAFC' : 'none'}
+            stroke="#CBD5E1"
+            strokeWidth="1"
+          />
+        ))}
+
+        {/* Ejes radiales */}
+        {Array.from({ length: total }, (_, i) => {
+          const angle = -Math.PI / 2 + (2 * Math.PI * i) / total;
+          const x2 = cx + rMax * Math.cos(angle);
+          const y2 = cy + rMax * Math.sin(angle);
+          const labelDist = rMax + 16;
+          const lx = cx + labelDist * Math.cos(angle);
+          const ly = cy + labelDist * Math.sin(angle);
+          const catNombre = categorias[i]?.nombre || '';
+          const shortName = catNombre.length > 15 ? catNombre.slice(0, 13) + '…' : catNombre;
+
+          return (
+            <g key={i}>
+              <line x1={cx} y1={cy} x2={x2} y2={y2} stroke="#CBD5E1" strokeWidth="1" />
+              <text
+                x={lx}
+                y={ly}
+                textAnchor={lx > cx + 10 ? 'start' : lx < cx - 10 ? 'end' : 'middle'}
+                dominantBaseline="central"
+                fontSize="9"
+                fontWeight="700"
+                fill="#334155"
+              >
+                {shortName}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Poligono evaluado */}
+        <polygon
+          points={candPoints}
+          fill="#0266CC"
+          fillOpacity="0.4"
+          stroke="#0266CC"
+          strokeWidth="2"
+        />
+
+        {/* Puntos en los vertices */}
+        {candPoints.split(' ').map((pt, i) => {
+          const [px, py] = pt.split(',');
+          return <circle key={i} cx={px} cy={py} r="3" fill="#01579B" stroke="#FFFFFF" strokeWidth="1" />;
+        })}
+      </svg>
+    </div>
+  );
+};
+
 export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps> = ({
   isOpen,
   onClose,
@@ -90,7 +178,7 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
 
   // Observaciones predeterminadas (calculadas a partir de la deliberación real)
   const defaultObsActitud = informe16PF
-    ? `Candidato con perfil predominante colaborativo (${informe16PF.factoresPrincipales?.find((f: any) => f.factor === 'A')?.etiqueta || 'Afinidad interpersonal'}). Buena adaptabilidad y disposición al trabajo en equipo.`
+    ? `Candidato con perfil predominantemente colaborativo (${informe16PF.factoresPrincipales?.find((f: any) => f.factor === 'A')?.etiqueta || 'Afinidad interpersonal'}). Buena adaptabilidad y disposición al trabajo en equipo.`
     : (candidato.entrevista?.anotaciones?.find((a: any) => a.competencia_evaluada.toLowerCase().includes('actitud'))?.comentario ||
       'Demuestra actitud receptiva, motivación por el aprendizaje y clara orientación al trabajo en equipo en dinámicas de squad.');
 
@@ -199,9 +287,9 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
           </div>
 
           {/* Cuerpo del Informe */}
-          <div className="p-8 sm:p-10 space-y-6">
+          <div className="p-8 sm:p-10 space-y-5">
             {/* Metadatos Superiores */}
-            <div className="space-y-1.5 text-xs text-slate-800">
+            <div className="space-y-1 text-xs text-slate-800">
               <p>
                 <strong className="font-bold">Sugerencia de porcentaje de Acceso: </strong>
                 <span className="font-extrabold text-[#1565C0] text-sm">
@@ -223,44 +311,44 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
               <table className="w-full border-collapse text-xs">
                 <thead>
                   <tr className="bg-[#1565C0] text-white">
-                    <th className="py-2 px-3 text-left font-bold w-[22%] border-r border-[#0D47A1]">
+                    <th className="py-1.5 px-3 text-left font-bold w-[22%] border-r border-[#0D47A1]">
                       Item
                     </th>
-                    <th className="py-2 px-3 text-left font-bold">
+                    <th className="py-1.5 px-3 text-left font-bold">
                       Observaciones ({responsable} - Gestión PROFER GII)
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                    <td className="py-1.5 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
                       Actitud
                     </td>
-                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                    <td className="py-1.5 px-3 text-slate-700 leading-relaxed text-[11px]">
                       {obsActitud}
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                    <td className="py-1.5 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
                       Aptitud
                     </td>
-                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                    <td className="py-1.5 px-3 text-slate-700 leading-relaxed text-[11px]">
                       {obsAptitud}
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                    <td className="py-1.5 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
                       Generalidades
                     </td>
-                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                    <td className="py-1.5 px-3 text-slate-700 leading-relaxed text-[11px]">
                       {obsGeneral}
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                    <td className="py-1.5 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
                       Recomendaciones
                     </td>
-                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                    <td className="py-1.5 px-3 text-slate-700 leading-relaxed text-[11px]">
                       {obsRecomendaciones}
                     </td>
                   </tr>
@@ -273,20 +361,20 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
               <table className="w-full border-collapse text-xs">
                 <thead>
                   <tr className="bg-[#1565C0] text-white">
-                    <th className="py-2 px-3 text-left font-bold w-[22%] border-r border-[#0D47A1]">
+                    <th className="py-1.5 px-3 text-left font-bold w-[22%] border-r border-[#0D47A1]">
                       Item
                     </th>
-                    <th className="py-2 px-3 text-left font-bold">
+                    <th className="py-1.5 px-3 text-left font-bold">
                       Observaciones (Lucía Terán - CWO)
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
+                    <td className="py-1.5 px-3 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 align-top">
                       Generalidades
                     </td>
-                    <td className="py-2 px-3 text-slate-700 leading-relaxed">
+                    <td className="py-1.5 px-3 text-slate-700 leading-relaxed text-[11px]">
                       {obsLucia}
                     </td>
                   </tr>
@@ -294,58 +382,66 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
               </table>
             </div>
 
-            {/* SECCIÓN: Resultados Tests */}
-            <div className="pt-2 space-y-4">
-              <h3 className="text-sm font-bold text-slate-900 tracking-wide uppercase border-b border-slate-200 pb-1">
+            {/* SECCIÓN: Resultados Tests (Con capturas fieles: Radar para Aptitud y Tabla 16PF para Actitud) */}
+            <div className="pt-1 space-y-3">
+              <h3 className="text-xs font-black text-slate-900 tracking-wide uppercase border-b border-slate-200 pb-1">
                 Resultados Tests
               </h3>
 
-              {/* Bloque Aptitud */}
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-black tracking-widest text-slate-700 text-center uppercase">
-                  APTITUD
+              {/* Bloque Aptitud: Solo Diagramas de Radar */}
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-black tracking-widest text-slate-700 text-center uppercase">
+                  APTITUD (DIAGRAMA DE RADAR DE COMPETENCIAS)
                 </h4>
                 {matrizAptitudes ? (
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs flex justify-between items-center">
-                    <div>
-                      <span className="font-bold text-slate-800">
-                        Autoevaluación de Habilidades Técnicas:
-                      </span>{' '}
-                      <span className="text-slate-600">
-                        {matrizAptitudes.areasFortaleza?.length || 0} fortalezas registradas • {matrizAptitudes.areasMejora?.length || 0} áreas prioritarias
-                      </span>
+                  <div className="border border-slate-200 rounded-lg p-2 bg-slate-50/50">
+                    <SvgRadarAptitud categorias={matrizAptitudes.categorias || []} />
+                    <div className="text-center text-[10px] text-slate-500 font-mono">
+                      Promedio Autoevaluación Técnica: <strong className="text-blue-700 font-bold">{matrizAptitudes.promedioNivelActual || '2.8'} / 5.0</strong>
                     </div>
-                    <span className="font-extrabold text-[#1565C0] text-sm">
-                      {matrizAptitudes.promedioNivelActual || '2.8'} / 5.0
-                    </span>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-slate-500 text-center italic">
-                    Batería de aptitud pendiente o en curso.
+                  <p className="text-[10px] text-slate-500 text-center italic py-2">
+                    Batería de aptitud técnica pendiente de realización.
                   </p>
                 )}
               </div>
 
-              {/* Bloque Actitud */}
-              <div className="space-y-1.5 pt-2">
-                <h4 className="text-xs font-black tracking-widest text-slate-700 text-center uppercase">
-                  ACTITUD
+              {/* Bloque Actitud: Solo Tabla de Decatipos 16PF (Sin explicaciones de texto) */}
+              <div className="space-y-1 pt-1">
+                <h4 className="text-[11px] font-black tracking-widest text-slate-700 text-center uppercase">
+                  ACTITUD (TABLA DE FACTORES 16PF OFICIAL)
                 </h4>
                 {informe16PF ? (
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-800">Cuestionario Oficial 16PF:</span>
-                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
-                        Completado ({informe16PF.distorsion?.consistencia || 'Consistente'})
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-600">
-                      Rasgo dominante: <strong className="text-slate-800">{informe16PF.factoresPrincipales?.[0]?.etiqueta || 'Colaboración Squad'}</strong>. Dinámica colaborativa alineada a metodologías ágiles.
-                    </p>
+                  <div className="border border-slate-300 rounded-xs overflow-hidden">
+                    <table className="w-full border-collapse text-[10px]">
+                      <thead>
+                        <tr className="bg-slate-100 text-slate-700 font-extrabold border-b border-slate-200">
+                          <th className="py-1 px-2 text-left w-14">Factor</th>
+                          <th className="py-1 px-1.5 text-center w-16">Puntuación</th>
+                          <th className="py-1 px-2 text-left">Rasgo Dominante Evaluado</th>
+                          <th className="py-1 px-1.5 text-center w-14">Rango</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {(informe16PF.factores || []).slice(0, 8).map((f: any) => {
+                          const pc = f.pc ?? f.pd ?? 6;
+                          const rasgo = pc >= 6 ? f.altaPuntuacion : f.bajaPuntuacion;
+                          return (
+                            <tr key={f.factor} className="hover:bg-slate-50/50">
+                              <td className="py-0.5 px-2 font-mono font-bold text-slate-900">Factor {f.factor}</td>
+                              <td className="py-0.5 px-1.5 text-center font-bold text-blue-800 font-mono">{pc} / 10</td>
+                              <td className="py-0.5 px-2 text-slate-700 font-medium truncate max-w-[220px]">{rasgo}</td>
+                              <td className="py-0.5 px-1.5 text-center font-bold text-slate-600">{f.rango || 'MEDIA'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-slate-500 text-center italic">
-                    Batería de actitud 16PF pendiente o en curso.
+                  <p className="text-[10px] text-slate-500 text-center italic py-2">
+                    Batería de actitud 16PF pendiente de realización.
                   </p>
                 )}
               </div>
@@ -388,7 +484,12 @@ export const ResumenResultadosPdfModal: React.FC<ResumenResultadosPdfModalProps>
 
       {/* Modal de Vista Previa en Pantalla */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs overflow-y-auto p-3 sm:p-6 flex flex-col items-center no-print">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+          className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs overflow-y-auto p-3 sm:p-6 flex flex-col items-center no-print"
+        >
           <div className="w-full max-w-[850px] mb-3 flex items-center justify-between bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-700">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-500/20 text-blue-400 rounded-xl">
