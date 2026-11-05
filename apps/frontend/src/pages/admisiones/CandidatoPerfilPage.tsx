@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
 import { Navbar } from '../../components/common/Navbar';
+import { AdmisionesSidebar } from '../../components/admisiones/AdmisionesSidebar';
 import {
   ArrowLeft,
   Menu,
@@ -23,8 +24,6 @@ import {
   Terminal,
   Sparkles,
   Users,
-  Building2,
-  GraduationCap,
   X,
 } from 'lucide-react';
 import {
@@ -278,81 +277,7 @@ export const CandidatoPerfilPage: React.FC = () => {
         {/* SIDEBAR DE NAVEGACIÓN (SIEMPRE ACCESIBLE EN CANDIDATO)   */}
         {/* ========================================================= */}
         {sidebarAbierto && (
-          <aside className="w-full lg:w-72 xl:w-80 shrink-0 bg-white border-r border-[#E0E0E0] lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:overflow-y-auto flex flex-col justify-between p-4 space-y-4 z-20">
-            <div className="space-y-4">
-              {/* Tarjeta de Contexto del Candidato en Foco */}
-              <div className="bg-[#E6EFF5] border border-[#CCDDEB] rounded-lg p-3.5 space-y-2">
-                <span className="text-[10px] font-bold text-[#01579B] uppercase tracking-wider block">
-                  Expediente en Foco
-                </span>
-                <p className="text-xs font-bold text-[#212121] truncate" title={candidato?.nombreCompleto}>
-                  {candidato?.nombreCompleto}
-                </p>
-                <div className="pt-1 border-t border-[#CCDDEB] flex items-center justify-between text-[11px] text-[#616161]">
-                  <span className="truncate max-w-[130px]">{candidato?.convocatoriaNombre || 'Convocatoria'}</span>
-                  <span className="font-semibold text-[#01579B] shrink-0">{candidato?.estado_postulacion}</span>
-                </div>
-              </div>
-
-              {/* Menú de Navegación Vertical */}
-              <nav className="space-y-1">
-                <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#757575]">
-                  Módulos de Admisión
-                </div>
-
-                <button
-                  onClick={() => navigate('/admisiones/panel?seccion=candidatos')}
-                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Users className="w-4 h-4 text-[#757575]" />
-                    <span className="truncate">Aspirantes & Selección</span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate('/admisiones/panel?seccion=equipos')}
-                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Building2 className="w-4 h-4 text-[#757575]" />
-                    <span className="truncate">Equipos CTS (Squads)</span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate('/admisiones/panel?seccion=alumnos')}
-                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <GraduationCap className="w-4 h-4 text-[#757575]" />
-                    <span className="truncate">Alumnos PROFER</span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate('/admisiones/panel?seccion=convocatoria')}
-                  className="w-full flex items-center px-3.5 py-2.5 text-xs font-semibold text-[#424242] hover:bg-[#F5F5F5] hover:text-[#212121] rounded-lg cursor-pointer transition-all"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Calendar className="w-4 h-4 text-[#757575]" />
-                    <span className="truncate">Convocatoria & Periodo</span>
-                  </div>
-                </button>
-              </nav>
-            </div>
-
-            {/* Retorno al Panel */}
-            <div className="pt-3 border-t border-[#EEEEEE]">
-              <button
-                onClick={() => navigate('/admisiones/panel')}
-                className="w-full py-2 px-3 border border-[#E0E0E0] text-[#424242] hover:bg-[#F5F5F5] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-[#616161]" />
-                <span>Volver al Panel General</span>
-              </button>
-            </div>
-          </aside>
+          <AdmisionesSidebar seccionActiva="candidatos" />
         )}
 
         {/* Botón Flotante para reabrir Sidebar */}
@@ -684,7 +609,7 @@ export const CandidatoPerfilPage: React.FC = () => {
                 className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-xs transition-all cursor-pointer ${
                   tabActivo === 'entrevista'
                     ? 'bg-[#01579B] text-white shadow-2xs font-bold'
-                    : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
+                    : 'text-[#616161] hover:text-[#01579B] hover:bg-[#E6EFF5] border border-transparent font-medium'
                 }`}
               >
                 <Video className={`w-3.5 h-3.5 ${tabActivo === 'entrevista' ? 'text-white' : 'text-[#757575]'}`} />
@@ -703,8 +628,8 @@ export const CandidatoPerfilPage: React.FC = () => {
                 onClick={() => setTabActivo('afinidad')}
                 className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-xs transition-all cursor-pointer ${
                   tabActivo === 'afinidad'
-                    ? 'bg-[#00695C] text-white shadow-2xs font-bold'
-                    : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
+                    ? 'bg-[#01579B] text-white shadow-2xs font-bold'
+                    : 'text-[#616161] hover:text-[#01579B] hover:bg-[#E6EFF5] border border-transparent font-medium'
                 }`}
               >
                 <Users className={`w-3.5 h-3.5 ${tabActivo === 'afinidad' ? 'text-white' : 'text-[#757575]'}`} />
@@ -723,8 +648,8 @@ export const CandidatoPerfilPage: React.FC = () => {
                 onClick={() => setTabActivo('tests')}
                 className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-xs transition-all cursor-pointer ${
                   tabActivo === 'tests'
-                    ? 'bg-[#37474F] text-white shadow-2xs font-bold'
-                    : 'text-[#616161] hover:text-[#212121] hover:bg-[#F5F5F5] border border-transparent font-medium'
+                    ? 'bg-[#01579B] text-white shadow-2xs font-bold'
+                    : 'text-[#616161] hover:text-[#01579B] hover:bg-[#E6EFF5] border border-transparent font-medium'
                 }`}
               >
                 <Sparkles className={`w-3.5 h-3.5 ${tabActivo === 'tests' ? 'text-white' : 'text-[#757575]'}`} />
@@ -922,7 +847,7 @@ export const CandidatoPerfilPage: React.FC = () => {
             {/* 2. SECCIÓN AFINIDAD CON SQUADS OFICIALES */}
             {tabActivo === 'afinidad' && (
               <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
-                <div className="px-6 py-3.5 bg-[#00695C] text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div className="px-6 py-3.5 bg-[#01579B] text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center space-x-2.5">
                     <div className="p-1.5 bg-white/15 rounded-md text-white">
                       <Users className="w-4 h-4" />
@@ -1018,7 +943,7 @@ export const CandidatoPerfilPage: React.FC = () => {
             {/* 3. SECCIÓN RESULTADOS DE TESTS */}
             {tabActivo === 'tests' && (
               <div className="bg-white rounded-lg border border-[#E0E0E0] shadow-xs overflow-hidden">
-                <div className="px-6 py-3.5 bg-[#37474F] text-white flex justify-between items-center">
+                <div className="px-6 py-3.5 bg-[#01579B] text-white flex justify-between items-center">
                   <div className="flex items-center space-x-2.5">
                     <div className="p-1.5 bg-white/15 rounded-md text-white">
                       <Sparkles className="w-4 h-4" />
